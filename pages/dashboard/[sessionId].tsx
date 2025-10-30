@@ -1,20 +1,36 @@
 // pages/dashboard/[sessionId].tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { useSocket } from '@/hooks/useSocket';
+import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer';
 import { ColorScheme, WeatherEffect, NowPlaying } from '@/types/overlay';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { sessionId } = router.query;
+  const { data: session } = useSession();
   const { socket, isConnected } = useSocket(sessionId as string);
+  const {
+    audioLevel,
+    frequencyData,
+    isListening,
+    startListening,
+    stopListening,
+  } = useAudioAnalyzer();
+
+  // Save status
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
+    'saved'
+  );
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Spotify Authentication
   const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
   const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(
-    null,
+    null
   );
 
   // Now Playing Form (now automated)
@@ -35,6 +51,10 @@ export default function DashboardPage() {
   const [visualizerSize, setVisualizerSize] = useState(1.0);
   const [visualizerX, setVisualizerX] = useState(50);
   const [visualizerY, setVisualizerY] = useState(50);
+
+  // Overlay settings
+  const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
+  const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
 
   // Handle Spotify callback tokens from URL
   useEffect(() => {
@@ -61,6 +81,117 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Load saved layout when user is authenticated
+  useEffect(() => {
+    if (!session || !sessionId) return;
+
+    const loadLayout = async () => {
+      try {
+        const response = await fetch(
+          `/api/layouts/load?sessionId=${sessionId}`
+        );
+        if (response.ok) {
+          const { layout } = await response.json();
+
+          // Restore settings from saved layout
+          setVisualizerSize(layout.visualizerSize);
+          setVisualizerX(layout.visualizerX);
+          setVisualizerY(layout.visualizerY);
+          setColorScheme(layout.colorScheme);
+          setWeatherEffect(layout.weatherEffect);
+          setLayers([
+            {
+              id: 'particles',
+              name: 'Particles',
+              visible: layout.particlesVisible,
+            },
+            {
+              id: 'weather',
+              name: 'Weather',
+              visible: layout.weatherVisible,
+            },
+            { id: 'chat', name: 'Chat', visible: layout.chatVisible },
+            {
+              id: 'nowplaying',
+              name: 'Now Playing',
+              visible: layout.nowPlayingVisible,
+            },
+          ]);
+
+          setLastSaved(new Date(layout.updatedAt));
+          console.log('Layout loaded successfully');
+        }
+      } catch (error) {
+        console.error('Error loading layout:', error);
+      }
+    };
+
+    loadLayout();
+  }, [session, sessionId]);
+
+  // Auto-save layout when settings change
+  const saveLayout = useCallback(async () => {
+    if (!session || !sessionId) return;
+
+    setSaveStatus('saving');
+
+    try {
+      const response = await fetch('/api/layouts/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          visualizerSize,
+          visualizerX,
+          visualizerY,
+          colorScheme,
+          weatherEffect,
+          layers,
+        }),
+      });
+
+      if (response.ok) {
+        setSaveStatus('saved');
+        setLastSaved(new Date());
+      } else {
+        setSaveStatus('unsaved');
+      }
+    } catch (error) {
+      console.error('Error saving layout:', error);
+      setSaveStatus('unsaved');
+    }
+  }, [
+    session,
+    sessionId,
+    visualizerSize,
+    visualizerX,
+    visualizerY,
+    colorScheme,
+    weatherEffect,
+    layers,
+  ]);
+
+  // Debounced auto-save
+  useEffect(() => {
+    if (!session) return;
+
+    setSaveStatus('unsaved');
+    const timer = setTimeout(() => {
+      saveLayout();
+    }, 1000); // Save 1 second after last change
+
+    return () => clearTimeout(timer);
+  }, [
+    session,
+    visualizerSize,
+    visualizerX,
+    visualizerY,
+    colorScheme,
+    weatherEffect,
+    layers,
+    saveLayout,
+  ]);
+
   // Poll Spotify API for now playing
   useEffect(() => {
     if (!spotifyToken || !socket || !isConnected) return;
@@ -68,7 +199,7 @@ export default function DashboardPage() {
     const pollSpotify = async () => {
       try {
         const response = await fetch(
-          `/api/spotify/now-playing?access_token=${spotifyToken}`,
+          `/api/spotify/now-playing?access_token=${spotifyToken}`
         );
         const data = await response.json();
 
@@ -111,11 +242,13 @@ export default function DashboardPage() {
 
   const changeColorScheme = (scheme: ColorScheme) => {
     if (!socket) return;
+    setColorScheme(scheme);
     socket.emit('color-scheme-change', scheme);
   };
 
   const changeWeather = (effect: WeatherEffect) => {
     if (!socket) return;
+    setWeatherEffect(effect);
     socket.emit('weather-change', effect);
   };
 
@@ -156,6 +289,47 @@ export default function DashboardPage() {
     });
   }, [socket, isConnected, visualizerSize, visualizerX, visualizerY]);
 
+  // Auto-start audio listening
+  useEffect(() => {
+    if (!isListening) {
+      startListening();
+    }
+  }, []);
+
+  // Store latest audio data in refs so the broadcast loop can access current values
+  const audioLevelRef = useRef(audioLevel);
+  const frequencyDataRef = useRef(frequencyData);
+
+  useEffect(() => {
+    audioLevelRef.current = audioLevel;
+    frequencyDataRef.current = frequencyData;
+  }, [audioLevel, frequencyData]);
+
+  // Broadcast audio data to overlay via socket
+  useEffect(() => {
+    if (!socket || !isConnected || !isListening) return;
+
+    // Use setInterval instead of requestAnimationFrame
+    // setInterval is less throttled in background tabs
+    const interval = setInterval(() => {
+      socket.emit('audio-data', {
+        audioLevel: audioLevelRef.current,
+        frequencyData: {
+          bass: frequencyDataRef.current.bass,
+          lowMid: frequencyDataRef.current.lowMid,
+          mid: frequencyDataRef.current.mid,
+          highMid: frequencyDataRef.current.highMid,
+          treble: frequencyDataRef.current.treble,
+          overall: frequencyDataRef.current.overall,
+          // Convert Uint8Array to regular array for transmission
+          frequencies: Array.from(frequencyDataRef.current.frequencies),
+        },
+      });
+    }, 16); // ~60fps (16ms)
+
+    return () => clearInterval(interval);
+  }, [socket, isConnected, isListening]);
+
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8'>
       <div className='max-w-7xl mx-auto'>
@@ -170,17 +344,76 @@ export default function DashboardPage() {
                 Configure your audio-reactive overlay in real-time
               </p>
             </div>
-            <div className='flex items-center gap-3 bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-gray-700'>
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  isConnected
-                    ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/50'
-                    : 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50'
-                }`}
-              />
-              <span className='text-sm font-semibold'>
-                {isConnected ? 'Live' : 'Offline'}
-              </span>
+            <div className='flex items-center gap-3'>
+              {/* Audio Broadcasting Status */}
+              {isListening && (
+                <div className='bg-purple-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-purple-700'>
+                  <div className='flex items-center gap-2'>
+                    <div className='flex items-center gap-1'>
+                      <div className='w-1 h-3 bg-purple-400 rounded animate-pulse' />
+                      <div className='w-1 h-4 bg-purple-400 rounded animate-pulse delay-75' />
+                      <div className='w-1 h-2 bg-purple-400 rounded animate-pulse delay-150' />
+                    </div>
+                    <span className='text-sm font-semibold text-purple-300'>
+                      Broadcasting
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Save Status */}
+              {session && (
+                <div className='bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-gray-700'>
+                  <div className='flex items-center gap-2'>
+                    {saveStatus === 'saved' && (
+                      <>
+                        <svg
+                          className='w-4 h-4 text-green-400'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M5 13l4 4L19 7'
+                          />
+                        </svg>
+                        <span className='text-sm text-green-400'>Saved</span>
+                      </>
+                    )}
+                    {saveStatus === 'saving' && (
+                      <>
+                        <div className='w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin' />
+                        <span className='text-sm text-blue-400'>Saving...</span>
+                      </>
+                    )}
+                    {saveStatus === 'unsaved' && (
+                      <>
+                        <div className='w-2 h-2 bg-yellow-400 rounded-full' />
+                        <span className='text-sm text-yellow-400'>Unsaved</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Connection Status */}
+              <div className='bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-gray-700'>
+                <div className='flex items-center gap-2'>
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      isConnected
+                        ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/50'
+                        : 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50'
+                    }`}
+                  />
+                  <span className='text-sm font-semibold'>
+                    {isConnected ? 'Live' : 'Offline'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -196,7 +429,9 @@ export default function DashboardPage() {
                     {sessionId}
                   </div>
                   <div className='text-xs text-gray-500 mt-1'>
-                    Share this ID with friends
+                    {session
+                      ? 'Your settings are auto-saved ✓'
+                      : 'Sign in with Twitch to save your settings'}
                   </div>
                 </div>
                 <div className='flex-1'>
@@ -226,6 +461,201 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+
+              {/* OBS Audio Setup Instructions */}
+              <details className='mt-4 bg-blue-900/20 rounded-xl p-4 border border-blue-500/30'>
+                <summary className='cursor-pointer text-sm font-semibold text-blue-300 flex items-center gap-2'>
+                  <svg
+                    className='w-4 h-4'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    />
+                  </svg>
+                  🎧 Setup Audio for Visualizer (CLICK ME!)
+                </summary>
+                <div className='mt-4 space-y-4 text-sm text-gray-200'>
+                  <div className='bg-purple-900/30 rounded-lg p-3 border border-purple-500/50 mb-4'>
+                    <p className='text-sm text-purple-200'>
+                      <strong>How it works:</strong> The{' '}
+                      <span className='text-yellow-300'>dashboard</span>{' '}
+                      captures your audio and sends it to the{' '}
+                      <span className='text-green-300'>overlay</span> in
+                      real-time.
+                    </p>
+                    <p className='text-xs text-yellow-300 mt-2 font-semibold'>
+                      ⚠️ Keep this dashboard tab visible/active while streaming
+                      - browsers throttle background tabs!
+                    </p>
+                  </div>
+
+                  {/* Step 1 */}
+                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-green-500'>
+                    <p className='font-bold text-green-300 mb-2'>
+                      STEP 1: Install BlackHole (Mac only)
+                    </p>
+                    <ol className='list-decimal list-inside space-y-1 text-xs ml-2'>
+                      <li>
+                        Download{' '}
+                        <a
+                          href='https://existential.audio/blackhole/'
+                          target='_blank'
+                          className='text-blue-400 hover:underline font-semibold'
+                        >
+                          BlackHole 2ch
+                        </a>
+                      </li>
+                      <li>Install it (standard Mac installer)</li>
+                      <li>Restart your Mac if prompted</li>
+                    </ol>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-blue-500'>
+                    <p className='font-bold text-blue-300 mb-2'>
+                      STEP 2: Setup Audio MIDI
+                    </p>
+                    <ol className='list-decimal list-inside space-y-2 text-xs ml-2'>
+                      <li>
+                        Open{' '}
+                        <span className='font-semibold text-yellow-300'>
+                          Audio MIDI Setup
+                        </span>{' '}
+                        (Cmd+Space, type "Audio MIDI")
+                      </li>
+                      <li>
+                        Click the <span className='font-semibold'>+</span>{' '}
+                        button at bottom left
+                      </li>
+                      <li>
+                        Select{' '}
+                        <span className='font-semibold text-yellow-300'>
+                          "Create Multi-Output Device"
+                        </span>
+                      </li>
+                      <li>
+                        Check BOTH boxes:
+                        <ul className='list-disc list-inside ml-4 mt-1'>
+                          <li>✅ Your normal speakers/headphones</li>
+                          <li>✅ BlackHole 2ch</li>
+                        </ul>
+                      </li>
+                      <li>
+                        Right-click the Multi-Output Device →{' '}
+                        <span className='font-semibold text-yellow-300'>
+                          "Use This Device For Sound Output"
+                        </span>
+                      </li>
+                    </ol>
+                    <p className='mt-2 text-yellow-200 text-xs'>
+                      💡 Now your audio plays through BOTH your speakers AND
+                      BlackHole
+                    </p>
+                  </div>
+
+                  {/* Step 3 - THIS DASHBOARD */}
+                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-pink-500'>
+                    <p className='font-bold text-pink-300 mb-2'>
+                      STEP 3: Enable Audio on THIS Dashboard
+                    </p>
+                    <ol className='list-decimal list-inside space-y-2 text-xs ml-2'>
+                      <li>
+                        Look for the browser permission prompt (usually top-left
+                        or in URL bar)
+                      </li>
+                      <li>
+                        Click{' '}
+                        <span className='font-semibold text-yellow-300'>
+                          "Allow"
+                        </span>{' '}
+                        when asked for microphone access
+                      </li>
+                      <li>
+                        In the device selector, choose{' '}
+                        <span className='font-semibold text-green-300'>
+                          BlackHole 2ch
+                        </span>
+                      </li>
+                      <li>
+                        Play some music and verify this dashboard is capturing
+                        audio
+                      </li>
+                    </ol>
+                    <p className='mt-2 text-yellow-200 text-xs'>
+                      💡 Keep this dashboard tab visible/active while streaming
+                      - it's sending audio data to your overlay! Browsers
+                      heavily throttle hidden tabs.
+                    </p>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-orange-500'>
+                    <p className='font-bold text-orange-300 mb-2'>
+                      STEP 4: Add Overlay to OBS
+                    </p>
+                    <ol className='list-decimal list-inside space-y-2 text-xs ml-2'>
+                      <li>
+                        In OBS, add a{' '}
+                        <span className='font-semibold text-yellow-300'>
+                          Browser Source
+                        </span>
+                      </li>
+                      <li>Paste the overlay URL from above</li>
+                      <li>
+                        Set Width: <span className='font-semibold'>1920</span>,
+                        Height: <span className='font-semibold'>1080</span>
+                      </li>
+                      <li>Click OK - no special audio settings needed!</li>
+                    </ol>
+                    <p className='mt-2 text-yellow-200 text-xs'>
+                      💡 The overlay receives audio data from this dashboard via
+                      the internet
+                    </p>
+                  </div>
+
+                  <div className='bg-green-900/30 rounded-lg p-3 border border-green-500/50 text-center'>
+                    <p className='font-bold text-green-300 mb-1'>
+                      🎉 Done! The visualizer should now react to your music!
+                    </p>
+                    <p className='text-xs text-yellow-200 font-semibold'>
+                      ⚠️ Keep this dashboard tab visible/active while streaming
+                    </p>
+                  </div>
+
+                  <div className='bg-red-900/30 rounded-lg p-3 border border-red-500/50'>
+                    <p className='font-bold text-red-300 mb-2'>
+                      Troubleshooting
+                    </p>
+                    <ul className='text-xs space-y-1 text-gray-300'>
+                      <li>
+                        • Make sure music is playing and this dashboard is open
+                      </li>
+                      <li>
+                        • Check System Preferences → Security & Privacy →
+                        Microphone → Allow your browser
+                      </li>
+                      <li>
+                        • Refresh the microphone permission by clicking the 🔒
+                        or camera icon in your browser's URL bar
+                      </li>
+                      <li>
+                        • Make sure you selected BlackHole 2ch (not your Mac's
+                        built-in mic)
+                      </li>
+                      <li>
+                        • Verify the Multi-Output Device is set as your sound
+                        output in System Preferences
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </details>
             </div>
           )}
         </div>

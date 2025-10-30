@@ -83,6 +83,14 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('audio-data', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          // Broadcast to all sockets in the session EXCEPT the sender
+          socket.to(sessionId).emit('audio-data', data);
+        }
+      });
+
       socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
       });

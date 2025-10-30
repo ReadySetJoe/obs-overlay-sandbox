@@ -3,9 +3,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 export default function HomePage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [sessionId, setSessionId] = useState('');
 
   const generateSessionId = () => {
@@ -38,6 +40,26 @@ export default function HomePage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white flex items-center justify-center p-4'>
       <div className='max-w-2xl w-full'>
+        {/* User Info */}
+        {session && (
+          <div className='absolute top-4 right-4 flex items-center gap-3 bg-gray-800/90 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-700'>
+            {session.user?.image && (
+              <img
+                src={session.user.image}
+                alt='Profile'
+                className='w-8 h-8 rounded-full'
+              />
+            )}
+            <span className='text-sm font-semibold'>{session.user?.name}</span>
+            <button
+              onClick={() => signOut()}
+              className='text-xs text-red-400 hover:text-red-300 transition'
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
+
         {/* Hero Section */}
         <div className='text-center mb-12'>
           <div className='mb-6'>
@@ -64,9 +86,39 @@ export default function HomePage() {
             Audio-reactive stream overlays that vibe with your music
           </p>
           <p className='text-sm text-gray-400'>
-            Create a session, share with friends, and let the beats do the talking
+            Create a session, share with friends, and let the beats do the
+            talking
           </p>
         </div>
+
+        {/* Twitch Login CTA */}
+        {!session && (
+          <div className='mb-8 bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/30'>
+            <div className='flex items-center justify-between flex-col md:flex-row gap-4'>
+              <div className='text-center md:text-left'>
+                <h3 className='text-lg font-bold mb-1'>
+                  Sign in to save your layouts
+                </h3>
+                <p className='text-sm text-gray-400'>
+                  Connect with Twitch to persist your settings across sessions
+                </p>
+              </div>
+              <button
+                onClick={() => signIn('twitch')}
+                className='bg-purple-600 hover:bg-purple-500 rounded-xl px-6 py-3 font-bold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2'
+              >
+                <svg
+                  className='w-5 h-5'
+                  fill='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path d='M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z' />
+                </svg>
+                Sign in with Twitch
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Action Cards */}
         <div className='grid md:grid-cols-2 gap-6 mb-8'>

@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSocket } from '@/hooks/useSocket';
-import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer';
 import ChatMessage from '@/components/overlay/ChatMessage';
 import ParticleSystem from '@/components/overlay/ParticleSystem';
 import WeatherEffect from '@/components/overlay/WeatherEffect';
@@ -21,18 +20,24 @@ export default function OverlayPage() {
   const router = useRouter();
   const { sessionId } = router.query;
   const { socket, isConnected } = useSocket(sessionId as string);
-  const {
-    audioLevel: liveAudioLevel,
-    frequencyData,
-    isListening,
-    startListening,
-    stopListening,
-  } = useAudioAnalyzer();
+
+  // Audio data received from dashboard via socket
+  const [liveAudioLevel, setLiveAudioLevel] = useState(0);
+  const [frequencyData, setFrequencyData] = useState({
+    bass: 0,
+    lowMid: 0,
+    mid: 0,
+    highMid: 0,
+    treble: 0,
+    overall: 0,
+    frequencies: new Uint8Array(256),
+  });
+  const [isReceivingAudio, setIsReceivingAudio] = useState(false);
+
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('none');
   const [nowPlaying, setNowPlaying] = useState<NowPlayingType | null>(null);
-  const [useAudioReactivity, setUseAudioReactivity] = useState(true);
   const [visualizerConfig, setVisualizerConfig] = useState({
     size: 1.0,
     x: 50,
@@ -44,13 +49,6 @@ export default function OverlayPage() {
     { id: 'chat', name: 'Chat', visible: true, zIndex: 5 },
     { id: 'nowplaying', name: 'Now Playing', visible: true, zIndex: 10 },
   ]);
-
-  // Auto-enable audio reactivity on mount
-  useEffect(() => {
-    if (useAudioReactivity && !isListening) {
-      startListening();
-    }
-  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -88,6 +86,20 @@ export default function OverlayPage() {
       }
     );
 
+    socket.on('audio-data', (data: any) => {
+      setLiveAudioLevel(data.audioLevel);
+      setFrequencyData({
+        bass: data.frequencyData.bass,
+        lowMid: data.frequencyData.lowMid,
+        mid: data.frequencyData.mid,
+        highMid: data.frequencyData.highMid,
+        treble: data.frequencyData.treble,
+        overall: data.frequencyData.overall,
+        frequencies: new Uint8Array(data.frequencyData.frequencies),
+      });
+      setIsReceivingAudio(true);
+    });
+
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
@@ -95,6 +107,7 @@ export default function OverlayPage() {
       socket.off('now-playing');
       socket.off('scene-toggle');
       socket.off('visualizer-config');
+      socket.off('audio-data');
     };
   }, [socket]);
 
@@ -130,40 +143,18 @@ export default function OverlayPage() {
         </div>
       )}
 
-      {/* Audio Reactivity Status */}
-      <div className='fixed top-4 left-4 z-50 flex items-center gap-2'>
-        {isListening ? (
-          <div className='bg-gray-800/90 backdrop-blur-sm text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-green-500/30'>
-            <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
-            <span className='text-xs font-semibold'>Audio Reactive</span>
-            <button
-              onClick={() => {
-                stopListening();
-                setUseAudioReactivity(false);
-              }}
-              className='ml-2 px-2 py-0.5 bg-red-600/80 hover:bg-red-600 rounded text-xs transition'
-            >
-              Disable
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => {
-              startListening();
-              setUseAudioReactivity(true);
-            }}
-            className='bg-gray-800/90 backdrop-blur-sm text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-700/90 transition border border-gray-600 text-xs font-semibold'
-          >
-            Enable Audio Reactive
-          </button>
-        )}
-      </div>
+      {/* Audio Status Indicator */}
+      {!isReceivingAudio && (
+        <div className='fixed top-4 left-4 bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-xs'>
+          ⚠️ Audio not detected - Open dashboard and enable microphone
+        </div>
+      )}
 
       {/* Particle System */}
       {getLayerVisible('particles') && (
         <ParticleSystem
           audioLevel={liveAudioLevel}
-          frequencyData={useAudioReactivity ? frequencyData : undefined}
+          frequencyData={frequencyData}
           colorScheme={colorScheme}
           size={visualizerConfig.size}
           x={visualizerConfig.x}
