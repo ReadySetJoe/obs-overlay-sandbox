@@ -31,7 +31,7 @@ export default function ParticleSystem({
   y = 50,
 }: ParticleSystemProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -75,7 +75,12 @@ export default function ParticleSystem({
           centerY,
           pulseSize
         );
-        gradient.addColorStop(0, `${colors[0]}${Math.floor(bass * 0.8).toString(16).padStart(2, '0')}`);
+        gradient.addColorStop(
+          0,
+          `${colors[0]}${Math.floor(bass * 0.8)
+            .toString(16)
+            .padStart(2, '0')}`
+        );
         gradient.addColorStop(0.5, `${colors[0]}20`);
         gradient.addColorStop(1, `${colors[0]}00`);
         ctx.fillStyle = gradient;
@@ -100,8 +105,10 @@ export default function ParticleSystem({
 
         // Color based on frequency range
         let barColor = colors[0];
-        if (i < numBars / 3) barColor = colors[0]; // Low frequencies
-        else if (i < (numBars * 2) / 3) barColor = colors[1]; // Mid frequencies
+        if (i < numBars / 3)
+          barColor = colors[0]; // Low frequencies
+        else if (i < (numBars * 2) / 3)
+          barColor = colors[1]; // Mid frequencies
         else barColor = colors[2]; // High frequencies
 
         // Draw bar

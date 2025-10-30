@@ -33,32 +33,54 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
     io.on('connection', socket => {
       console.log('Client connected:', socket.id);
 
+      // Handle joining a session room
+      socket.on('join-session', (sessionId: string) => {
+        console.log(`Socket ${socket.id} joining session: ${sessionId}`);
+        socket.join(sessionId);
+        socket.data.sessionId = sessionId;
+      });
+
+      // Emit events to the specific session room
       socket.on('chat-message', data => {
-        io.emit('chat-message', data);
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('chat-message', data);
+        }
       });
 
       socket.on('color-scheme-change', data => {
-        io.emit('color-scheme-change', data);
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('color-scheme-change', data);
+        }
       });
 
       socket.on('weather-change', data => {
-        io.emit('weather-change', data);
-      });
-
-      socket.on('audio-level', data => {
-        io.emit('audio-level', data);
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('weather-change', data);
+        }
       });
 
       socket.on('now-playing', data => {
-        io.emit('now-playing', data);
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('now-playing', data);
+        }
       });
 
       socket.on('scene-toggle', data => {
-        io.emit('scene-toggle', data);
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('scene-toggle', data);
+        }
       });
 
       socket.on('visualizer-config', data => {
-        io.emit('visualizer-config', data);
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('visualizer-config', data);
+        }
       });
 
       socket.on('disconnect', () => {
