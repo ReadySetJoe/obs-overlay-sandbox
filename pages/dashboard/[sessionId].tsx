@@ -164,10 +164,10 @@ export default function DashboardPage() {
           <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
             <div>
               <h1 className='text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2'>
-                Stream Overlay Control
+                Joe-verlay Control
               </h1>
               <p className='text-gray-400 text-sm md:text-base'>
-                Configure your live stream visualization in real-time
+                Configure your audio-reactive overlay in real-time
               </p>
             </div>
             <div className='flex items-center gap-3 bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-gray-700'>
@@ -189,14 +189,19 @@ export default function DashboardPage() {
             <div className='mt-6 bg-gradient-to-br from-purple-800/30 to-pink-800/30 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30'>
               <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
                 <div>
-                  <div className='text-xs text-gray-400 mb-1'>Session ID</div>
+                  <div className='text-xs text-gray-400 mb-1'>
+                    Your Joe-verlay Session
+                  </div>
                   <div className='text-lg font-bold text-purple-300'>
                     {sessionId}
+                  </div>
+                  <div className='text-xs text-gray-500 mt-1'>
+                    Share this ID with friends
                   </div>
                 </div>
                 <div className='flex-1'>
                   <div className='text-xs text-gray-400 mb-1'>
-                    Overlay URL for OBS
+                    OBS Browser Source URL
                   </div>
                   <div className='flex gap-2'>
                     <input
@@ -215,6 +220,9 @@ export default function DashboardPage() {
                     >
                       Copy
                     </button>
+                  </div>
+                  <div className='text-xs text-gray-500 mt-1'>
+                    Width: 1920 × Height: 1080 × FPS: 60
                   </div>
                 </div>
               </div>

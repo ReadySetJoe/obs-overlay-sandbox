@@ -57,14 +57,14 @@ export default function HomePage() {
               </svg>
             </div>
           </div>
-          <h1 className='text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent'>
-            Stream Overlay
+          <h1 className='text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent'>
+            Joe-verlay
           </h1>
           <p className='text-xl text-gray-300 mb-2'>
-            Audio-reactive visualizations for your streams
+            Audio-reactive stream overlays that vibe with your music
           </p>
           <p className='text-sm text-gray-400'>
-            Create your own session and share with friends
+            Create a session, share with friends, and let the beats do the talking
           </p>
         </div>
 
@@ -88,9 +88,9 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h2 className='text-2xl font-bold mb-2'>Create New</h2>
+              <h2 className='text-2xl font-bold mb-2'>Create Session</h2>
               <p className='text-gray-400 text-sm mb-6'>
-                Start a new session with a unique ID
+                Get your own Joe-verlay with a unique session ID
               </p>
             </div>
             <button
@@ -119,9 +119,9 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h2 className='text-2xl font-bold mb-2'>Join Existing</h2>
+              <h2 className='text-2xl font-bold mb-2'>Join Session</h2>
               <p className='text-gray-400 text-sm mb-6'>
-                Enter a session ID to join
+                Enter your friend's session ID to access their Joe-verlay
               </p>
             </div>
             <div className='space-y-3'>
@@ -146,23 +146,35 @@ export default function HomePage() {
 
         {/* Features */}
         <div className='bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30'>
-          <h3 className='text-lg font-bold mb-4 text-center'>Features</h3>
+          <h3 className='text-lg font-bold mb-4 text-center'>
+            What Makes Joe-verlay Special
+          </h3>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm'>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🎵</div>
-              <div>Audio Reactive</div>
+              <div>Real-time Audio</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Reacts to frequencies
+              </div>
             </div>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🎨</div>
-              <div>Color Schemes</div>
+              <div>Custom Themes</div>
+              <div className='text-xs text-gray-500 mt-1'>6 color schemes</div>
             </div>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>☁️</div>
-              <div>Weather Effects</div>
+              <div>Visual Effects</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Weather & particles
+              </div>
             </div>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🎧</div>
-              <div>Spotify Integration</div>
+              <div>Spotify Sync</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Now playing widget
+              </div>
             </div>
           </div>
         </div>
