@@ -35,8 +35,14 @@ export default async function handler(
       progress: response.body.progress_ms,
       duration: track.duration_ms,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching now playing:', error);
+
+    // Check if it's an authentication error
+    if (error.statusCode === 401 || error.body?.error?.status === 401) {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+
     res.status(500).json({ error: 'Failed to fetch now playing' });
   }
 }

@@ -21,7 +21,8 @@ export type ColorScheme =
   | 'chill'
   | 'energetic'
   | 'dark'
-  | 'neon';
+  | 'neon'
+  | 'custom';
 
 export type WeatherEffect = 'none' | 'rain' | 'snow' | 'particles' | 'confetti';
 

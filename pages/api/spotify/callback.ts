@@ -6,7 +6,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { code } = req.query;
+  const { code, state } = req.query;
 
   if (!code || typeof code !== 'string') {
     return res.status(400).json({ error: 'No code provided' });
@@ -16,10 +16,16 @@ export default async function handler(
     const data = await spotifyApi.authorizationCodeGrant(code);
     const { access_token, refresh_token, expires_in } = data.body;
 
-    // Store tokens (you'll want to use a proper session/database in production)
-    // For now, we'll redirect back to dashboard with tokens in query params
+    // Extract sessionId from state parameter
+    const sessionId = state && state !== 'no-session' ? state : '';
+
+    // Redirect back to dashboard with sessionId and tokens
+    const redirectPath = sessionId
+      ? `/dashboard/${sessionId}`
+      : '/dashboard';
+
     res.redirect(
-      `/dashboard?access_token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}`,
+      `${redirectPath}?access_token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}`,
     );
   } catch (error) {
     console.error('Error getting tokens:', error);

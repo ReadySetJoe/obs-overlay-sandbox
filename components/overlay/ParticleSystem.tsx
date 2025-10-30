@@ -8,6 +8,7 @@ interface ParticleSystemProps {
   audioLevel: number;
   frequencyData?: AudioFrequencyData;
   colorScheme: string;
+  customColors?: string[]; // Custom colors [bass, mid, treble]
   size?: number; // Scale factor (0.5 to 2.0)
   x?: number; // X position as percentage (0-100)
   y?: number; // Y position as percentage (0-100)
@@ -19,13 +20,15 @@ const schemeColors: Record<string, string[]> = {
   chill: ['#06b6d4', '#8b5cf6', '#ec4899'],
   energetic: ['#f59e0b', '#ef4444', '#ec4899'],
   dark: ['#6b7280', '#4b5563', '#374151'],
-  neon: ['#0ff', '#f0f', '#ff0'],
+  neon: ['#00ffff', '#ff00ff', '#ffff00'],
+  custom: ['#3b82f6', '#8b5cf6', '#ec4899'], // Will be overridden by custom colors
 };
 
 export default function ParticleSystem({
   audioLevel,
   frequencyData,
   colorScheme,
+  customColors,
   size = 1.0,
   x = 50,
   y = 50,
@@ -45,7 +48,10 @@ export default function ParticleSystem({
 
     const centerX = (canvas.width * x) / 100;
     const centerY = (canvas.height * y) / 100;
-    const colors = schemeColors[colorScheme] || schemeColors.default;
+    const colors =
+      colorScheme === 'custom' && customColors && customColors.length === 3
+        ? customColors
+        : schemeColors[colorScheme] || schemeColors.default;
 
     // Visual parameters scaled by size prop
     const numBars = 64;
@@ -65,8 +71,9 @@ export default function ParticleSystem({
       const frequencies = frequencyData?.frequencies || new Uint8Array(numBars);
 
       // 1. BASS PULSE - Radial glow effect
-      if (bass > 30) {
-        const pulseSize = (100 + bass * 3) * size;
+      const boostedBass = bass * 1.5; // Amplify bass for more visible pulse
+      if (boostedBass > 30) {
+        const pulseSize = (120 + boostedBass * 3.5) * size;
         const gradient = ctx.createRadialGradient(
           centerX,
           centerY,
@@ -77,11 +84,11 @@ export default function ParticleSystem({
         );
         gradient.addColorStop(
           0,
-          `${colors[0]}${Math.floor(bass * 0.8)
+          `${colors[0]}${Math.floor(Math.min(255, boostedBass * 1.2))
             .toString(16)
             .padStart(2, '0')}`
         );
-        gradient.addColorStop(0.5, `${colors[0]}20`);
+        gradient.addColorStop(0.5, `${colors[0]}30`);
         gradient.addColorStop(1, `${colors[0]}00`);
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -91,8 +98,20 @@ export default function ParticleSystem({
       const step = Math.floor(frequencies.length / numBars);
       for (let i = 0; i < numBars; i++) {
         const freqIndex = i * step;
-        const value =
+        let value =
           frequencies.length > 0 ? frequencies[freqIndex] / 255 : 0.3;
+
+        // Amplify bass and treble for more balanced/round visualization
+        if (i < numBars / 3) {
+          // Bass boost (first third)
+          value = Math.min(1, value * 1.8);
+        } else if (i > (numBars * 2) / 3) {
+          // Treble boost (last third)
+          value = Math.min(1, value * 2.2);
+        } else {
+          // Slight boost to mids
+          value = Math.min(1, value * 1.2);
+        }
 
         const angle = (Math.PI * 2 * i) / numBars - Math.PI / 2;
         const barHeight = minBarHeight + value * maxBarHeight;
@@ -144,8 +163,19 @@ export default function ParticleSystem({
       for (let i = 0; i <= wavePoints; i++) {
         const angle = (Math.PI * 2 * i) / wavePoints;
         const freqIndex = Math.floor((i / wavePoints) * frequencies.length);
-        const value =
+        let value =
           frequencies.length > 0 ? frequencies[freqIndex] / 255 : 0.3;
+
+        // Apply same frequency balancing as outer bars
+        const normalizedPos = i / wavePoints;
+        if (normalizedPos < 0.33) {
+          value = Math.min(1, value * 1.8); // Bass boost
+        } else if (normalizedPos > 0.66) {
+          value = Math.min(1, value * 2.2); // Treble boost
+        } else {
+          value = Math.min(1, value * 1.2); // Slight mid boost
+        }
+
         const r = waveRadius + value * 30 * size;
 
         const x = centerX + Math.cos(angle) * r;
@@ -176,7 +206,7 @@ export default function ParticleSystem({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [audioLevel, frequencyData, colorScheme, size, x, y]);
+  }, [audioLevel, frequencyData, colorScheme, customColors, size, x, y]);
 
   return (
     <canvas

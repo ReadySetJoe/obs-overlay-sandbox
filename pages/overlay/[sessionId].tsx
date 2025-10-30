@@ -36,6 +36,11 @@ export default function OverlayPage() {
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
+  const [customColors, setCustomColors] = useState<string[]>([
+    '#3b82f6',
+    '#8b5cf6',
+    '#ec4899',
+  ]);
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('none');
   const [nowPlaying, setNowPlaying] = useState<NowPlayingType | null>(null);
   const [visualizerConfig, setVisualizerConfig] = useState({
@@ -100,6 +105,10 @@ export default function OverlayPage() {
       setIsReceivingAudio(true);
     });
 
+    socket.on('custom-colors-change', (colors: string[]) => {
+      setCustomColors(colors);
+    });
+
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
@@ -108,6 +117,7 @@ export default function OverlayPage() {
       socket.off('scene-toggle');
       socket.off('visualizer-config');
       socket.off('audio-data');
+      socket.off('custom-colors-change');
     };
   }, [socket]);
 
@@ -156,6 +166,7 @@ export default function OverlayPage() {
           audioLevel={liveAudioLevel}
           frequencyData={frequencyData}
           colorScheme={colorScheme}
+          customColors={customColors}
           size={visualizerConfig.size}
           x={visualizerConfig.x}
           y={visualizerConfig.y}

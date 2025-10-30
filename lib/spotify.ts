@@ -12,6 +12,8 @@ export const spotifyApi = new SpotifyWebApi({
   redirectUri: process.env.SPOTIFY_REDIRECT_URI,
 });
 
-export function getAuthUrl() {
-  return spotifyApi.createAuthorizeURL(scopes, 'state');
+export function getAuthUrl(sessionId?: string) {
+  // Use sessionId as state to preserve it through OAuth flow
+  const state = sessionId || 'no-session';
+  return spotifyApi.createAuthorizeURL(scopes, state);
 }

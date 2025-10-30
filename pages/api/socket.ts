@@ -91,6 +91,13 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('custom-colors-change', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('custom-colors-change', data);
+        }
+      });
+
       socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
       });

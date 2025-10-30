@@ -55,6 +55,11 @@ export default function DashboardPage() {
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
+  const [customColors, setCustomColors] = useState<string[]>([
+    '#3b82f6',
+    '#8b5cf6',
+    '#ec4899',
+  ]); // [bass, mid, treble]
 
   // Handle Spotify callback tokens from URL
   useEffect(() => {
@@ -68,8 +73,11 @@ export default function DashboardPage() {
       // Store in localStorage for persistence
       localStorage.setItem('spotify_access_token', accessToken);
       localStorage.setItem('spotify_refresh_token', refreshToken);
-      // Clean URL
-      window.history.replaceState({}, '', '/dashboard');
+      // Clean URL - preserve sessionId
+      const cleanUrl = sessionId
+        ? `/dashboard/${sessionId}`
+        : window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
     } else {
       // Try to restore from localStorage
       const storedToken = localStorage.getItem('spotify_access_token');
@@ -79,7 +87,7 @@ export default function DashboardPage() {
         setSpotifyRefreshToken(storedRefresh);
       }
     }
-  }, []);
+  }, [sessionId]);
 
   // Load saved layout when user is authenticated
   useEffect(() => {
@@ -99,6 +107,9 @@ export default function DashboardPage() {
           setVisualizerY(layout.visualizerY);
           setColorScheme(layout.colorScheme);
           setWeatherEffect(layout.weatherEffect);
+          if (layout.customColors) {
+            setCustomColors(JSON.parse(layout.customColors));
+          }
           setLayers([
             {
               id: 'particles',
@@ -146,6 +157,7 @@ export default function DashboardPage() {
           visualizerY,
           colorScheme,
           weatherEffect,
+          customColors: JSON.stringify(customColors),
           layers,
         }),
       });
@@ -188,6 +200,7 @@ export default function DashboardPage() {
     visualizerY,
     colorScheme,
     weatherEffect,
+    customColors,
     layers,
     saveLayout,
   ]);
@@ -201,6 +214,32 @@ export default function DashboardPage() {
         const response = await fetch(
           `/api/spotify/now-playing?access_token=${spotifyToken}`
         );
+
+        // If token expired (401), try to refresh
+        if (response.status === 401 && spotifyRefreshToken) {
+          console.log('Spotify token expired, refreshing...');
+          try {
+            const refreshResponse = await fetch(
+              `/api/spotify/refresh?refresh_token=${spotifyRefreshToken}`
+            );
+            const refreshData = await refreshResponse.json();
+
+            if (refreshResponse.ok) {
+              // Update tokens
+              setSpotifyToken(refreshData.access_token);
+              localStorage.setItem(
+                'spotify_access_token',
+                refreshData.access_token
+              );
+              console.log('Spotify token refreshed successfully');
+              return; // Will retry on next poll with new token
+            }
+          } catch (refreshError) {
+            console.error('Error refreshing Spotify token:', refreshError);
+            return;
+          }
+        }
+
         const data = await response.json();
 
         if (data.isPlaying) {
@@ -238,12 +277,25 @@ export default function DashboardPage() {
     const interval = setInterval(pollSpotify, 5000);
 
     return () => clearInterval(interval);
-  }, [spotifyToken, socket, isConnected]);
+  }, [spotifyToken, socket, isConnected, spotifyRefreshToken]);
 
   const changeColorScheme = (scheme: ColorScheme) => {
     if (!socket) return;
     setColorScheme(scheme);
     socket.emit('color-scheme-change', scheme);
+    // Also emit custom colors if switching to custom scheme
+    if (scheme === 'custom') {
+      socket.emit('custom-colors-change', customColors);
+    }
+  };
+
+  const updateCustomColors = (colors: string[]) => {
+    if (!socket) return;
+    setCustomColors(colors);
+    // Only emit if we're currently on custom scheme
+    if (colorScheme === 'custom') {
+      socket.emit('custom-colors-change', colors);
+    }
   };
 
   const changeWeather = (effect: WeatherEffect) => {
@@ -785,18 +837,123 @@ export default function DashboardPage() {
                     'energetic',
                     'dark',
                     'neon',
+                    'custom',
                   ] as ColorScheme[]
                 ).map(scheme => (
                   <button
                     key={scheme}
                     onClick={() => changeColorScheme(scheme)}
-                    className='group relative bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 rounded-xl px-4 py-4 font-semibold capitalize transition-all duration-200 border border-gray-600 hover:border-gray-500 shadow-lg hover:shadow-xl overflow-hidden'
+                    className={`group relative bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 rounded-xl px-4 py-4 font-semibold capitalize transition-all duration-200 border shadow-lg hover:shadow-xl overflow-hidden ${
+                      colorScheme === scheme
+                        ? 'border-purple-500 ring-2 ring-purple-500/50'
+                        : 'border-gray-600 hover:border-gray-500'
+                    }`}
                   >
                     <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
                     {scheme}
                   </button>
                 ))}
               </div>
+
+              {/* Custom Color Pickers */}
+              {colorScheme === 'custom' && (
+                <div className='mt-4 bg-gray-700/30 rounded-xl p-4 border border-gray-600'>
+                  <p className='text-sm font-semibold text-gray-300 mb-3'>
+                    Custom Colors
+                  </p>
+                  <div className='space-y-3'>
+                    {/* Bass Color */}
+                    <div className='flex items-center gap-3'>
+                      <label className='text-xs text-gray-400 w-16'>Bass</label>
+                      <input
+                        type='color'
+                        value={customColors[0]}
+                        onChange={e =>
+                          updateCustomColors([
+                            e.target.value,
+                            customColors[1],
+                            customColors[2],
+                          ])
+                        }
+                        className='w-12 h-8 rounded border border-gray-600 cursor-pointer'
+                      />
+                      <input
+                        type='text'
+                        value={customColors[0]}
+                        onChange={e =>
+                          updateCustomColors([
+                            e.target.value,
+                            customColors[1],
+                            customColors[2],
+                          ])
+                        }
+                        className='flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-gray-300 focus:outline-none focus:border-purple-500'
+                        placeholder='#3b82f6'
+                      />
+                    </div>
+
+                    {/* Mid Color */}
+                    <div className='flex items-center gap-3'>
+                      <label className='text-xs text-gray-400 w-16'>Mid</label>
+                      <input
+                        type='color'
+                        value={customColors[1]}
+                        onChange={e =>
+                          updateCustomColors([
+                            customColors[0],
+                            e.target.value,
+                            customColors[2],
+                          ])
+                        }
+                        className='w-12 h-8 rounded border border-gray-600 cursor-pointer'
+                      />
+                      <input
+                        type='text'
+                        value={customColors[1]}
+                        onChange={e =>
+                          updateCustomColors([
+                            customColors[0],
+                            e.target.value,
+                            customColors[2],
+                          ])
+                        }
+                        className='flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-gray-300 focus:outline-none focus:border-purple-500'
+                        placeholder='#8b5cf6'
+                      />
+                    </div>
+
+                    {/* Treble Color */}
+                    <div className='flex items-center gap-3'>
+                      <label className='text-xs text-gray-400 w-16'>Treble</label>
+                      <input
+                        type='color'
+                        value={customColors[2]}
+                        onChange={e =>
+                          updateCustomColors([
+                            customColors[0],
+                            customColors[1],
+                            e.target.value,
+                          ])
+                        }
+                        className='w-12 h-8 rounded border border-gray-600 cursor-pointer'
+                      />
+                      <input
+                        type='text'
+                        value={customColors[2]}
+                        onChange={e =>
+                          updateCustomColors([
+                            customColors[0],
+                            customColors[1],
+                            e.target.value,
+                          ])
+                        }
+                        className='flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-gray-300 focus:outline-none focus:border-purple-500'
+                        placeholder='#ec4899'
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Weather Effects */}
@@ -902,7 +1059,7 @@ export default function DashboardPage() {
                     listening to
                   </div>
                   <a
-                    href='/api/spotify/login'
+                    href={`/api/spotify/login?sessionId=${sessionId}`}
                     className='inline-block bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 rounded-xl px-8 py-3 font-bold transition-all duration-200 shadow-lg hover:shadow-xl'
                   >
                     Connect Spotify

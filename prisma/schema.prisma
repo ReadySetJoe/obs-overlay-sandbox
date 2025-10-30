@@ -72,6 +72,7 @@ model Layout {
   // Overlay settings
   colorScheme    String   @default("default")
   weatherEffect  String   @default("none")
+  customColors   String?  // JSON array of custom colors [bass, mid, treble]
 
   // Scene layers visibility
   particlesVisible   Boolean @default(true)
