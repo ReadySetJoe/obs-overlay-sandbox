@@ -1,25 +1,23 @@
 // pages/dashboard/[sessionId].tsx
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useSocket } from '@/hooks/useSocket';
-import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer';
-import { ColorScheme, WeatherEffect, NowPlaying } from '@/types/overlay';
+import {
+  ColorScheme,
+  WeatherEffect,
+  NowPlaying,
+  CountdownTimer,
+  EmoteWallConfig,
+} from '@/types/overlay';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { sessionId } = router.query;
   const { data: session } = useSession();
   const { socket, isConnected } = useSocket(sessionId as string);
-  const {
-    audioLevel,
-    frequencyData,
-    isListening,
-    startListening,
-    stopListening,
-  } = useAudioAnalyzer();
 
   // Save status
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
@@ -41,25 +39,26 @@ export default function DashboardPage() {
 
   // Scene Layers
   const [layers, setLayers] = useState([
-    { id: 'particles', name: 'Particles', visible: true },
     { id: 'weather', name: 'Weather', visible: true },
     { id: 'chat', name: 'Chat', visible: true },
     { id: 'nowplaying', name: 'Now Playing', visible: true },
+    { id: 'countdown', name: 'Countdown', visible: true },
   ]);
-
-  // Visualizer Configuration
-  const [visualizerSize, setVisualizerSize] = useState(1.0);
-  const [visualizerX, setVisualizerX] = useState(50);
-  const [visualizerY, setVisualizerY] = useState(50);
 
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
-  const [customColors, setCustomColors] = useState<string[]>([
-    '#3b82f6',
-    '#8b5cf6',
-    '#ec4899',
-  ]); // [bass, mid, treble]
+
+  // Countdown timers
+  const [timers, setTimers] = useState<CountdownTimer[]>([]);
+  const [showTimerForm, setShowTimerForm] = useState(false);
+  const [newTimerTitle, setNewTimerTitle] = useState('');
+  const [newTimerDescription, setNewTimerDescription] = useState('');
+  const [newTimerDate, setNewTimerDate] = useState('');
+
+  // Emote wall
+  const [emoteInput, setEmoteInput] = useState('🎉 🎊 ✨ 🌟 💫');
+  const [emoteIntensity, setEmoteIntensity] = useState<'light' | 'medium' | 'heavy'>('medium');
 
   // Handle Spotify callback tokens from URL
   useEffect(() => {
@@ -102,20 +101,9 @@ export default function DashboardPage() {
           const { layout } = await response.json();
 
           // Restore settings from saved layout
-          setVisualizerSize(layout.visualizerSize);
-          setVisualizerX(layout.visualizerX);
-          setVisualizerY(layout.visualizerY);
           setColorScheme(layout.colorScheme);
           setWeatherEffect(layout.weatherEffect);
-          if (layout.customColors) {
-            setCustomColors(JSON.parse(layout.customColors));
-          }
           setLayers([
-            {
-              id: 'particles',
-              name: 'Particles',
-              visible: layout.particlesVisible,
-            },
             {
               id: 'weather',
               name: 'Weather',
@@ -126,6 +114,11 @@ export default function DashboardPage() {
               id: 'nowplaying',
               name: 'Now Playing',
               visible: layout.nowPlayingVisible,
+            },
+            {
+              id: 'countdown',
+              name: 'Countdown',
+              visible: layout.countdownVisible,
             },
           ]);
 
@@ -140,6 +133,25 @@ export default function DashboardPage() {
     loadLayout();
   }, [session, sessionId]);
 
+  // Load timers when session is ready
+  useEffect(() => {
+    if (!session || !sessionId) return;
+
+    const loadTimers = async () => {
+      try {
+        const response = await fetch(`/api/timers/list?sessionId=${sessionId}`);
+        if (response.ok) {
+          const { timers } = await response.json();
+          setTimers(timers);
+        }
+      } catch (error) {
+        console.error('Error loading timers:', error);
+      }
+    };
+
+    loadTimers();
+  }, [session, sessionId]);
+
   // Auto-save layout when settings change
   const saveLayout = useCallback(async () => {
     if (!session || !sessionId) return;
@@ -152,12 +164,8 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId,
-          visualizerSize,
-          visualizerX,
-          visualizerY,
           colorScheme,
           weatherEffect,
-          customColors: JSON.stringify(customColors),
           layers,
         }),
       });
@@ -172,16 +180,7 @@ export default function DashboardPage() {
       console.error('Error saving layout:', error);
       setSaveStatus('unsaved');
     }
-  }, [
-    session,
-    sessionId,
-    visualizerSize,
-    visualizerX,
-    visualizerY,
-    colorScheme,
-    weatherEffect,
-    layers,
-  ]);
+  }, [session, sessionId, colorScheme, weatherEffect, layers]);
 
   // Debounced auto-save
   useEffect(() => {
@@ -193,17 +192,7 @@ export default function DashboardPage() {
     }, 1000); // Save 1 second after last change
 
     return () => clearTimeout(timer);
-  }, [
-    session,
-    visualizerSize,
-    visualizerX,
-    visualizerY,
-    colorScheme,
-    weatherEffect,
-    customColors,
-    layers,
-    saveLayout,
-  ]);
+  }, [session, colorScheme, weatherEffect, layers, saveLayout]);
 
   // Poll Spotify API for now playing
   useEffect(() => {
@@ -283,19 +272,6 @@ export default function DashboardPage() {
     if (!socket) return;
     setColorScheme(scheme);
     socket.emit('color-scheme-change', scheme);
-    // Also emit custom colors if switching to custom scheme
-    if (scheme === 'custom') {
-      socket.emit('custom-colors-change', customColors);
-    }
-  };
-
-  const updateCustomColors = (colors: string[]) => {
-    if (!socket) return;
-    setCustomColors(colors);
-    // Only emit if we're currently on custom scheme
-    if (colorScheme === 'custom') {
-      socket.emit('custom-colors-change', colors);
-    }
   };
 
   const changeWeather = (effect: WeatherEffect) => {
@@ -331,56 +307,89 @@ export default function DashboardPage() {
     socket.emit('scene-toggle', { layerId, visible: newVisible });
   };
 
-  // Emit visualizer config changes
+  // Emit timers to overlay when they change
   useEffect(() => {
     if (!socket || !isConnected) return;
-    socket.emit('visualizer-config', {
-      size: visualizerSize,
-      x: visualizerX,
-      y: visualizerY,
-    });
-  }, [socket, isConnected, visualizerSize, visualizerX, visualizerY]);
+    socket.emit('countdown-timers', timers);
+  }, [socket, isConnected, timers]);
 
-  // Auto-start audio listening
-  useEffect(() => {
-    if (!isListening) {
-      startListening();
-    }
-  }, []);
+  const createTimer = async () => {
+    if (!session || !sessionId || !newTimerTitle || !newTimerDate) return;
 
-  // Store latest audio data in refs so the broadcast loop can access current values
-  const audioLevelRef = useRef(audioLevel);
-  const frequencyDataRef = useRef(frequencyData);
-
-  useEffect(() => {
-    audioLevelRef.current = audioLevel;
-    frequencyDataRef.current = frequencyData;
-  }, [audioLevel, frequencyData]);
-
-  // Broadcast audio data to overlay via socket
-  useEffect(() => {
-    if (!socket || !isConnected || !isListening) return;
-
-    // Use setInterval instead of requestAnimationFrame
-    // setInterval is less throttled in background tabs
-    const interval = setInterval(() => {
-      socket.emit('audio-data', {
-        audioLevel: audioLevelRef.current,
-        frequencyData: {
-          bass: frequencyDataRef.current.bass,
-          lowMid: frequencyDataRef.current.lowMid,
-          mid: frequencyDataRef.current.mid,
-          highMid: frequencyDataRef.current.highMid,
-          treble: frequencyDataRef.current.treble,
-          overall: frequencyDataRef.current.overall,
-          // Convert Uint8Array to regular array for transmission
-          frequencies: Array.from(frequencyDataRef.current.frequencies),
-        },
+    try {
+      const response = await fetch('/api/timers/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          title: newTimerTitle,
+          description: newTimerDescription,
+          targetDate: new Date(newTimerDate).toISOString(),
+        }),
       });
-    }, 16); // ~60fps (16ms)
 
-    return () => clearInterval(interval);
-  }, [socket, isConnected, isListening]);
+      if (response.ok) {
+        const { timer } = await response.json();
+        setTimers(prev => [...prev, timer]);
+        setNewTimerTitle('');
+        setNewTimerDescription('');
+        setNewTimerDate('');
+        setShowTimerForm(false);
+      }
+    } catch (error) {
+      console.error('Error creating timer:', error);
+    }
+  };
+
+  const deleteTimer = async (timerId: string) => {
+    if (!session) return;
+
+    try {
+      const response = await fetch(`/api/timers/${timerId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setTimers(prev => prev.filter(t => t.id !== timerId));
+      }
+    } catch (error) {
+      console.error('Error deleting timer:', error);
+    }
+  };
+
+  const toggleTimer = async (timerId: string, isActive: boolean) => {
+    if (!session) return;
+
+    try {
+      const response = await fetch(`/api/timers/${timerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive }),
+      });
+
+      if (response.ok) {
+        const { timer } = await response.json();
+        setTimers(prev =>
+          prev.map(t => (t.id === timerId ? timer : t))
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling timer:', error);
+    }
+  };
+
+  const triggerEmoteWall = () => {
+    if (!socket || !isConnected) return;
+
+    const emotes = emoteInput.split(/\s+/).filter(e => e.trim());
+    const config: EmoteWallConfig = {
+      emotes,
+      duration: 10000, // 10 seconds
+      intensity: emoteIntensity,
+    };
+
+    socket.emit('emote-wall', config);
+  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8'>
@@ -393,26 +402,10 @@ export default function DashboardPage() {
                 Joe-verlay Control
               </h1>
               <p className='text-gray-400 text-sm md:text-base'>
-                Configure your audio-reactive overlay in real-time
+                Configure your stream overlay in real-time
               </p>
             </div>
             <div className='flex items-center gap-3'>
-              {/* Audio Broadcasting Status */}
-              {isListening && (
-                <div className='bg-purple-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-purple-700'>
-                  <div className='flex items-center gap-2'>
-                    <div className='flex items-center gap-1'>
-                      <div className='w-1 h-3 bg-purple-400 rounded animate-pulse' />
-                      <div className='w-1 h-4 bg-purple-400 rounded animate-pulse delay-75' />
-                      <div className='w-1 h-2 bg-purple-400 rounded animate-pulse delay-150' />
-                    </div>
-                    <span className='text-sm font-semibold text-purple-300'>
-                      Broadcasting
-                    </span>
-                  </div>
-                </div>
-              )}
-
               {/* Save Status */}
               {session && (
                 <div className='bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-gray-700'>
@@ -513,300 +506,13 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-
-              {/* OBS Audio Setup Instructions */}
-              <details className='mt-4 bg-blue-900/20 rounded-xl p-4 border border-blue-500/30'>
-                <summary className='cursor-pointer text-sm font-semibold text-blue-300 flex items-center gap-2'>
-                  <svg
-                    className='w-4 h-4'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                    />
-                  </svg>
-                  🎧 Setup Audio for Visualizer (CLICK ME!)
-                </summary>
-                <div className='mt-4 space-y-4 text-sm text-gray-200'>
-                  <div className='bg-purple-900/30 rounded-lg p-3 border border-purple-500/50 mb-4'>
-                    <p className='text-sm text-purple-200'>
-                      <strong>How it works:</strong> The{' '}
-                      <span className='text-yellow-300'>dashboard</span>{' '}
-                      captures your audio and sends it to the{' '}
-                      <span className='text-green-300'>overlay</span> in
-                      real-time.
-                    </p>
-                    <p className='text-xs text-yellow-300 mt-2 font-semibold'>
-                      ⚠️ Keep this dashboard tab visible/active while streaming
-                      - browsers throttle background tabs!
-                    </p>
-                  </div>
-
-                  {/* Step 1 */}
-                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-green-500'>
-                    <p className='font-bold text-green-300 mb-2'>
-                      STEP 1: Install BlackHole (Mac only)
-                    </p>
-                    <ol className='list-decimal list-inside space-y-1 text-xs ml-2'>
-                      <li>
-                        Download{' '}
-                        <a
-                          href='https://existential.audio/blackhole/'
-                          target='_blank'
-                          className='text-blue-400 hover:underline font-semibold'
-                        >
-                          BlackHole 2ch
-                        </a>
-                      </li>
-                      <li>Install it (standard Mac installer)</li>
-                      <li>Restart your Mac if prompted</li>
-                    </ol>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-blue-500'>
-                    <p className='font-bold text-blue-300 mb-2'>
-                      STEP 2: Setup Audio MIDI
-                    </p>
-                    <ol className='list-decimal list-inside space-y-2 text-xs ml-2'>
-                      <li>
-                        Open{' '}
-                        <span className='font-semibold text-yellow-300'>
-                          Audio MIDI Setup
-                        </span>{' '}
-                        (Cmd+Space, type "Audio MIDI")
-                      </li>
-                      <li>
-                        Click the <span className='font-semibold'>+</span>{' '}
-                        button at bottom left
-                      </li>
-                      <li>
-                        Select{' '}
-                        <span className='font-semibold text-yellow-300'>
-                          "Create Multi-Output Device"
-                        </span>
-                      </li>
-                      <li>
-                        Check BOTH boxes:
-                        <ul className='list-disc list-inside ml-4 mt-1'>
-                          <li>✅ Your normal speakers/headphones</li>
-                          <li>✅ BlackHole 2ch</li>
-                        </ul>
-                      </li>
-                      <li>
-                        Right-click the Multi-Output Device →{' '}
-                        <span className='font-semibold text-yellow-300'>
-                          "Use This Device For Sound Output"
-                        </span>
-                      </li>
-                    </ol>
-                    <p className='mt-2 text-yellow-200 text-xs'>
-                      💡 Now your audio plays through BOTH your speakers AND
-                      BlackHole
-                    </p>
-                  </div>
-
-                  {/* Step 3 - THIS DASHBOARD */}
-                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-pink-500'>
-                    <p className='font-bold text-pink-300 mb-2'>
-                      STEP 3: Enable Audio on THIS Dashboard
-                    </p>
-                    <ol className='list-decimal list-inside space-y-2 text-xs ml-2'>
-                      <li>
-                        Look for the browser permission prompt (usually top-left
-                        or in URL bar)
-                      </li>
-                      <li>
-                        Click{' '}
-                        <span className='font-semibold text-yellow-300'>
-                          "Allow"
-                        </span>{' '}
-                        when asked for microphone access
-                      </li>
-                      <li>
-                        In the device selector, choose{' '}
-                        <span className='font-semibold text-green-300'>
-                          BlackHole 2ch
-                        </span>
-                      </li>
-                      <li>
-                        Play some music and verify this dashboard is capturing
-                        audio
-                      </li>
-                    </ol>
-                    <p className='mt-2 text-yellow-200 text-xs'>
-                      💡 Keep this dashboard tab visible/active while streaming
-                      - it's sending audio data to your overlay! Browsers
-                      heavily throttle hidden tabs.
-                    </p>
-                  </div>
-
-                  {/* Step 4 */}
-                  <div className='bg-gray-800/70 rounded-lg p-4 border-l-4 border-orange-500'>
-                    <p className='font-bold text-orange-300 mb-2'>
-                      STEP 4: Add Overlay to OBS
-                    </p>
-                    <ol className='list-decimal list-inside space-y-2 text-xs ml-2'>
-                      <li>
-                        In OBS, add a{' '}
-                        <span className='font-semibold text-yellow-300'>
-                          Browser Source
-                        </span>
-                      </li>
-                      <li>Paste the overlay URL from above</li>
-                      <li>
-                        Set Width: <span className='font-semibold'>1920</span>,
-                        Height: <span className='font-semibold'>1080</span>
-                      </li>
-                      <li>Click OK - no special audio settings needed!</li>
-                    </ol>
-                    <p className='mt-2 text-yellow-200 text-xs'>
-                      💡 The overlay receives audio data from this dashboard via
-                      the internet
-                    </p>
-                  </div>
-
-                  <div className='bg-green-900/30 rounded-lg p-3 border border-green-500/50 text-center'>
-                    <p className='font-bold text-green-300 mb-1'>
-                      🎉 Done! The visualizer should now react to your music!
-                    </p>
-                    <p className='text-xs text-yellow-200 font-semibold'>
-                      ⚠️ Keep this dashboard tab visible/active while streaming
-                    </p>
-                  </div>
-
-                  <div className='bg-red-900/30 rounded-lg p-3 border border-red-500/50'>
-                    <p className='font-bold text-red-300 mb-2'>
-                      Troubleshooting
-                    </p>
-                    <ul className='text-xs space-y-1 text-gray-300'>
-                      <li>
-                        • Make sure music is playing and this dashboard is open
-                      </li>
-                      <li>
-                        • Check System Preferences → Security & Privacy →
-                        Microphone → Allow your browser
-                      </li>
-                      <li>
-                        • Refresh the microphone permission by clicking the 🔒
-                        or camera icon in your browser's URL bar
-                      </li>
-                      <li>
-                        • Make sure you selected BlackHole 2ch (not your Mac's
-                        built-in mic)
-                      </li>
-                      <li>
-                        • Verify the Multi-Output Device is set as your sound
-                        output in System Preferences
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </details>
             </div>
           )}
         </div>
 
         {/* Main Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-          {/* Left Column - Visualizer Controls */}
-          <div className='lg:col-span-1 space-y-6'>
-            {/* Visualizer Configuration */}
-            <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
-              <div className='flex items-center gap-3 mb-6'>
-                <div className='w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center'>
-                  <svg
-                    className='w-6 h-6'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'
-                    />
-                  </svg>
-                </div>
-                <h2 className='text-xl font-bold'>Visualizer</h2>
-              </div>
-              <div className='space-y-5'>
-                <div>
-                  <div className='flex justify-between items-center mb-2'>
-                    <label className='text-sm font-medium text-gray-300'>
-                      Size
-                    </label>
-                    <span className='text-sm font-bold text-purple-400'>
-                      {visualizerSize.toFixed(1)}x
-                    </span>
-                  </div>
-                  <input
-                    type='range'
-                    min='0.3'
-                    max='2.0'
-                    step='0.1'
-                    value={visualizerSize}
-                    onChange={e => setVisualizerSize(Number(e.target.value))}
-                    className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500'
-                  />
-                </div>
-                <div>
-                  <div className='flex justify-between items-center mb-2'>
-                    <label className='text-sm font-medium text-gray-300'>
-                      Horizontal
-                    </label>
-                    <span className='text-sm font-bold text-blue-400'>
-                      {visualizerX}%
-                    </span>
-                  </div>
-                  <input
-                    type='range'
-                    min='0'
-                    max='100'
-                    value={visualizerX}
-                    onChange={e => setVisualizerX(Number(e.target.value))}
-                    className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500'
-                  />
-                </div>
-                <div>
-                  <div className='flex justify-between items-center mb-2'>
-                    <label className='text-sm font-medium text-gray-300'>
-                      Vertical
-                    </label>
-                    <span className='text-sm font-bold text-pink-400'>
-                      {visualizerY}%
-                    </span>
-                  </div>
-                  <input
-                    type='range'
-                    min='0'
-                    max='100'
-                    value={visualizerY}
-                    onChange={e => setVisualizerY(Number(e.target.value))}
-                    className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-pink-500'
-                  />
-                </div>
-                <button
-                  onClick={() => {
-                    setVisualizerSize(1.0);
-                    setVisualizerX(50);
-                    setVisualizerY(50);
-                  }}
-                  className='w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 rounded-xl px-4 py-3 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-gray-600'
-                >
-                  Reset Position
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Middle Column - Color & Effects */}
+          {/* Left Column - Color & Effects */}
           <div className='lg:col-span-1 space-y-6'>
             {/* Color Schemes */}
             <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
@@ -830,15 +536,7 @@ export default function DashboardPage() {
               </div>
               <div className='grid grid-cols-2 gap-3'>
                 {(
-                  [
-                    'default',
-                    'gaming',
-                    'chill',
-                    'energetic',
-                    'dark',
-                    'neon',
-                    'custom',
-                  ] as ColorScheme[]
+                  ['default', 'gaming', 'chill', 'energetic', 'dark', 'neon'] as ColorScheme[]
                 ).map(scheme => (
                   <button
                     key={scheme}
@@ -854,106 +552,6 @@ export default function DashboardPage() {
                   </button>
                 ))}
               </div>
-
-              {/* Custom Color Pickers */}
-              {colorScheme === 'custom' && (
-                <div className='mt-4 bg-gray-700/30 rounded-xl p-4 border border-gray-600'>
-                  <p className='text-sm font-semibold text-gray-300 mb-3'>
-                    Custom Colors
-                  </p>
-                  <div className='space-y-3'>
-                    {/* Bass Color */}
-                    <div className='flex items-center gap-3'>
-                      <label className='text-xs text-gray-400 w-16'>Bass</label>
-                      <input
-                        type='color'
-                        value={customColors[0]}
-                        onChange={e =>
-                          updateCustomColors([
-                            e.target.value,
-                            customColors[1],
-                            customColors[2],
-                          ])
-                        }
-                        className='w-12 h-8 rounded border border-gray-600 cursor-pointer'
-                      />
-                      <input
-                        type='text'
-                        value={customColors[0]}
-                        onChange={e =>
-                          updateCustomColors([
-                            e.target.value,
-                            customColors[1],
-                            customColors[2],
-                          ])
-                        }
-                        className='flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-gray-300 focus:outline-none focus:border-purple-500'
-                        placeholder='#3b82f6'
-                      />
-                    </div>
-
-                    {/* Mid Color */}
-                    <div className='flex items-center gap-3'>
-                      <label className='text-xs text-gray-400 w-16'>Mid</label>
-                      <input
-                        type='color'
-                        value={customColors[1]}
-                        onChange={e =>
-                          updateCustomColors([
-                            customColors[0],
-                            e.target.value,
-                            customColors[2],
-                          ])
-                        }
-                        className='w-12 h-8 rounded border border-gray-600 cursor-pointer'
-                      />
-                      <input
-                        type='text'
-                        value={customColors[1]}
-                        onChange={e =>
-                          updateCustomColors([
-                            customColors[0],
-                            e.target.value,
-                            customColors[2],
-                          ])
-                        }
-                        className='flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-gray-300 focus:outline-none focus:border-purple-500'
-                        placeholder='#8b5cf6'
-                      />
-                    </div>
-
-                    {/* Treble Color */}
-                    <div className='flex items-center gap-3'>
-                      <label className='text-xs text-gray-400 w-16'>Treble</label>
-                      <input
-                        type='color'
-                        value={customColors[2]}
-                        onChange={e =>
-                          updateCustomColors([
-                            customColors[0],
-                            customColors[1],
-                            e.target.value,
-                          ])
-                        }
-                        className='w-12 h-8 rounded border border-gray-600 cursor-pointer'
-                      />
-                      <input
-                        type='text'
-                        value={customColors[2]}
-                        onChange={e =>
-                          updateCustomColors([
-                            customColors[0],
-                            customColors[1],
-                            e.target.value,
-                          ])
-                        }
-                        className='flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-gray-300 focus:outline-none focus:border-purple-500'
-                        placeholder='#ec4899'
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Weather Effects */}
@@ -1031,6 +629,237 @@ export default function DashboardPage() {
                     </div>
                   </button>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Column - Timers & Fun Stuff */}
+          <div className='lg:col-span-1 space-y-6'>
+            {/* Countdown Timers */}
+            <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+              <div className='flex items-center justify-between mb-6'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center'>
+                    <svg
+                      className='w-6 h-6'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+                      />
+                    </svg>
+                  </div>
+                  <h2 className='text-xl font-bold'>Countdown Timers</h2>
+                </div>
+                {session && (
+                  <button
+                    onClick={() => setShowTimerForm(!showTimerForm)}
+                    className='bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
+                  >
+                    + Add Timer
+                  </button>
+                )}
+              </div>
+
+              {!session ? (
+                <div className='text-center py-4 text-gray-400 text-sm'>
+                  Sign in with Twitch to create countdown timers
+                </div>
+              ) : (
+                <>
+                  {/* Timer Form */}
+                  {showTimerForm && (
+                    <div className='mb-6 bg-gray-700/30 rounded-xl p-4 border border-gray-600 space-y-3'>
+                      <div>
+                        <label className='block text-xs text-gray-400 mb-1'>
+                          Event Title
+                        </label>
+                        <input
+                          type='text'
+                          value={newTimerTitle}
+                          onChange={e => setNewTimerTitle(e.target.value)}
+                          className='w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-yellow-500 focus:outline-none'
+                          placeholder='Stream starts, Tournament begins...'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-xs text-gray-400 mb-1'>
+                          Description (optional)
+                        </label>
+                        <input
+                          type='text'
+                          value={newTimerDescription}
+                          onChange={e => setNewTimerDescription(e.target.value)}
+                          className='w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-yellow-500 focus:outline-none'
+                          placeholder='Get ready!'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-xs text-gray-400 mb-1'>
+                          Target Date & Time
+                        </label>
+                        <input
+                          type='datetime-local'
+                          value={newTimerDate}
+                          onChange={e => setNewTimerDate(e.target.value)}
+                          className='w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-yellow-500 focus:outline-none'
+                        />
+                      </div>
+                      <div className='flex gap-2'>
+                        <button
+                          onClick={createTimer}
+                          className='flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
+                        >
+                          Create Timer
+                        </button>
+                        <button
+                          onClick={() => setShowTimerForm(false)}
+                          className='bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-2 text-sm font-semibold transition'
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Timer List */}
+                  {timers.length === 0 ? (
+                    <div className='text-center py-8 text-gray-400 text-sm'>
+                      No timers yet. Create one to countdown to your events!
+                    </div>
+                  ) : (
+                    <div className='space-y-3'>
+                      {timers.map(timer => (
+                        <div
+                          key={timer.id}
+                          className='bg-gray-700/30 rounded-xl p-4 border border-gray-600'
+                        >
+                          <div className='flex items-start justify-between'>
+                            <div className='flex-1'>
+                              <div className='font-semibold text-yellow-400'>
+                                {timer.title}
+                              </div>
+                              {timer.description && (
+                                <div className='text-xs text-gray-400 mt-1'>
+                                  {timer.description}
+                                </div>
+                              )}
+                              <div className='text-xs text-gray-500 mt-2'>
+                                {new Date(timer.targetDate).toLocaleString()}
+                              </div>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                              <button
+                                onClick={() =>
+                                  toggleTimer(timer.id, !timer.isActive)
+                                }
+                                className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                                  timer.isActive
+                                    ? 'bg-green-600 hover:bg-green-500'
+                                    : 'bg-gray-600 hover:bg-gray-500'
+                                }`}
+                              >
+                                {timer.isActive ? 'Active' : 'Paused'}
+                              </button>
+                              <button
+                                onClick={() => deleteTimer(timer.id)}
+                                className='text-red-400 hover:text-red-300 transition'
+                              >
+                                <svg
+                                  className='w-5 h-5'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Emote Wall */}
+            <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+              <div className='flex items-center gap-3 mb-6'>
+                <div className='w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center'>
+                  <svg
+                    className='w-6 h-6'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    />
+                  </svg>
+                </div>
+                <h2 className='text-xl font-bold'>Emote Wall</h2>
+              </div>
+
+              <div className='space-y-4'>
+                <div>
+                  <label className='block text-sm text-gray-300 mb-2'>
+                    Emotes (space-separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={emoteInput}
+                    onChange={e => setEmoteInput(e.target.value)}
+                    className='w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-pink-500 focus:outline-none'
+                    placeholder='🎉 🎊 ✨ 🌟 💫'
+                  />
+                  <p className='text-xs text-gray-500 mt-1'>
+                    Use emoji or paste emote URLs
+                  </p>
+                </div>
+
+                <div>
+                  <label className='block text-sm text-gray-300 mb-2'>
+                    Intensity
+                  </label>
+                  <div className='grid grid-cols-3 gap-2'>
+                    {(['light', 'medium', 'heavy'] as const).map(intensity => (
+                      <button
+                        key={intensity}
+                        onClick={() => setEmoteIntensity(intensity)}
+                        className={`py-2 rounded-lg text-sm font-semibold capitalize transition ${
+                          emoteIntensity === intensity
+                            ? 'bg-gradient-to-r from-pink-600 to-purple-600 border-pink-500'
+                            : 'bg-gray-700/50 border-gray-600 hover:bg-gray-600/50'
+                        } border`}
+                      >
+                        {intensity}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={triggerEmoteWall}
+                  disabled={!isConnected}
+                  className='w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl px-6 py-4 font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl'
+                >
+                  {isConnected ? '🎉 Trigger Emote Wall! 🎉' : 'Not Connected'}
+                </button>
               </div>
             </div>
           </div>

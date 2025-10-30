@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -64,24 +64,36 @@ model Layout {
   sessionId String   @unique
   name      String   @default("My Layout")
 
-  // Visualizer config
-  visualizerSize Float    @default(1.0)
-  visualizerX    Float    @default(50)
-  visualizerY    Float    @default(50)
-
   // Overlay settings
   colorScheme    String   @default("default")
   weatherEffect  String   @default("none")
-  customColors   String?  // JSON array of custom colors [bass, mid, treble]
 
   // Scene layers visibility
-  particlesVisible   Boolean @default(true)
   weatherVisible     Boolean @default(true)
   chatVisible        Boolean @default(true)
   nowPlayingVisible  Boolean @default(true)
+  countdownVisible   Boolean @default(true)
+
+  // Component layouts (JSON) - stores position, size, styling for each component
+  componentLayouts String? @default("{\"chat\":{\"position\":\"top-right\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"bottom-right\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"bottom-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1}}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  countdowns CountdownTimer[]
+}
+
+model CountdownTimer {
+  id          String   @id @default(cuid())
+  layoutId    String
+  title       String
+  description String?
+  targetDate  DateTime
+  isActive    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  layout Layout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
 }

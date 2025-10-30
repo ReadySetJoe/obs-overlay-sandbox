@@ -18,45 +18,31 @@ export default async function handler(
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const {
-    sessionId,
-    visualizerSize,
-    visualizerX,
-    visualizerY,
-    colorScheme,
-    weatherEffect,
-    layers,
-  } = req.body;
+  const { sessionId, colorScheme, weatherEffect, layers } = req.body;
 
   try {
     const layout = await prisma.layout.upsert({
       where: { sessionId },
       update: {
-        visualizerSize,
-        visualizerX,
-        visualizerY,
         colorScheme,
         weatherEffect,
-        particlesVisible: layers.find((l: any) => l.id === 'particles')
-          ?.visible,
         weatherVisible: layers.find((l: any) => l.id === 'weather')?.visible,
         chatVisible: layers.find((l: any) => l.id === 'chat')?.visible,
         nowPlayingVisible: layers.find((l: any) => l.id === 'nowplaying')
+          ?.visible,
+        countdownVisible: layers.find((l: any) => l.id === 'countdown')
           ?.visible,
       },
       create: {
         userId: session.user.id,
         sessionId,
-        visualizerSize,
-        visualizerX,
-        visualizerY,
         colorScheme,
         weatherEffect,
-        particlesVisible: layers.find((l: any) => l.id === 'particles')
-          ?.visible,
         weatherVisible: layers.find((l: any) => l.id === 'weather')?.visible,
         chatVisible: layers.find((l: any) => l.id === 'chat')?.visible,
         nowPlayingVisible: layers.find((l: any) => l.id === 'nowplaying')
+          ?.visible,
+        countdownVisible: layers.find((l: any) => l.id === 'countdown')
           ?.visible,
       },
     });

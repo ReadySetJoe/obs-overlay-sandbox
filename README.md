@@ -5,12 +5,11 @@ A Next.js-based stream overlay system with real-time WebSocket communication for
 ## Features
 
 - **Highlighted Chat Messages** - Role-based styling (viewer, subscriber, moderator, VIP, first-timer)
-- **Audio-Reactive Particle System** - Particles respond to live audio with dynamic colors and intensity
 - **Spotify Integration** - Auto-updating "Now Playing" widget with album art color extraction
 - **Color Schemes** - 6 different mood-based color schemes
 - **Weather Effects** - Rain, snow, and confetti animations
 - **Scene Layers** - Toggle individual overlay components
-- **Real-time Audio Analysis** - Particles react to music using Web Audio API
+- **User Authentication** - Sign in with Twitch to save your overlay settings
 
 ## Installation
 
@@ -24,15 +23,29 @@ Required packages:
 - `socket.io` and `socket.io-client` - Real-time communication
 - `spotify-web-api-node` - Spotify API integration
 - `colorthief` - Album art color extraction
+- `next-auth` - Authentication with Twitch
+- `@prisma/client` - Database ORM
 
 2. Set up environment variables:
 
 Create a `.env.local` file in your project root:
 
 ```env
+# Database
+DATABASE_URL="postgresql://obs_user:obs_password@localhost:5432/obs_overlay"
+
+# Spotify OAuth
 SPOTIFY_CLIENT_ID=your_client_id_here
 SPOTIFY_CLIENT_SECRET=your_client_secret_here
 SPOTIFY_REDIRECT_URI=http://localhost:3000/api/spotify/callback
+
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000/
+NEXTAUTH_SECRET=your-secret-key-change-this-in-production
+
+# Twitch OAuth
+TWITCH_CLIENT_ID=your_twitch_client_id
+TWITCH_CLIENT_SECRET=your_twitch_client_secret
 ```
 
 **Getting Spotify Credentials:**
@@ -41,50 +54,77 @@ SPOTIFY_REDIRECT_URI=http://localhost:3000/api/spotify/callback
 3. Copy your Client ID and Client Secret
 4. Add `http://localhost:3000/api/spotify/callback` to your app's Redirect URIs
 
-3. Project structure:
+**Getting Twitch Credentials:**
+1. Go to [Twitch Developer Console](https://dev.twitch.tv/console/apps)
+2. Create a new application
+3. Copy your Client ID and Client Secret
+4. Add `http://localhost:3000/api/auth/callback/twitch` to your OAuth Redirect URLs
+
+3. Set up the database:
+
+```bash
+# Start PostgreSQL with Docker
+docker-compose up -d
+
+# Generate Prisma client
+npm run db:generate
+
+# Run migrations
+npm run db:migrate
+```
+
+4. Project structure:
 
 ```
 your-nextjs-app/
 ├── pages/
 │   ├── api/
 │   │   ├── socket.ts            # WebSocket server
-│   │   └── spotify/
-│   │       ├── login.ts         # Spotify OAuth login
-│   │       ├── callback.ts      # OAuth callback handler
-│   │       └── now-playing.ts   # Fetch current track
-│   ├── overlay.tsx              # Overlay page for OBS
-│   └── dashboard.tsx            # Control dashboard
+│   │   ├── auth/                # NextAuth configuration
+│   │   ├── layouts/             # Layout save/load endpoints
+│   │   └── spotify/             # Spotify OAuth and API
+│   ├── overlay/[sessionId].tsx  # Overlay page for OBS
+│   ├── dashboard/[sessionId].tsx # Control dashboard
+│   └── index.tsx                # Landing page
 ├── components/
 │   └── overlay/
 │       ├── ChatMessage.tsx      # Chat message component
-│       ├── ParticleSystem.tsx   # Audio-reactive particles
 │       ├── WeatherEffect.tsx    # Weather effects
 │       └── NowPlaying.tsx       # Spotify widget
 ├── hooks/
-│   ├── useSocket.ts             # WebSocket hook
-│   └── useAudioAnalyzer.ts      # Audio analysis hook
+│   └── useSocket.ts             # WebSocket hook
 ├── lib/
-│   └── spotify.ts               # Spotify API setup
-├── types/
-│   └── overlay.ts               # TypeScript types
-└── styles/
-    └── globals.css              # Global styles with animations
+│   ├── spotify.ts               # Spotify API setup
+│   └── prisma.ts                # Prisma client
+├── prisma/
+│   └── schema.prisma            # Database schema
+└── types/
+    └── overlay.ts               # TypeScript types
 ```
-
-4. Make sure your Next.js app has Tailwind CSS configured.
 
 ## Usage
 
+### Getting Started
+
+1. Start the development server:
+
+```bash
+npm run dev
+```
+
+2. Navigate to `http://localhost:3000`
+3. Sign in with your Twitch account to create a session
+4. You'll be redirected to your dashboard with a unique session ID
+
 ### Dashboard
 
-Navigate to `/dashboard` to control your overlay:
+Navigate to `/dashboard/[your-session-id]` to control your overlay:
 
 - **Spotify Integration**: Click "Connect Spotify" to link your account for auto-updating "Now Playing"
-- **Chat Messages**: Send test chat messages with different roles and colors
 - **Color Schemes**: Switch between 6 different mood-based themes
 - **Weather Effects**: Toggle rain, snow, or confetti
-- **Audio Levels**: Manual particle intensity control (when not using audio reactivity)
 - **Scene Layers**: Toggle individual overlay components on/off
+- **Auto-Save**: Your settings are automatically saved when signed in with Twitch
 
 **Spotify Features:**
 - Automatically updates track info every 5 seconds
@@ -96,36 +136,34 @@ Navigate to `/dashboard` to control your overlay:
 
 ### Overlay
 
-Navigate to `/overlay` to view the overlay (add as Browser Source in OBS):
+Navigate to `/overlay/[your-session-id]` to view the overlay (add as Browser Source in OBS):
 
-- URL: `http://localhost:3000/overlay`
+- URL: `http://localhost:3000/overlay/[your-session-id]`
 - Width: 1920
 - Height: 1080
 - FPS: 60
 - Check "Shutdown source when not visible" for performance
 
-**Audio Reactivity:**
-Click "Enable Audio Reactive" on the overlay page to make particles respond to live audio. See the [Audio Setup](#audio-reactive-particles-setup) section below for configuring with headphones.
-
 ## OBS Setup
 
 1. Add a **Browser Source** in OBS
-2. Set the URL to your overlay page (e.g., `http://localhost:3000/overlay`)
-3. Set dimensions to match your stream resolution
+2. Set the URL to your overlay page (e.g., `http://localhost:3000/overlay/abc123`)
+3. Set dimensions to 1920x1080
 4. Set FPS to 60 for smooth animations
 5. Check "Shutdown source when not visible"
-6. Optional: Add custom CSS for chroma key if needed
 
 ## Customization
 
 ### Adding Custom Color Schemes
 
-Edit `ParticleSystem.tsx` and `overlay-page.tsx`:
+Edit the color scheme styles in `overlay/[sessionId].tsx`:
 
 ```typescript
-const schemeColors: Record<string, string[]> = {
+const colorSchemeStyles: Record<ColorScheme, string> = {
+  default: 'from-blue-900/20 to-purple-900/20',
+  gaming: 'from-red-900/20 to-orange-900/20',
   // Add your custom scheme
-  myScheme: ['#color1', '#color2', '#color3'],
+  myScheme: 'from-color1-900/20 to-color2-900/20',
 };
 ```
 
@@ -145,62 +183,20 @@ const timer = setTimeout(() => {
 
 Edit `WeatherEffect.tsx` and add new drawing functions for custom effects.
 
-## Audio-Reactive Particles Setup
+## Database Management
 
-The particle system can react to live audio in real-time! Here's how to set it up with headphones:
+The project uses PostgreSQL with Prisma ORM. Useful commands:
 
-### macOS Setup (using BlackHole)
+```bash
+# Open Prisma Studio (database GUI)
+npm run db:studio
 
-**1. Install BlackHole (Free Virtual Audio Driver)**
-- Download from [BlackHole GitHub](https://github.com/ExistentialAudio/BlackHole)
-- Install BlackHole 2ch `.pkg` file
-- Restart your browser after installation
+# Reset database (WARNING: deletes all data)
+npm run db:reset
 
-**2. Create a Multi-Output Device**
-- Open **Audio MIDI Setup** app (⌘ + Space → "Audio MIDI Setup")
-- Click the **"+"** button (bottom left) → **"Create Multi-Output Device"**
-- Check both:
-  - ✅ Your headphones (e.g., "MacBook Pro Speakers" or Bluetooth headphones)
-  - ✅ BlackHole 2ch
-- Right-click the Multi-Output Device → **"Use This Device For Sound Output"**
-
-**3. Configure Spotify**
-- In Spotify settings, set audio output to your new **Multi-Output Device**
-- Now Spotify plays to both your headphones AND BlackHole
-
-**4. Enable Audio Reactivity in Browser**
-- Go to `/overlay` page
-- Click **"Enable Audio Reactive"**
-- In the browser permission dialog, select **BlackHole 2ch** as the microphone
-- Grant permission
-
-**5. Done!**
-- Particles now react to your music in real-time
-- You still hear everything through your headphones
-- Audio level is displayed on screen
-
-### Windows Setup (using VB-Audio Virtual Cable)
-
-**1. Install VB-Audio Virtual Cable**
-- Download from [VB-Audio website](https://vb-audio.com/Cable/)
-- Install and restart your computer
-
-**2. Set up Audio Routing**
-- Right-click sound icon → **Sound settings**
-- Set **Output device** to "CABLE Input"
-- Set **Input device** to "CABLE Output"
-
-**3. Configure Listen Back (to hear audio)**
-- Open **Sound Control Panel** → **Recording** tab
-- Right-click "CABLE Output" → **Properties**
-- Go to **Listen** tab
-- Check "Listen to this device"
-- Select your headphones from dropdown
-- Click **Apply**
-
-**4. Enable in Browser**
-- Follow step 4-5 from macOS instructions above
-- Select "CABLE Output" when prompted for microphone access
+# Push schema changes without migrations
+npm run db:push
+```
 
 ## Integration with Real Services
 
@@ -216,15 +212,15 @@ Create a new API route to listen to Twitch chat and emit to the overlay.
 
 ### Spotify Integration
 
-✅ **Already integrated!** See the [Dashboard](#dashboard) section for setup instructions.
+Already integrated! See the [Dashboard](#dashboard) section for setup instructions.
 
 ## Performance Tips
 
-1. Limit the number of simultaneous particles (currently capped at 200)
-2. Reduce canvas resolution for lower-end systems
-3. Disable unused layers from the dashboard
-4. Use hardware acceleration in OBS settings
-5. Consider using a dedicated machine for streaming
+1. Reduce canvas resolution for lower-end systems
+2. Disable unused layers from the dashboard
+3. Use hardware acceleration in OBS settings
+4. Consider using a dedicated machine for streaming
+5. Keep the dashboard tab visible if using Spotify integration
 
 ## Troubleshooting
 
@@ -236,30 +232,38 @@ Create a new API route to listen to Twitch chat and emit to the overlay.
 
 **Overlay not visible in OBS:**
 
-- Check if the URL is correct
-- Ensure browser source dimensions match
+- Check if the URL is correct and includes your session ID
+- Ensure browser source dimensions match (1920x1080)
 - Try refreshing the browser source
 - Check if "Shutdown source when not visible" is causing issues
 
-**Performance issues:**
+**Spotify not updating:**
 
-- Lower particle count
-- Reduce weather effect density
-- Disable unused layers
-- Check OBS render lag in stats
+- Make sure you're signed into Spotify and playing music
+- Check that you've granted permission in the Spotify dashboard
+- Try disconnecting and reconnecting Spotify in the dashboard
+- Check browser console for token refresh errors
+
+**Database connection issues:**
+
+- Make sure PostgreSQL is running: `docker-compose ps`
+- Check that DATABASE_URL in .env matches docker-compose.yml
+- Try restarting the database: `docker-compose restart`
 
 ## Features Overview
 
-### ✅ Implemented
-- Audio-reactive particle system with Web Audio API
+### Implemented
+- Real-time WebSocket communication
 - Spotify integration with OAuth authentication
 - Dynamic album art color extraction
 - Smooth progress bar sync
-- Real-time WebSocket communication
 - Multiple color schemes and weather effects
 - Scene layer management
+- User authentication with Twitch
+- Database persistence of user settings
 
-### 🚧 Future Enhancements
+### Future Enhancements
+- Twitch chat integration
 - Interactive games viewers can play via chat commands
 - More weather effects (leaves, stars, bubbles)
 - Animated GIF support for alerts
@@ -267,7 +271,6 @@ Create a new API route to listen to Twitch chat and emit to the overlay.
 - Custom CSS theme editor
 - Chat commands for viewers to trigger effects
 - Leaderboards and statistics
-- Twitch chat integration
 
 ## License
 

@@ -5,15 +5,19 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSocket } from '@/hooks/useSocket';
 import ChatMessage from '@/components/overlay/ChatMessage';
-import ParticleSystem from '@/components/overlay/ParticleSystem';
 import WeatherEffect from '@/components/overlay/WeatherEffect';
 import NowPlaying from '@/components/overlay/NowPlaying';
+import CountdownTimer from '@/components/overlay/CountdownTimer';
+import EmoteWall from '@/components/overlay/EmoteWall';
 import {
   ChatMessage as ChatMessageType,
   ColorScheme,
   WeatherEffect as WeatherEffectType,
   NowPlaying as NowPlayingType,
   SceneLayer,
+  CountdownTimer as CountdownTimerType,
+  EmoteWallConfig,
+  ComponentLayouts,
 } from '@/types/overlay';
 
 export default function OverlayPage() {
@@ -21,38 +25,24 @@ export default function OverlayPage() {
   const { sessionId } = router.query;
   const { socket, isConnected } = useSocket(sessionId as string);
 
-  // Audio data received from dashboard via socket
-  const [liveAudioLevel, setLiveAudioLevel] = useState(0);
-  const [frequencyData, setFrequencyData] = useState({
-    bass: 0,
-    lowMid: 0,
-    mid: 0,
-    highMid: 0,
-    treble: 0,
-    overall: 0,
-    frequencies: new Uint8Array(256),
-  });
-  const [isReceivingAudio, setIsReceivingAudio] = useState(false);
-
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
-  const [customColors, setCustomColors] = useState<string[]>([
-    '#3b82f6',
-    '#8b5cf6',
-    '#ec4899',
-  ]);
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('none');
   const [nowPlaying, setNowPlaying] = useState<NowPlayingType | null>(null);
-  const [visualizerConfig, setVisualizerConfig] = useState({
-    size: 1.0,
-    x: 50,
-    y: 50,
+  const [countdownTimers, setCountdownTimers] = useState<CountdownTimerType[]>(
+    []
+  );
+  const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
+    chat: { position: 'top-right', x: 0, y: 80, maxWidth: 400 },
+    nowPlaying: { position: 'bottom-right', x: 0, y: 0, width: 400, scale: 1 },
+    countdown: { position: 'bottom-left', x: 0, y: 0, scale: 1, minWidth: 320 },
+    weather: { density: 1 },
   });
   const [sceneLayers, setSceneLayers] = useState<SceneLayer[]>([
-    { id: 'particles', name: 'Particles', visible: true, zIndex: 1 },
     { id: 'weather', name: 'Weather', visible: true, zIndex: 2 },
     { id: 'chat', name: 'Chat', visible: true, zIndex: 5 },
     { id: 'nowplaying', name: 'Now Playing', visible: true, zIndex: 10 },
+    { id: 'countdown', name: 'Countdown', visible: true, zIndex: 15 },
   ]);
 
   useEffect(() => {
@@ -84,29 +74,19 @@ export default function OverlayPage() {
       );
     });
 
-    socket.on(
-      'visualizer-config',
-      (config: { size: number; x: number; y: number }) => {
-        setVisualizerConfig(config);
-      }
-    );
-
-    socket.on('audio-data', (data: any) => {
-      setLiveAudioLevel(data.audioLevel);
-      setFrequencyData({
-        bass: data.frequencyData.bass,
-        lowMid: data.frequencyData.lowMid,
-        mid: data.frequencyData.mid,
-        highMid: data.frequencyData.highMid,
-        treble: data.frequencyData.treble,
-        overall: data.frequencyData.overall,
-        frequencies: new Uint8Array(data.frequencyData.frequencies),
-      });
-      setIsReceivingAudio(true);
+    socket.on('countdown-timers', (timers: CountdownTimerType[]) => {
+      setCountdownTimers(timers);
     });
 
-    socket.on('custom-colors-change', (colors: string[]) => {
-      setCustomColors(colors);
+    socket.on('emote-wall', (config: EmoteWallConfig) => {
+      // Trigger emote wall via global function
+      if ((window as any).triggerEmoteWall) {
+        (window as any).triggerEmoteWall(config);
+      }
+    });
+
+    socket.on('component-layouts', (layouts: ComponentLayouts) => {
+      setComponentLayouts(layouts);
     });
 
     return () => {
@@ -115,9 +95,9 @@ export default function OverlayPage() {
       socket.off('weather-change');
       socket.off('now-playing');
       socket.off('scene-toggle');
-      socket.off('visualizer-config');
-      socket.off('audio-data');
-      socket.off('custom-colors-change');
+      socket.off('countdown-timers');
+      socket.off('emote-wall');
+      socket.off('component-layouts');
     };
   }, [socket]);
 
@@ -153,34 +133,29 @@ export default function OverlayPage() {
         </div>
       )}
 
-      {/* Audio Status Indicator */}
-      {!isReceivingAudio && (
-        <div className='fixed top-4 left-4 bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-xs'>
-          ⚠️ Audio not detected - Open dashboard and enable microphone
-        </div>
-      )}
-
-      {/* Particle System */}
-      {getLayerVisible('particles') && (
-        <ParticleSystem
-          audioLevel={liveAudioLevel}
-          frequencyData={frequencyData}
-          colorScheme={colorScheme}
-          customColors={customColors}
-          size={visualizerConfig.size}
-          x={visualizerConfig.x}
-          y={visualizerConfig.y}
-        />
-      )}
-
       {/* Weather Effect */}
       {getLayerVisible('weather') && <WeatherEffect effect={weatherEffect} />}
 
       {/* Chat Messages */}
       {getLayerVisible('chat') && (
         <div
-          className='fixed top-20 right-8 max-w-md space-y-3'
-          style={{ zIndex: 5 }}
+          className={`fixed space-y-3 ${
+            componentLayouts.chat.position === 'top-right'
+              ? 'top-0 right-0'
+              : componentLayouts.chat.position === 'top-left'
+              ? 'top-0 left-0'
+              : componentLayouts.chat.position === 'bottom-right'
+              ? 'bottom-0 right-0'
+              : componentLayouts.chat.position === 'bottom-left'
+              ? 'bottom-0 left-0'
+              : ''
+          }`}
+          style={{
+            zIndex: 5,
+            maxWidth: componentLayouts.chat.maxWidth,
+            transform: `translate(${componentLayouts.chat.position.includes('right') ? '-' : ''}${componentLayouts.chat.x}px, ${componentLayouts.chat.y}px)`,
+            padding: '2rem',
+          }}
         >
           {messages.map(message => (
             <ChatMessage
@@ -193,7 +168,17 @@ export default function OverlayPage() {
       )}
 
       {/* Now Playing */}
-      {getLayerVisible('nowplaying') && <NowPlaying track={nowPlaying} />}
+      {getLayerVisible('nowplaying') && (
+        <NowPlaying track={nowPlaying} layout={componentLayouts.nowPlaying} />
+      )}
+
+      {/* Countdown Timers */}
+      {getLayerVisible('countdown') && (
+        <CountdownTimer timers={countdownTimers} layout={componentLayouts.countdown} />
+      )}
+
+      {/* Emote Wall */}
+      <EmoteWall />
     </div>
   );
 }

@@ -98,6 +98,20 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('countdown-timers', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('countdown-timers', data);
+        }
+      });
+
+      socket.on('emote-wall', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('emote-wall', data);
+        }
+      });
+
       socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
       });

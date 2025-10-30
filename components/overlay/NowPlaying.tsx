@@ -2,14 +2,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { NowPlaying as NowPlayingType } from '@/types/overlay';
+import { NowPlaying as NowPlayingType, NowPlayingLayout } from '@/types/overlay';
 import Image from 'next/image';
 
 interface NowPlayingProps {
   track: NowPlayingType | null;
+  layout: NowPlayingLayout;
 }
 
-export default function NowPlaying({ track }: NowPlayingProps) {
+export default function NowPlaying({ track, layout }: NowPlayingProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [dominantColor, setDominantColor] = useState<string>('#16a34a');
@@ -91,13 +92,26 @@ export default function NowPlaying({ track }: NowPlayingProps) {
     ? (currentProgress / track.duration) * 100
     : 0;
 
+  const positionClasses = {
+    'top-left': 'top-0 left-0',
+    'top-right': 'top-0 right-0',
+    'bottom-left': 'bottom-0 left-0',
+    'bottom-right': 'bottom-0 right-0',
+    'custom': '',
+  };
+
   return (
     <div
       className={`
-        fixed bottom-8 right-8 transform transition-all duration-500
+        fixed ${positionClasses[layout.position]} transform transition-all duration-500
         ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
       `}
-      style={{ zIndex: 10, width: '400px' }}
+      style={{
+        zIndex: 10,
+        width: `${layout.width}px`,
+        transform: `translate(${layout.position.includes('right') ? '-' : ''}${layout.x}px, ${layout.position.includes('bottom') ? '-' : ''}${layout.y}px) scale(${layout.scale}) ${isVisible ? '' : 'translateY(100%)'}`,
+        padding: '2rem',
+      }}
     >
       <div
         className='rounded-lg shadow-2xl overflow-hidden backdrop-blur-sm transition-colors duration-1000'

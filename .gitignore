@@ -42,7 +42,7 @@ next-env.d.ts
 
 # prisma
 /lib/generated/prisma
-/prisma/
+/prisma/dev.db
 
 # claude
 .claude/
