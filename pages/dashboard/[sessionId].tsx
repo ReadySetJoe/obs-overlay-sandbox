@@ -11,7 +11,10 @@ import {
   NowPlaying,
   CountdownTimer,
   EmoteWallConfig,
+  ComponentLayouts,
 } from '@/types/overlay';
+import PositionControls from '@/components/dashboard/PositionControls';
+import { Pencil } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -52,6 +55,7 @@ export default function DashboardPage() {
   // Countdown timers
   const [timers, setTimers] = useState<CountdownTimer[]>([]);
   const [showTimerForm, setShowTimerForm] = useState(false);
+  const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
   const [newTimerTitle, setNewTimerTitle] = useState('');
   const [newTimerDescription, setNewTimerDescription] = useState('');
   const [newTimerDate, setNewTimerDate] = useState('');
@@ -59,6 +63,14 @@ export default function DashboardPage() {
   // Emote wall
   const [emoteInput, setEmoteInput] = useState('🎉 🎊 ✨ 🌟 💫');
   const [emoteIntensity, setEmoteIntensity] = useState<'light' | 'medium' | 'heavy'>('medium');
+
+  // Component layouts
+  const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
+    chat: { position: 'top-left', x: 0, y: 80, maxWidth: 400 },
+    nowPlaying: { position: 'top-left', x: 0, y: 0, width: 400, scale: 1 },
+    countdown: { position: 'top-left', x: 0, y: 0, scale: 1, minWidth: 320 },
+    weather: { density: 1 },
+  });
 
   // Handle Spotify callback tokens from URL
   useEffect(() => {
@@ -122,6 +134,16 @@ export default function DashboardPage() {
             },
           ]);
 
+          // Load component layouts
+          if (layout.componentLayouts) {
+            try {
+              const parsedLayouts = JSON.parse(layout.componentLayouts);
+              setComponentLayouts(parsedLayouts);
+            } catch (error) {
+              console.error('Error parsing component layouts:', error);
+            }
+          }
+
           setLastSaved(new Date(layout.updatedAt));
           console.log('Layout loaded successfully');
         }
@@ -167,6 +189,7 @@ export default function DashboardPage() {
           colorScheme,
           weatherEffect,
           layers,
+          componentLayouts: JSON.stringify(componentLayouts),
         }),
       });
 
@@ -180,7 +203,7 @@ export default function DashboardPage() {
       console.error('Error saving layout:', error);
       setSaveStatus('unsaved');
     }
-  }, [session, sessionId, colorScheme, weatherEffect, layers]);
+  }, [session, sessionId, colorScheme, weatherEffect, layers, componentLayouts]);
 
   // Debounced auto-save
   useEffect(() => {
@@ -192,7 +215,7 @@ export default function DashboardPage() {
     }, 1000); // Save 1 second after last change
 
     return () => clearTimeout(timer);
-  }, [session, colorScheme, weatherEffect, layers, saveLayout]);
+  }, [session, colorScheme, weatherEffect, layers, componentLayouts, saveLayout]);
 
   // Poll Spotify API for now playing
   useEffect(() => {
@@ -313,31 +336,70 @@ export default function DashboardPage() {
     socket.emit('countdown-timers', timers);
   }, [socket, isConnected, timers]);
 
+  // Emit component layouts to overlay when they change
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    socket.emit('component-layouts', componentLayouts);
+  }, [socket, isConnected, componentLayouts]);
+
+  const startEditingTimer = (timer: CountdownTimer) => {
+    setEditingTimerId(timer.id);
+    setNewTimerTitle(timer.title);
+    setNewTimerDescription(timer.description || '');
+    setNewTimerDate(new Date(timer.targetDate).toISOString().slice(0, 16));
+    setShowTimerForm(true);
+  };
+
+  const cancelTimerForm = () => {
+    setShowTimerForm(false);
+    setEditingTimerId(null);
+    setNewTimerTitle('');
+    setNewTimerDescription('');
+    setNewTimerDate('');
+  };
+
   const createTimer = async () => {
     if (!session || !sessionId || !newTimerTitle || !newTimerDate) return;
 
     try {
-      const response = await fetch('/api/timers/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          title: newTimerTitle,
-          description: newTimerDescription,
-          targetDate: new Date(newTimerDate).toISOString(),
-        }),
-      });
+      if (editingTimerId) {
+        // Update existing timer
+        const response = await fetch(`/api/timers/${editingTimerId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newTimerTitle,
+            description: newTimerDescription,
+            targetDate: new Date(newTimerDate).toISOString(),
+          }),
+        });
 
-      if (response.ok) {
-        const { timer } = await response.json();
-        setTimers(prev => [...prev, timer]);
-        setNewTimerTitle('');
-        setNewTimerDescription('');
-        setNewTimerDate('');
-        setShowTimerForm(false);
+        if (response.ok) {
+          const { timer } = await response.json();
+          setTimers(prev => prev.map(t => t.id === editingTimerId ? timer : t));
+          cancelTimerForm();
+        }
+      } else {
+        // Create new timer
+        const response = await fetch('/api/timers/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            title: newTimerTitle,
+            description: newTimerDescription,
+            targetDate: new Date(newTimerDate).toISOString(),
+          }),
+        });
+
+        if (response.ok) {
+          const { timer } = await response.json();
+          setTimers(prev => [...prev, timer]);
+          cancelTimerForm();
+        }
       }
     } catch (error) {
-      console.error('Error creating timer:', error);
+      console.error('Error saving timer:', error);
     }
   };
 
@@ -556,31 +618,47 @@ export default function DashboardPage() {
 
             {/* Weather Effects */}
             <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
-              <div className='flex items-center gap-3 mb-6'>
-                <div className='w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center'>
-                  <svg
-                    className='w-6 h-6'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z'
-                    />
-                  </svg>
+              <div className='flex items-center justify-between mb-6'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center'>
+                    <svg
+                      className='w-6 h-6'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z'
+                      />
+                    </svg>
+                  </div>
+                  <h2 className='text-xl font-bold'>Weather Effects</h2>
                 </div>
-                <h2 className='text-xl font-bold'>Weather Effects</h2>
+                <button
+                  onClick={() => toggleLayer('weather')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                    layers.find(l => l.id === 'weather')?.visible
+                      ? 'bg-cyan-600 hover:bg-cyan-500'
+                      : 'bg-gray-700 hover:bg-gray-600'
+                  }`}
+                >
+                  {layers.find(l => l.id === 'weather')?.visible ? '👁️ Visible' : '🚫 Hidden'}
+                </button>
               </div>
-              <div className='grid grid-cols-2 gap-3'>
+              <div className='grid grid-cols-2 gap-3 mb-6'>
                 {(['none', 'rain', 'snow', 'confetti'] as WeatherEffect[]).map(
                   effect => (
                     <button
                       key={effect}
                       onClick={() => changeWeather(effect)}
-                      className='group relative bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 rounded-xl px-4 py-4 font-semibold capitalize transition-all duration-200 border border-gray-600 hover:border-gray-500 shadow-lg hover:shadow-xl overflow-hidden'
+                      className={`group relative rounded-xl px-4 py-4 font-semibold capitalize transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden border ${
+                        weatherEffect === effect
+                          ? 'bg-gradient-to-br from-cyan-600/80 to-blue-600/80 border-cyan-500'
+                          : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
+                      }`}
                     >
                       <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
                       {effect}
@@ -588,49 +666,25 @@ export default function DashboardPage() {
                   )
                 )}
               </div>
+              <div>
+                <label className='block text-xs text-gray-400 mb-1'>
+                  Particle Density: {(componentLayouts.weather.density || 1).toFixed(1)}x
+                </label>
+                <input
+                  type='range'
+                  min='0.5'
+                  max='2'
+                  step='0.1'
+                  value={componentLayouts.weather.density || 1}
+                  onChange={e => setComponentLayouts({
+                    ...componentLayouts,
+                    weather: { ...componentLayouts.weather, density: parseFloat(e.target.value) }
+                  })}
+                  className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-500'
+                />
+              </div>
             </div>
 
-            {/* Scene Layers */}
-            <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
-              <div className='flex items-center gap-3 mb-6'>
-                <div className='w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center'>
-                  <svg
-                    className='w-6 h-6'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
-                    />
-                  </svg>
-                </div>
-                <h2 className='text-xl font-bold'>Scene Layers</h2>
-              </div>
-              <div className='grid grid-cols-2 gap-3'>
-                {layers.map(layer => (
-                  <button
-                    key={layer.id}
-                    onClick={() => toggleLayer(layer.id)}
-                    className={`relative rounded-xl px-4 py-4 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border ${
-                      layer.visible
-                        ? 'bg-gradient-to-br from-green-600/80 to-emerald-600/80 border-green-500 hover:from-green-500/80 hover:to-emerald-500/80'
-                        : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 border-gray-600 hover:from-gray-600/50 hover:to-gray-700/50'
-                    }`}
-                  >
-                    <div className='flex flex-col items-center gap-1'>
-                      <span>{layer.name}</span>
-                      <span className='text-xs opacity-75'>
-                        {layer.visible ? '👁️ Visible' : '🚫 Hidden'}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Middle Column - Timers & Fun Stuff */}
@@ -656,14 +710,26 @@ export default function DashboardPage() {
                   </div>
                   <h2 className='text-xl font-bold'>Countdown Timers</h2>
                 </div>
-                {session && (
+                <div className='flex items-center gap-2'>
                   <button
-                    onClick={() => setShowTimerForm(!showTimerForm)}
-                    className='bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
+                    onClick={() => toggleLayer('countdown')}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                      layers.find(l => l.id === 'countdown')?.visible
+                        ? 'bg-yellow-600 hover:bg-yellow-500'
+                        : 'bg-gray-700 hover:bg-gray-600'
+                    }`}
                   >
-                    + Add Timer
+                    {layers.find(l => l.id === 'countdown')?.visible ? '👁️ Visible' : '🚫 Hidden'}
                   </button>
-                )}
+                  {session && !showTimerForm && (
+                    <button
+                      onClick={() => setShowTimerForm(!showTimerForm)}
+                      className='bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
+                    >
+                      + Add Timer
+                    </button>
+                  )}
+                </div>
               </div>
 
               {!session ? (
@@ -675,6 +741,9 @@ export default function DashboardPage() {
                   {/* Timer Form */}
                   {showTimerForm && (
                     <div className='mb-6 bg-gray-700/30 rounded-xl p-4 border border-gray-600 space-y-3'>
+                      <h3 className='text-sm font-semibold text-yellow-400 mb-3'>
+                        {editingTimerId ? 'Edit Timer' : 'Create New Timer'}
+                      </h3>
                       <div>
                         <label className='block text-xs text-gray-400 mb-1'>
                           Event Title
@@ -715,10 +784,10 @@ export default function DashboardPage() {
                           onClick={createTimer}
                           className='flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
                         >
-                          Create Timer
+                          {editingTimerId ? 'Update Timer' : 'Create Timer'}
                         </button>
                         <button
-                          onClick={() => setShowTimerForm(false)}
+                          onClick={cancelTimerForm}
                           className='bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-2 text-sm font-semibold transition'
                         >
                           Cancel
@@ -767,8 +836,16 @@ export default function DashboardPage() {
                                 {timer.isActive ? 'Active' : 'Paused'}
                               </button>
                               <button
+                                onClick={() => startEditingTimer(timer)}
+                                className='text-yellow-400 hover:text-yellow-300 transition'
+                                title='Edit timer'
+                              >
+                                <Pencil className='w-4 h-4' />
+                              </button>
+                              <button
                                 onClick={() => deleteTimer(timer.id)}
                                 className='text-red-400 hover:text-red-300 transition'
+                                title='Delete timer'
                               >
                                 <svg
                                   className='w-5 h-5'
@@ -790,6 +867,59 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   )}
+
+                  {/* Position & Size Controls */}
+                  <div className='mt-6 pt-6 border-t border-gray-600'>
+                    <h4 className='text-sm font-semibold text-gray-300 mb-3'>Position & Size</h4>
+                    <PositionControls
+                      x={componentLayouts.countdown.x || 0}
+                      y={componentLayouts.countdown.y || 0}
+                      onPositionChange={(x, y) => setComponentLayouts({
+                        ...componentLayouts,
+                        countdown: { ...componentLayouts.countdown, position: 'top-left', x, y }
+                      })}
+                      color='yellow'
+                      elementWidth={componentLayouts.countdown.minWidth || 320}
+                      elementHeight={80 * (timers.length || 1)}
+                      scale={componentLayouts.countdown.scale || 1}
+                    />
+                    <div className='grid grid-cols-2 gap-3 mt-3'>
+                      <div>
+                        <label className='block text-xs text-gray-400 mb-1'>
+                          Scale: {(componentLayouts.countdown.scale || 1).toFixed(1)}x
+                        </label>
+                        <input
+                          type='range'
+                          min='0.5'
+                          max='2'
+                          step='0.1'
+                          value={componentLayouts.countdown.scale || 1}
+                          onChange={e => setComponentLayouts({
+                            ...componentLayouts,
+                            countdown: { ...componentLayouts.countdown, scale: parseFloat(e.target.value) }
+                          })}
+                          className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-xs text-gray-400 mb-1'>
+                          Min Width: {componentLayouts.countdown.minWidth || 320}px
+                        </label>
+                        <input
+                          type='range'
+                          min='250'
+                          max='500'
+                          step='50'
+                          value={componentLayouts.countdown.minWidth || 320}
+                          onChange={e => setComponentLayouts({
+                            ...componentLayouts,
+                            countdown: { ...componentLayouts.countdown, minWidth: parseInt(e.target.value) }
+                          })}
+                          className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500'
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -868,17 +998,29 @@ export default function DashboardPage() {
           <div className='lg:col-span-1 space-y-6'>
             {/* Now Playing */}
             <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
-              <div className='flex items-center gap-3 mb-6'>
-                <div className='w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center'>
-                  <svg
-                    className='w-6 h-6'
-                    fill='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path d='M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z' />
-                  </svg>
+              <div className='flex items-center justify-between mb-6'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center'>
+                    <svg
+                      className='w-6 h-6'
+                      fill='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path d='M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z' />
+                    </svg>
+                  </div>
+                  <h2 className='text-xl font-bold'>Now Playing</h2>
                 </div>
-                <h2 className='text-xl font-bold'>Spotify</h2>
+                <button
+                  onClick={() => toggleLayer('nowplaying')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                    layers.find(l => l.id === 'nowplaying')?.visible
+                      ? 'bg-green-600 hover:bg-green-500'
+                      : 'bg-gray-700 hover:bg-gray-600'
+                  }`}
+                >
+                  {layers.find(l => l.id === 'nowplaying')?.visible ? '👁️ Visible' : '🚫 Hidden'}
+                </button>
               </div>
 
               {!spotifyToken ? (
@@ -952,8 +1094,61 @@ export default function DashboardPage() {
                     </div>
                   )}
 
+                  {/* Position & Size Controls */}
+                  <div className='mt-4'>
+                    <h4 className='text-sm font-semibold text-gray-300 mb-3'>Position & Size</h4>
+                    <PositionControls
+                      x={componentLayouts.nowPlaying.x || 0}
+                      y={componentLayouts.nowPlaying.y || 0}
+                      onPositionChange={(x, y) => setComponentLayouts({
+                        ...componentLayouts,
+                        nowPlaying: { ...componentLayouts.nowPlaying, position: 'top-left', x, y }
+                      })}
+                      color='green'
+                      elementWidth={componentLayouts.nowPlaying.width || 400}
+                      elementHeight={120}
+                      scale={componentLayouts.nowPlaying.scale || 1}
+                    />
+                    <div className='grid grid-cols-2 gap-3 mt-3'>
+                      <div>
+                        <label className='block text-xs text-gray-400 mb-1'>
+                          Width: {componentLayouts.nowPlaying.width || 400}px
+                        </label>
+                        <input
+                          type='range'
+                          min='300'
+                          max='600'
+                          step='50'
+                          value={componentLayouts.nowPlaying.width || 400}
+                          onChange={e => setComponentLayouts({
+                            ...componentLayouts,
+                            nowPlaying: { ...componentLayouts.nowPlaying, width: parseInt(e.target.value) }
+                          })}
+                          className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-xs text-gray-400 mb-1'>
+                          Scale: {(componentLayouts.nowPlaying.scale || 1).toFixed(1)}x
+                        </label>
+                        <input
+                          type='range'
+                          min='0.5'
+                          max='2'
+                          step='0.1'
+                          value={componentLayouts.nowPlaying.scale || 1}
+                          onChange={e => setComponentLayouts({
+                            ...componentLayouts,
+                            nowPlaying: { ...componentLayouts.nowPlaying, scale: parseFloat(e.target.value) }
+                          })}
+                          className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500'
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Manual Override */}
-                  <details className='group'>
+                  <details className='group mt-4'>
                     <summary className='cursor-pointer text-xs text-gray-400 hover:text-gray-300 transition list-none flex items-center gap-2'>
                       <svg
                         className='w-4 h-4 transition-transform group-open:rotate-90'

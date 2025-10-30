@@ -18,7 +18,7 @@ export default async function handler(
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { sessionId, colorScheme, weatherEffect, layers } = req.body;
+  const { sessionId, colorScheme, weatherEffect, layers, componentLayouts } = req.body;
 
   try {
     const layout = await prisma.layout.upsert({
@@ -32,6 +32,7 @@ export default async function handler(
           ?.visible,
         countdownVisible: layers.find((l: any) => l.id === 'countdown')
           ?.visible,
+        componentLayouts: componentLayouts || null,
       },
       create: {
         userId: session.user.id,
@@ -44,6 +45,7 @@ export default async function handler(
           ?.visible,
         countdownVisible: layers.find((l: any) => l.id === 'countdown')
           ?.visible,
+        componentLayouts: componentLayouts || null,
       },
     });
 

@@ -75,7 +75,7 @@ model Layout {
   countdownVisible   Boolean @default(true)
 
   // Component layouts (JSON) - stores position, size, styling for each component
-  componentLayouts String? @default("{\"chat\":{\"position\":\"top-right\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"bottom-right\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"bottom-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1}}")
+  componentLayouts String? @default("{\"chat\":{\"position\":\"top-left\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1}}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

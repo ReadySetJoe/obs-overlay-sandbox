@@ -100,13 +100,13 @@ export default function LayoutEditor({
           <div className='grid grid-cols-2 gap-3'>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                X Offset: {componentLayouts.chat.x}px
+                X Offset: {componentLayouts.chat.x || 0}px
               </label>
               <input
                 type='range'
                 min='0'
                 max='200'
-                value={componentLayouts.chat.x}
+                value={componentLayouts.chat.x || 0}
                 onChange={e =>
                   updateChatLayout('x', parseInt(e.target.value))
                 }
@@ -115,13 +115,13 @@ export default function LayoutEditor({
             </div>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                Y Offset: {componentLayouts.chat.y}px
+                Y Offset: {componentLayouts.chat.y || 0}px
               </label>
               <input
                 type='range'
                 min='0'
                 max='200'
-                value={componentLayouts.chat.y}
+                value={componentLayouts.chat.y || 0}
                 onChange={e =>
                   updateChatLayout('y', parseInt(e.target.value))
                 }
@@ -131,14 +131,14 @@ export default function LayoutEditor({
           </div>
           <div>
             <label className='block text-xs text-gray-400 mb-1'>
-              Max Width: {componentLayouts.chat.maxWidth}px
+              Max Width: {componentLayouts.chat.maxWidth || 400}px
             </label>
             <input
               type='range'
               min='200'
               max='600'
               step='50'
-              value={componentLayouts.chat.maxWidth}
+              value={componentLayouts.chat.maxWidth || 400}
               onChange={e =>
                 updateChatLayout('maxWidth', parseInt(e.target.value))
               }
@@ -190,13 +190,13 @@ export default function LayoutEditor({
           <div className='grid grid-cols-2 gap-3'>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                X Offset: {componentLayouts.nowPlaying.x}px
+                X Offset: {componentLayouts.nowPlaying.x || 0}px
               </label>
               <input
                 type='range'
                 min='0'
                 max='200'
-                value={componentLayouts.nowPlaying.x}
+                value={componentLayouts.nowPlaying.x || 0}
                 onChange={e =>
                   updateNowPlayingLayout('x', parseInt(e.target.value))
                 }
@@ -205,13 +205,13 @@ export default function LayoutEditor({
             </div>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                Y Offset: {componentLayouts.nowPlaying.y}px
+                Y Offset: {componentLayouts.nowPlaying.y || 0}px
               </label>
               <input
                 type='range'
                 min='0'
                 max='200'
-                value={componentLayouts.nowPlaying.y}
+                value={componentLayouts.nowPlaying.y || 0}
                 onChange={e =>
                   updateNowPlayingLayout('y', parseInt(e.target.value))
                 }
@@ -222,14 +222,14 @@ export default function LayoutEditor({
           <div className='grid grid-cols-2 gap-3'>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                Width: {componentLayouts.nowPlaying.width}px
+                Width: {componentLayouts.nowPlaying.width || 400}px
               </label>
               <input
                 type='range'
                 min='300'
                 max='600'
                 step='50'
-                value={componentLayouts.nowPlaying.width}
+                value={componentLayouts.nowPlaying.width || 400}
                 onChange={e =>
                   updateNowPlayingLayout('width', parseInt(e.target.value))
                 }
@@ -238,14 +238,14 @@ export default function LayoutEditor({
             </div>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                Scale: {componentLayouts.nowPlaying.scale.toFixed(1)}x
+                Scale: {(componentLayouts.nowPlaying.scale || 1).toFixed(1)}x
               </label>
               <input
                 type='range'
                 min='0.5'
                 max='2'
                 step='0.1'
-                value={componentLayouts.nowPlaying.scale}
+                value={componentLayouts.nowPlaying.scale || 1}
                 onChange={e =>
                   updateNowPlayingLayout('scale', parseFloat(e.target.value))
                 }
@@ -298,13 +298,13 @@ export default function LayoutEditor({
           <div className='grid grid-cols-2 gap-3'>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                X Offset: {componentLayouts.countdown.x}px
+                X Offset: {componentLayouts.countdown.x || 0}px
               </label>
               <input
                 type='range'
                 min='0'
                 max='200'
-                value={componentLayouts.countdown.x}
+                value={componentLayouts.countdown.x || 0}
                 onChange={e =>
                   updateCountdownLayout('x', parseInt(e.target.value))
                 }
@@ -313,13 +313,13 @@ export default function LayoutEditor({
             </div>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                Y Offset: {componentLayouts.countdown.y}px
+                Y Offset: {componentLayouts.countdown.y || 0}px
               </label>
               <input
                 type='range'
                 min='0'
                 max='200'
-                value={componentLayouts.countdown.y}
+                value={componentLayouts.countdown.y || 0}
                 onChange={e =>
                   updateCountdownLayout('y', parseInt(e.target.value))
                 }
@@ -330,14 +330,14 @@ export default function LayoutEditor({
           <div className='grid grid-cols-2 gap-3'>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                Scale: {componentLayouts.countdown.scale.toFixed(1)}x
+                Scale: {(componentLayouts.countdown.scale || 1).toFixed(1)}x
               </label>
               <input
                 type='range'
                 min='0.5'
                 max='2'
                 step='0.1'
-                value={componentLayouts.countdown.scale}
+                value={componentLayouts.countdown.scale || 1}
                 onChange={e =>
                   updateCountdownLayout('scale', parseFloat(e.target.value))
                 }
@@ -346,14 +346,14 @@ export default function LayoutEditor({
             </div>
             <div>
               <label className='block text-xs text-gray-400 mb-1'>
-                Min Width: {componentLayouts.countdown.minWidth}px
+                Min Width: {componentLayouts.countdown.minWidth || 320}px
               </label>
               <input
                 type='range'
                 min='250'
                 max='500'
                 step='50'
-                value={componentLayouts.countdown.minWidth}
+                value={componentLayouts.countdown.minWidth || 320}
                 onChange={e =>
                   updateCountdownLayout('minWidth', parseInt(e.target.value))
                 }
@@ -385,14 +385,14 @@ export default function LayoutEditor({
         <div className='space-y-3'>
           <div>
             <label className='block text-xs text-gray-400 mb-1'>
-              Particle Density: {componentLayouts.weather.density.toFixed(1)}x
+              Particle Density: {(componentLayouts.weather.density || 1).toFixed(1)}x
             </label>
             <input
               type='range'
               min='0.5'
               max='2'
               step='0.1'
-              value={componentLayouts.weather.density}
+              value={componentLayouts.weather.density || 1}
               onChange={e =>
                 updateWeatherLayout('density', parseFloat(e.target.value))
               }
