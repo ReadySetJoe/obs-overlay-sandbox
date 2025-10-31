@@ -265,9 +265,10 @@ export default function CountdownExpanded({
               y={componentLayouts.countdown.y || 0}
               onPositionChange={onPositionChange}
               color='yellow'
-              elementWidth={componentLayouts.countdown.minWidth || 320}
-              elementHeight={80 * (timers.length || 1)}
+              elementWidth={400}
+              elementHeight={Math.max(150, 120 * (timers.filter(t => t.isActive).length || 1))}
               scale={componentLayouts.countdown.scale || 1}
+              isDynamicSize={true}
             />
             <div className='grid grid-cols-2 gap-3 mt-3'>
               <div>

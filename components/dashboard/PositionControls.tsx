@@ -8,9 +8,11 @@ interface PositionControlsProps {
   y: number;
   onPositionChange: (x: number, y: number) => void;
   color?: string;
-  elementWidth?: number; // Base width before scaling
-  elementHeight?: number; // Base height before scaling
-  scale?: number; // Scale factor applied via CSS transform
+  elementWidth?: number;
+  elementHeight?: number;
+  scale?: number;
+  // Optional: show a note about dynamic sizing
+  isDynamicSize?: boolean;
 }
 
 export default function PositionControls({
@@ -21,25 +23,22 @@ export default function PositionControls({
   elementWidth = 200,
   elementHeight = 100,
   scale = 1,
+  isDynamicSize = false,
 }: PositionControlsProps) {
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Screen dimensions (1920x1080)
-  const screenWidth = 1920;
-  const screenHeight = 1080;
+  // Stream dimensions (1920x1080)
+  const STREAM_WIDTH = 1920;
+  const STREAM_HEIGHT = 1080;
 
-  // Visual dimensions after scaling (what the user sees)
-  const visualWidth = elementWidth * scale;
-  const visualHeight = elementHeight * scale;
+  // Preview dimensions (16:9 ratio)
+  const PREVIEW_WIDTH = 240;
+  const PREVIEW_HEIGHT = 135;
 
-  // Visual preview dimensions
-  const previewWidth = 240;
-  const previewHeight = 135; // 16:9 ratio
-
-  // Scale factors
-  const scaleX = screenWidth / previewWidth;
-  const scaleY = screenHeight / previewHeight;
+  // Calculate scale factors between stream and preview
+  const scaleX = STREAM_WIDTH / PREVIEW_WIDTH;
+  const scaleY = STREAM_HEIGHT / PREVIEW_HEIGHT;
 
   const handleMouseDown = () => {
     setIsDragging(true);
@@ -54,31 +53,23 @@ export default function PositionControls({
     if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
-    const mouseX = Math.max(0, Math.min(e.clientX - rect.left, previewWidth));
-    const mouseY = Math.max(0, Math.min(e.clientY - rect.top, previewHeight));
 
-    // Convert preview coordinates to screen coordinates (visual center where user clicked)
-    const visualCenterX = Math.round(mouseX * scaleX);
-    const visualCenterY = Math.round(mouseY * scaleY);
+    // Get mouse position within preview, clamped to bounds
+    const mouseX = Math.max(0, Math.min(e.clientX - rect.left, PREVIEW_WIDTH));
+    const mouseY = Math.max(0, Math.min(e.clientY - rect.top, PREVIEW_HEIGHT));
 
-    // Convert to percentage of screen dimensions for the visual center
-    const centerXPercent = visualCenterX / screenWidth;
-    const centerYPercent = visualCenterY / screenHeight;
+    // Convert preview coordinates to stream coordinates
+    const streamX = mouseX * scaleX;
+    const streamY = mouseY * scaleY;
 
-    // Clamp to reasonable bounds (10% to 90% to keep some padding)
-    const clampedXPercent = Math.max(0.05, Math.min(centerXPercent, 0.95));
-    const clampedYPercent = Math.max(0.05, Math.min(centerYPercent, 0.95));
+    // Clamp to keep element fully visible (considering scale)
+    const visualWidth = elementWidth * scale;
+    const visualHeight = elementHeight * scale;
 
-    // Convert back to pixels for the visual center
-    const clampedCenterX = clampedXPercent * screenWidth;
-    const clampedCenterY = clampedYPercent * screenHeight;
+    const clampedX = Math.max(0, Math.min(streamX, STREAM_WIDTH - visualWidth));
+    const clampedY = Math.max(0, Math.min(streamY, STREAM_HEIGHT - visualHeight));
 
-    // Convert visual center to CSS top-left position for storage
-    // Visual center = x + width/2, so x = visualCenter - width/2
-    const cssX = clampedCenterX - elementWidth / 2;
-    const cssY = clampedCenterY - elementHeight / 2;
-
-    onPositionChange(cssX, cssY);
+    onPositionChange(Math.round(clampedX), Math.round(clampedY));
   };
 
   useEffect(() => {
@@ -88,20 +79,11 @@ export default function PositionControls({
     }
   }, [isDragging]);
 
-  // Convert stored top-left coordinates to visual center coordinates for display
-  // The CSS box is at (x, y) with size (elementWidth, elementHeight)
-  // Its center is at (x + elementWidth/2, y + elementHeight/2)
-  // This is also the visual center after scaling
-  const centerX = x + elementWidth / 2;
-  const centerY = y + elementHeight / 2;
-
-  // Convert screen center coordinates to preview coordinates
-  const previewCenterX = centerX / scaleX;
-  const previewCenterY = centerY / scaleY;
-
-  // Visual element dimensions in preview scale (what user sees after scaling)
-  const previewVisualWidth = visualWidth / scaleX;
-  const previewVisualHeight = visualHeight / scaleY;
+  // Convert stream coordinates to preview coordinates for display
+  const previewX = x / scaleX;
+  const previewY = y / scaleY;
+  const previewWidth = (elementWidth * scale) / scaleX;
+  const previewHeight = (elementHeight * scale) / scaleY;
 
   const colorMap: Record<string, string> = {
     purple: 'bg-purple-500',
@@ -112,32 +94,36 @@ export default function PositionControls({
 
   const elementColor = colorMap[color] || 'bg-purple-500';
 
-  // Snap positions - targets are pixel coordinates for visual center
-  const snapToPosition = (targetCenterX: number, targetCenterY: number) => {
-    // Convert visual center to CSS top-left position for storage
-    // Visual center = x + width/2, so x = visualCenter - width/2
-    const cssX = targetCenterX - elementWidth / 2;
-    const cssY = targetCenterY - elementHeight / 2;
+  // Preset snap positions (as percentages of screen)
+  const snapToPosition = (xPercent: number, yPercent: number) => {
+    const visualWidth = elementWidth * scale;
+    const visualHeight = elementHeight * scale;
 
-    onPositionChange(cssX, cssY);
+    const targetX = (STREAM_WIDTH * xPercent) - (visualWidth * xPercent);
+    const targetY = (STREAM_HEIGHT * yPercent) - (visualHeight * yPercent);
+
+    const clampedX = Math.max(0, Math.min(targetX, STREAM_WIDTH - visualWidth));
+    const clampedY = Math.max(0, Math.min(targetY, STREAM_HEIGHT - visualHeight));
+
+    onPositionChange(Math.round(clampedX), Math.round(clampedY));
   };
 
   return (
     <div className='space-y-3 bg-gray-700/20 rounded-lg p-3 border border-gray-600/50'>
       <div>
         <label className='block text-xs text-gray-400 mb-2 font-semibold'>
-          Position Preview
+          Position Preview (1920x1080)
         </label>
         <div
           ref={containerRef}
           className='relative bg-gray-900 rounded border border-gray-600 cursor-crosshair select-none'
-          style={{ width: previewWidth, height: previewHeight }}
+          style={{ width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onClick={handleMouseMove}
         >
-          {/* Preview screen */}
-          <div className='absolute inset-0 opacity-30'>
+          {/* Grid overlay */}
+          <div className='absolute inset-0 opacity-20 pointer-events-none'>
             <div className='absolute top-0 left-0 right-0 h-px bg-gray-600' />
             <div className='absolute bottom-0 left-0 right-0 h-px bg-gray-600' />
             <div className='absolute top-0 bottom-0 left-0 w-px bg-gray-600' />
@@ -146,127 +132,105 @@ export default function PositionControls({
             <div className='absolute top-0 bottom-0 left-1/2 w-px bg-gray-700' />
           </div>
 
-          {/* Snap buttons - use percentage-based positions */}
+          {/* Quick position buttons */}
           {/* Corners */}
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.1, screenHeight * 0.1);
-            }}
-            className='absolute top-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tl'
+            onClick={e => { e.stopPropagation(); snapToPosition(0, 0); }}
+            className='absolute top-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tl z-10'
             title='Top Left'
           />
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.9, screenHeight * 0.1);
-            }}
-            className='absolute top-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tr'
+            onClick={e => { e.stopPropagation(); snapToPosition(1, 0); }}
+            className='absolute top-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tr z-10'
             title='Top Right'
           />
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.1, screenHeight * 0.9);
-            }}
-            className='absolute bottom-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-bl'
+            onClick={e => { e.stopPropagation(); snapToPosition(0, 1); }}
+            className='absolute bottom-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-bl z-10'
             title='Bottom Left'
           />
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.9, screenHeight * 0.9);
-            }}
-            className='absolute bottom-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-br'
+            onClick={e => { e.stopPropagation(); snapToPosition(1, 1); }}
+            className='absolute bottom-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-br z-10'
             title='Bottom Right'
           />
 
           {/* Edges */}
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.5, screenHeight * 0.1);
-            }}
-            className='absolute top-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-t'
+            onClick={e => { e.stopPropagation(); snapToPosition(0.5, 0); }}
+            className='absolute top-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-t z-10'
             title='Top Center'
           />
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.5, screenHeight * 0.9);
-            }}
-            className='absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-b'
+            onClick={e => { e.stopPropagation(); snapToPosition(0.5, 1); }}
+            className='absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-b z-10'
             title='Bottom Center'
           />
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.1, screenHeight * 0.5);
-            }}
-            className='absolute top-1/2 left-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-l'
+            onClick={e => { e.stopPropagation(); snapToPosition(0, 0.5); }}
+            className='absolute top-1/2 left-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-l z-10'
             title='Left Center'
           />
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.9, screenHeight * 0.5);
-            }}
-            className='absolute top-1/2 right-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-r'
+            onClick={e => { e.stopPropagation(); snapToPosition(1, 0.5); }}
+            className='absolute top-1/2 right-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-r z-10'
             title='Right Center'
           />
 
           {/* Center */}
           <button
-            onClick={e => {
-              e.stopPropagation();
-              snapToPosition(screenWidth * 0.5, screenHeight * 0.5);
-            }}
-            className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-sm'
+            onClick={e => { e.stopPropagation(); snapToPosition(0.5, 0.5); }}
+            className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-sm z-10'
             title='Center'
           />
 
-          {/* Draggable element indicator - shows as a rectangle with visual dimensions */}
+          {/* Element preview */}
           <div
-            className={`absolute ${elementColor} rounded border-2 border-white transition-opacity ${
+            className={`absolute ${elementColor} rounded border-2 border-white transition-opacity pointer-events-none ${
               isDragging ? 'opacity-90' : 'opacity-60 hover:opacity-80'
-            }`}
+            } ${isDynamicSize ? 'border-dashed' : ''}`}
             style={{
-              left: previewCenterX,
-              top: previewCenterY,
-              width: previewVisualWidth,
-              height: previewVisualHeight,
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'none',
+              left: previewX,
+              top: previewY,
+              width: previewWidth,
+              height: previewHeight,
             }}
-          />
+          >
+            {isDynamicSize && (
+              <div className='absolute inset-0 flex items-center justify-center text-white text-[8px] font-bold bg-black/30'>
+                ~{Math.round(elementHeight)}px
+              </div>
+            )}
+          </div>
 
-          {/* Crosshair lines when dragging */}
+          {/* Crosshair when dragging */}
           {isDragging && (
             <>
               <div
-                className='absolute top-0 bottom-0 w-px bg-white opacity-30'
-                style={{ left: previewCenterX }}
+                className='absolute top-0 bottom-0 w-px bg-white opacity-30 pointer-events-none'
+                style={{ left: previewX }}
               />
               <div
-                className='absolute left-0 right-0 h-px bg-white opacity-30'
-                style={{ top: previewCenterY }}
+                className='absolute left-0 right-0 h-px bg-white opacity-30 pointer-events-none'
+                style={{ top: previewY }}
               />
             </>
           )}
         </div>
-        <div className='text-xs text-gray-500 mt-1'>
-          Click or drag to position element
+        <div className='text-xs text-gray-500 mt-1 flex items-center justify-between'>
+          <span>Click or drag to position</span>
         </div>
       </div>
 
+      {/* Coordinate inputs */}
       <div className='grid grid-cols-2 gap-3'>
         <div>
           <label className='block text-xs text-gray-400 mb-1'>X Position</label>
           <input
             type='number'
             min='0'
-            max={screenWidth}
-            value={x}
+            max={STREAM_WIDTH}
+            value={Math.round(x)}
             onChange={e => onPositionChange(parseInt(e.target.value) || 0, y)}
             className='w-full bg-gray-800 border border-gray-600 rounded-lg px-2 py-1 text-sm focus:border-gray-500 focus:outline-none'
           />
@@ -276,12 +240,17 @@ export default function PositionControls({
           <input
             type='number'
             min='0'
-            max={screenHeight}
-            value={y}
+            max={STREAM_HEIGHT}
+            value={Math.round(y)}
             onChange={e => onPositionChange(x, parseInt(e.target.value) || 0)}
             className='w-full bg-gray-800 border border-gray-600 rounded-lg px-2 py-1 text-sm focus:border-gray-500 focus:outline-none'
           />
         </div>
+      </div>
+
+      {/* Size info */}
+      <div className='text-xs text-gray-500 bg-gray-800/50 rounded px-2 py-1'>
+        Element: {elementWidth}×{elementHeight}px × {scale}x scale = {Math.round(elementWidth * scale)}×{Math.round(elementHeight * scale)}px
       </div>
     </div>
   );
