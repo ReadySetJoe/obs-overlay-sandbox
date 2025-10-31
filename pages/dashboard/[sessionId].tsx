@@ -67,6 +67,7 @@ export default function DashboardPage() {
 
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   // Component layouts
   const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
@@ -412,6 +413,20 @@ export default function DashboardPage() {
     socket.emit('emote-wall', config);
   };
 
+  const handleExpandElement = (element: string) => {
+    setIsExpanding(true);
+    setExpandedElement(element);
+    // Wait for expansion animation to complete before showing content
+    setTimeout(() => {
+      setIsExpanding(false);
+    }, 400);
+  };
+
+  const handleCloseExpanded = () => {
+    setExpandedElement(null);
+    setIsExpanding(false);
+  };
+
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8'>
       <div className='max-w-7xl mx-auto'>
@@ -488,7 +503,7 @@ export default function DashboardPage() {
         {/* Main Content */}
         {!expandedElement ? (
           /* Summary Tiles Grid */
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          <div key='summary-grid' className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-zoom-in'>
             {/* Now Playing Tile */}
             <SummaryTile
               title='Now Playing'
@@ -501,7 +516,7 @@ export default function DashboardPage() {
               color='green'
               isVisible={layers.find((l) => l.id === 'nowplaying')?.visible}
               onToggleVisibility={() => toggleLayer('nowplaying')}
-              onClick={() => setExpandedElement('nowplaying')}
+              onClick={() => handleExpandElement('nowplaying')}
             />
 
             {/* Countdown Timers Tile */}
@@ -521,7 +536,7 @@ export default function DashboardPage() {
               color='yellow'
               isVisible={layers.find((l) => l.id === 'countdown')?.visible}
               onToggleVisibility={() => toggleLayer('countdown')}
-              onClick={() => setExpandedElement('countdown')}
+              onClick={() => handleExpandElement('countdown')}
             />
 
             {/* Weather Effects Tile */}
@@ -541,7 +556,7 @@ export default function DashboardPage() {
               color='cyan'
               isVisible={layers.find((l) => l.id === 'weather')?.visible}
               onToggleVisibility={() => toggleLayer('weather')}
-              onClick={() => setExpandedElement('weather')}
+              onClick={() => handleExpandElement('weather')}
             />
 
             {/* Color Scheme Tile */}
@@ -559,7 +574,7 @@ export default function DashboardPage() {
                 </svg>
               }
               color='purple'
-              onClick={() => setExpandedElement('color')}
+              onClick={() => handleExpandElement('color')}
             />
 
             {/* Emote Wall Tile */}
@@ -577,37 +592,29 @@ export default function DashboardPage() {
                 </svg>
               }
               color='pink'
-              onClick={() => setExpandedElement('emote')}
+              onClick={() => handleExpandElement('emote')}
             />
           </div>
         ) : (
           /* Expanded Element View */
-          <div>
-            {/* Back Button */}
-            <button
-              onClick={() => setExpandedElement(null)}
-              className='mb-6 flex items-center gap-2 text-gray-400 hover:text-white transition'
-            >
-              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M15 19l-7-7 7-7'
-                />
-              </svg>
-              Back to all elements
-            </button>
+          <div key={`expanded-${expandedElement}`} className={`relative ${isExpanding ? 'animate-tile-expand' : 'animate-zoom-in'}`}>
+            {/* Expanding placeholder - Show during expansion */}
+            {isExpanding && (
+              <div className={`bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl min-h-[400px] flex items-center justify-center`}>
+                <div className='w-16 h-16 border-4 border-gray-600 border-t-gray-400 rounded-full animate-spin' />
+              </div>
+            )}
 
-            {/* Render expanded element */}
-            {expandedElement === 'color' && (
+            {/* Render expanded element - Only show after expansion */}
+            {!isExpanding && expandedElement === 'color' && (
               <ColorSchemeExpanded
                 colorScheme={colorScheme}
                 onColorSchemeChange={changeColorScheme}
+                onClose={handleCloseExpanded}
               />
             )}
 
-            {expandedElement === 'weather' && (
+            {!isExpanding && expandedElement === 'weather' && (
               <WeatherExpanded
                 weatherEffect={weatherEffect}
                 isVisible={layers.find((l) => l.id === 'weather')?.visible || false}
@@ -620,10 +627,11 @@ export default function DashboardPage() {
                     weather: { ...componentLayouts.weather, density },
                   })
                 }
+                onClose={handleCloseExpanded}
               />
             )}
 
-            {expandedElement === 'nowplaying' && (
+            {!isExpanding && expandedElement === 'nowplaying' && (
               <NowPlayingExpanded
                 spotifyToken={spotifyToken}
                 sessionId={sessionId as string}
@@ -663,10 +671,11 @@ export default function DashboardPage() {
                 onTrackAlbumArtChange={setTrackAlbumArt}
                 onIsPlayingChange={setIsPlaying}
                 onManualUpdate={updateNowPlaying}
+                onClose={handleCloseExpanded}
               />
             )}
 
-            {expandedElement === 'countdown' && (
+            {!isExpanding && expandedElement === 'countdown' && (
               <CountdownExpanded
                 timers={timers}
                 isVisible={layers.find((l) => l.id === 'countdown')?.visible || false}
@@ -705,10 +714,11 @@ export default function DashboardPage() {
                     countdown: { ...componentLayouts.countdown, minWidth },
                   })
                 }
+                onClose={handleCloseExpanded}
               />
             )}
 
-            {expandedElement === 'emote' && (
+            {!isExpanding && expandedElement === 'emote' && (
               <EmoteWallExpanded
                 emoteInput={emoteInput}
                 emoteIntensity={emoteIntensity}
@@ -716,6 +726,7 @@ export default function DashboardPage() {
                 onEmoteInputChange={setEmoteInput}
                 onIntensityChange={setEmoteIntensity}
                 onTrigger={triggerEmoteWall}
+                onClose={handleCloseExpanded}
               />
             )}
           </div>

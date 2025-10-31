@@ -76,8 +76,9 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
       const elapsed = Date.now() - startTime;
       const newProgress = initialProgress + elapsed;
 
-      if (newProgress >= track.duration) {
-        setCurrentProgress(track.duration);
+      const duration = track.duration || 0;
+      if (newProgress >= duration) {
+        setCurrentProgress(duration);
       } else {
         setCurrentProgress(newProgress);
       }

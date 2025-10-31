@@ -8,6 +8,7 @@ interface EmoteWallExpandedProps {
   onEmoteInputChange: (value: string) => void;
   onIntensityChange: (intensity: 'light' | 'medium' | 'heavy') => void;
   onTrigger: () => void;
+  onClose: () => void;
 }
 
 export default function EmoteWallExpanded({
@@ -17,10 +18,20 @@ export default function EmoteWallExpanded({
   onEmoteInputChange,
   onIntensityChange,
   onTrigger,
+  onClose,
 }: EmoteWallExpandedProps) {
   return (
     <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center gap-3 mb-6'>
+        <button
+          onClick={onClose}
+          className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
+          aria-label='Back'
+        >
+          <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+          </svg>
+        </button>
         <div className='w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center'>
           <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path

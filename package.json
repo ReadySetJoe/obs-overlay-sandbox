@@ -33,9 +33,11 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/colorthief": "^2.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/spotify-web-api-node": "^5.0.11",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",

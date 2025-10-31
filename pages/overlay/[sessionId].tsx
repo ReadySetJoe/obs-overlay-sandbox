@@ -116,6 +116,7 @@ export default function OverlayPage() {
     energetic: 'from-orange-900/20 to-pink-900/20',
     dark: 'from-gray-900/20 to-black/20',
     neon: 'from-cyan-500/20 to-fuchsia-500/20',
+    custom: 'from-blue-900/20 to-purple-900/20', // Placeholder for custom schemes
   };
 
   return (
@@ -135,37 +136,6 @@ export default function OverlayPage() {
 
       {/* Weather Effect */}
       {getLayerVisible('weather') && <WeatherEffect effect={weatherEffect} />}
-
-      {/* Chat Messages */}
-      {getLayerVisible('chat') && (
-        <div
-          className={`fixed space-y-3 ${
-            componentLayouts.chat.position === 'top-right'
-              ? 'top-0 right-0'
-              : componentLayouts.chat.position === 'top-left'
-              ? 'top-0 left-0'
-              : componentLayouts.chat.position === 'bottom-right'
-              ? 'bottom-0 right-0'
-              : componentLayouts.chat.position === 'bottom-left'
-              ? 'bottom-0 left-0'
-              : ''
-          }`}
-          style={{
-            zIndex: 5,
-            maxWidth: componentLayouts.chat.maxWidth,
-            transform: `translate(${componentLayouts.chat.position.includes('right') ? '-' : ''}${componentLayouts.chat.x}px, ${componentLayouts.chat.y}px)`,
-            padding: '2rem',
-          }}
-        >
-          {messages.map(message => (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              onComplete={() => removeMessage(message.id)}
-            />
-          ))}
-        </div>
-      )}
 
       {/* Now Playing */}
       {getLayerVisible('nowplaying') && (

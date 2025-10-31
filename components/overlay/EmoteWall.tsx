@@ -22,7 +22,7 @@ export default function EmoteWall() {
   const [isActive, setIsActive] = useState(false);
   const [config, setConfig] = useState<EmoteWallConfig | null>(null);
   const particlesRef = useRef<EmoteParticle[]>([]);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
 
   // Expose trigger function globally for socket events

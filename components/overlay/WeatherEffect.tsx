@@ -18,7 +18,7 @@ interface Drop {
 export default function WeatherEffect({ effect }: WeatherEffectProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dropsRef = useRef<Drop[]>([]);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
 
   useEffect(() => {
     if (effect === 'none') return;

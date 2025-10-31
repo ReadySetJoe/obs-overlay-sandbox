@@ -39,28 +39,29 @@ export default function SummaryTile({
   };
 
   return (
-    <button
-      onClick={onClick}
-      className={`bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl ${colorMap[color]} transition-all text-left group`}
+    <div
+      className={`bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl ${colorMap[color]} transition-all group cursor-pointer`}
     >
-      <div className='flex items-center justify-between mb-4'>
-        <div className='flex items-center gap-3'>
-          <div className={`w-12 h-12 bg-gradient-to-br ${gradientMap[color]} rounded-xl flex items-center justify-center`}>
-            {icon}
+      <div onClick={onClick} className='mb-4'>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-3'>
+            <div className={`w-12 h-12 bg-gradient-to-br ${gradientMap[color]} rounded-xl flex items-center justify-center`}>
+              {icon}
+            </div>
+            <div>
+              <h3 className='text-lg font-bold text-white'>{title}</h3>
+              <p className='text-xs text-gray-400'>{subtitle}</p>
+            </div>
           </div>
-          <div>
-            <h3 className='text-lg font-bold text-white'>{title}</h3>
-            <p className='text-xs text-gray-400'>{subtitle}</p>
-          </div>
+          <svg
+            className={`w-5 h-5 text-gray-400 ${colorMap[color]} transition`}
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+          </svg>
         </div>
-        <svg
-          className={`w-5 h-5 text-gray-400 ${colorMap[color]} transition`}
-          fill='none'
-          stroke='currentColor'
-          viewBox='0 0 24 24'
-        >
-          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
-        </svg>
       </div>
       {onToggleVisibility !== undefined && isVisible !== undefined && (
         <div className='flex items-center justify-between'>
@@ -72,6 +73,6 @@ export default function SummaryTile({
           />
         </div>
       )}
-    </button>
+    </div>
   );
 }
