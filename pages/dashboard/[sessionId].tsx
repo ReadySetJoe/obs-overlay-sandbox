@@ -65,7 +65,7 @@ export default function DashboardPage() {
 
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
-  const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
+  const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('rain');
 
   // Countdown timers
   const [timers, setTimers] = useState<CountdownTimer[]>([]);

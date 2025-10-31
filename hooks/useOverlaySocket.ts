@@ -18,7 +18,7 @@ export function useOverlaySocket(sessionId: string) {
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
-  const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('none');
+  const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('rain');
   const [nowPlaying, setNowPlaying] = useState<NowPlayingType | null>(null);
   const [countdownTimers, setCountdownTimers] = useState<CountdownTimerType[]>(
     []
