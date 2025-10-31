@@ -34,7 +34,10 @@ export default function ChatHighlightOverlay() {
 
       {/* Chat Highlight */}
       {getLayerVisible('chathighlight') && (
-        <ChatHighlight highlight={chatHighlight} layout={componentLayouts.chatHighlight} />
+        <ChatHighlight
+          highlight={chatHighlight}
+          layout={componentLayouts.chatHighlight}
+        />
       )}
     </div>
   );

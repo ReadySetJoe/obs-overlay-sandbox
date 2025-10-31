@@ -8,11 +8,9 @@ import EmoteWall from '@/components/overlay/EmoteWall';
 export default function EmoteWallOverlay() {
   const router = useRouter();
   const { sessionId } = router.query;
-  const {
-    isConnected,
-    colorScheme,
-    colorSchemeStyles,
-  } = useOverlaySocket(sessionId as string);
+  const { isConnected, colorScheme, colorSchemeStyles } = useOverlaySocket(
+    sessionId as string
+  );
 
   return (
     <div

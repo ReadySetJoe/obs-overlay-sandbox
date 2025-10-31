@@ -22,12 +22,27 @@ export default function ColorSchemeExpanded({
           className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
           aria-label='Back'
         >
-          <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+          <svg
+            className='w-5 h-5'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M15 19l-7-7 7-7'
+            />
           </svg>
         </button>
         <div className='w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center'>
-          <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <svg
+            className='w-6 h-6'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
             <path
               strokeLinecap='round'
               strokeLinejoin='round'
@@ -39,22 +54,29 @@ export default function ColorSchemeExpanded({
         <h2 className='text-xl font-bold'>Color Scheme</h2>
       </div>
       <div className='grid grid-cols-2 gap-3'>
-        {(['default', 'gaming', 'chill', 'energetic', 'dark', 'neon'] as ColorScheme[]).map(
-          (scheme) => (
-            <button
-              key={scheme}
-              onClick={() => onColorSchemeChange(scheme)}
-              className={`group relative bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 rounded-xl px-4 py-4 font-semibold capitalize transition-all duration-200 border shadow-lg hover:shadow-xl overflow-hidden ${
-                colorScheme === scheme
-                  ? 'border-purple-500 ring-2 ring-purple-500/50'
-                  : 'border-gray-600 hover:border-gray-500'
-              }`}
-            >
-              <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
-              {scheme}
-            </button>
-          )
-        )}
+        {(
+          [
+            'default',
+            'gaming',
+            'chill',
+            'energetic',
+            'dark',
+            'neon',
+          ] as ColorScheme[]
+        ).map(scheme => (
+          <button
+            key={scheme}
+            onClick={() => onColorSchemeChange(scheme)}
+            className={`group relative bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 rounded-xl px-4 py-4 font-semibold capitalize transition-all duration-200 border shadow-lg hover:shadow-xl overflow-hidden ${
+              colorScheme === scheme
+                ? 'border-purple-500 ring-2 ring-purple-500/50'
+                : 'border-gray-600 hover:border-gray-500'
+            }`}
+          >
+            <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
+            {scheme}
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -8,7 +8,10 @@ interface CopyURLButtonProps {
   label?: string;
 }
 
-export default function CopyURLButton({ url, label = 'Copy OBS URL' }: CopyURLButtonProps) {
+export default function CopyURLButton({
+  url,
+  label = 'Copy OBS URL',
+}: CopyURLButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -25,7 +28,9 @@ export default function CopyURLButton({ url, label = 'Copy OBS URL' }: CopyURLBu
     <div className='mt-6 pt-4 border-t border-gray-700/50'>
       <div className='flex items-center gap-3'>
         <div className='flex-1'>
-          <div className='text-xs text-gray-400 mb-1'>Individual Element URL</div>
+          <div className='text-xs text-gray-400 mb-1'>
+            Individual Element URL
+          </div>
           <div className='text-xs font-mono text-gray-500 truncate bg-gray-800/50 rounded px-2 py-1 border border-gray-700/50'>
             {url}
           </div>
@@ -40,14 +45,29 @@ export default function CopyURLButton({ url, label = 'Copy OBS URL' }: CopyURLBu
         >
           {copied ? (
             <>
-              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M5 13l4 4L19 7'
+                />
               </svg>
               Copied!
             </>
           ) : (
             <>
-              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
                 <path
                   strokeLinecap='round'
                   strokeLinejoin='round'

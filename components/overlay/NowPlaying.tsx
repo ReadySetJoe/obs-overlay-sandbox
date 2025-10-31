@@ -2,7 +2,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { NowPlaying as NowPlayingType, NowPlayingLayout } from '@/types/overlay';
+import {
+  NowPlaying as NowPlayingType,
+  NowPlayingLayout,
+} from '@/types/overlay';
 import Image from 'next/image';
 
 interface NowPlayingProps {
@@ -98,7 +101,7 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
     'top-right': 'top-0 right-0',
     'bottom-left': 'bottom-0 left-0',
     'bottom-right': 'bottom-0 right-0',
-    'custom': '',
+    custom: '',
   };
 
   return (

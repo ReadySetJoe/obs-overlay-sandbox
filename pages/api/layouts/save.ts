@@ -18,7 +18,8 @@ export default async function handler(
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { sessionId, colorScheme, weatherEffect, layers, componentLayouts } = req.body;
+  const { sessionId, colorScheme, weatherEffect, layers, componentLayouts } =
+    req.body;
 
   try {
     const layout = await prisma.layout.upsert({

@@ -49,7 +49,10 @@ export default function OverlayPage() {
 
       {/* Countdown Timers */}
       {getLayerVisible('countdown') && (
-        <CountdownTimer timers={countdownTimers} layout={componentLayouts.countdown} />
+        <CountdownTimer
+          timers={countdownTimers}
+          layout={componentLayouts.countdown}
+        />
       )}
 
       {/* Emote Wall */}
@@ -57,7 +60,10 @@ export default function OverlayPage() {
 
       {/* Chat Highlight */}
       {getLayerVisible('chathighlight') && (
-        <ChatHighlight highlight={chatHighlight} layout={componentLayouts.chatHighlight} />
+        <ChatHighlight
+          highlight={chatHighlight}
+          layout={componentLayouts.chatHighlight}
+        />
       )}
     </div>
   );

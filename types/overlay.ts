@@ -62,7 +62,12 @@ export interface EmoteWallConfig {
   intensity: 'light' | 'medium' | 'heavy';
 }
 
-export type Position = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'custom';
+export type Position =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'custom';
 
 export interface ChatLayout {
   position: Position;

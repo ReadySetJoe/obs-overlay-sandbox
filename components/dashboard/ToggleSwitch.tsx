@@ -26,7 +26,7 @@ export default function ToggleSwitch({
     <div className='flex items-center gap-2'>
       {label && <span className='text-xs text-gray-500'>{label}</span>}
       <button
-        onClick={(e) => {
+        onClick={e => {
           e.stopPropagation();
           onChange();
         }}

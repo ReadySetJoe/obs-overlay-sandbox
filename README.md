@@ -20,6 +20,7 @@ npm install
 ```
 
 Required packages:
+
 - `socket.io` and `socket.io-client` - Real-time communication
 - `spotify-web-api-node` - Spotify API integration
 - `colorthief` - Album art color extraction
@@ -49,18 +50,20 @@ TWITCH_CLIENT_SECRET=your_twitch_client_secret
 ```
 
 **Getting Spotify Credentials:**
+
 1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Create a new app
 3. Copy your Client ID and Client Secret
 4. Add `http://localhost:3000/api/spotify/callback` to your app's Redirect URIs
 
 **Getting Twitch Credentials:**
+
 1. Go to [Twitch Developer Console](https://dev.twitch.tv/console/apps)
 2. Create a new application
 3. Copy your Client ID and Client Secret
 4. Add `http://localhost:3000/api/auth/callback/twitch` to your OAuth Redirect URLs
 
-3. Set up the database:
+5. Set up the database:
 
 ```bash
 # Start PostgreSQL with Docker
@@ -127,6 +130,7 @@ Navigate to `/dashboard/[your-session-id]` to control your overlay:
 - **Auto-Save**: Your settings are automatically saved when signed in with Twitch
 
 **Spotify Features:**
+
 - Automatically updates track info every 5 seconds
 - Shows current playing track with album art
 - Progress bar syncs with playback
@@ -253,6 +257,7 @@ Already integrated! See the [Dashboard](#dashboard) section for setup instructio
 ## Features Overview
 
 ### Implemented
+
 - Real-time WebSocket communication
 - Spotify integration with OAuth authentication
 - Dynamic album art color extraction
@@ -263,6 +268,7 @@ Already integrated! See the [Dashboard](#dashboard) section for setup instructio
 - Database persistence of user settings
 
 ### Future Enhancements
+
 - Twitch chat integration
 - Interactive games viewers can play via chat commands
 - More weather effects (leaves, stars, bubbles)

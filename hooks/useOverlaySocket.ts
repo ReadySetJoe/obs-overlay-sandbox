@@ -28,7 +28,13 @@ export function useOverlaySocket(sessionId: string) {
     nowPlaying: { position: 'bottom-right', x: 0, y: 0, width: 400, scale: 1 },
     countdown: { position: 'bottom-left', x: 0, y: 0, scale: 1, minWidth: 320 },
     weather: { density: 1 },
-    chatHighlight: { position: 'bottom-left', x: 20, y: 20, width: 500, scale: 1 },
+    chatHighlight: {
+      position: 'bottom-left',
+      x: 20,
+      y: 20,
+      width: 500,
+      scale: 1,
+    },
   });
   const [sceneLayers, setSceneLayers] = useState<SceneLayer[]>([
     { id: 'weather', name: 'Weather', visible: true, zIndex: 2 },
@@ -37,7 +43,9 @@ export function useOverlaySocket(sessionId: string) {
     { id: 'countdown', name: 'Countdown', visible: true, zIndex: 15 },
     { id: 'chathighlight', name: 'Chat Highlight', visible: true, zIndex: 20 },
   ]);
-  const [chatHighlight, setChatHighlight] = useState<ChatHighlightType | null>(null);
+  const [chatHighlight, setChatHighlight] = useState<ChatHighlightType | null>(
+    null
+  );
 
   useEffect(() => {
     if (!socket) return;

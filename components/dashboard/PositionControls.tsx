@@ -8,9 +8,9 @@ interface PositionControlsProps {
   y: number;
   onPositionChange: (x: number, y: number) => void;
   color?: string;
-  elementWidth?: number;  // Base width before scaling
+  elementWidth?: number; // Base width before scaling
   elementHeight?: number; // Base height before scaling
-  scale?: number;         // Scale factor applied via CSS transform
+  scale?: number; // Scale factor applied via CSS transform
 }
 
 export default function PositionControls({
@@ -149,51 +149,78 @@ export default function PositionControls({
           {/* Snap buttons - use percentage-based positions */}
           {/* Corners */}
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.1, screenHeight * 0.1); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.1, screenHeight * 0.1);
+            }}
             className='absolute top-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tl'
             title='Top Left'
           />
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.9, screenHeight * 0.1); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.9, screenHeight * 0.1);
+            }}
             className='absolute top-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tr'
             title='Top Right'
           />
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.1, screenHeight * 0.9); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.1, screenHeight * 0.9);
+            }}
             className='absolute bottom-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-bl'
             title='Bottom Left'
           />
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.9, screenHeight * 0.9); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.9, screenHeight * 0.9);
+            }}
             className='absolute bottom-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-br'
             title='Bottom Right'
           />
 
           {/* Edges */}
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.5, screenHeight * 0.1); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.5, screenHeight * 0.1);
+            }}
             className='absolute top-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-t'
             title='Top Center'
           />
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.5, screenHeight * 0.9); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.5, screenHeight * 0.9);
+            }}
             className='absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-b'
             title='Bottom Center'
           />
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.1, screenHeight * 0.5); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.1, screenHeight * 0.5);
+            }}
             className='absolute top-1/2 left-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-l'
             title='Left Center'
           />
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.9, screenHeight * 0.5); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.9, screenHeight * 0.5);
+            }}
             className='absolute top-1/2 right-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-r'
             title='Right Center'
           />
 
           {/* Center */}
           <button
-            onClick={(e) => { e.stopPropagation(); snapToPosition(screenWidth * 0.5, screenHeight * 0.5); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(screenWidth * 0.5, screenHeight * 0.5);
+            }}
             className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-sm'
             title='Center'
           />
@@ -234,9 +261,7 @@ export default function PositionControls({
 
       <div className='grid grid-cols-2 gap-3'>
         <div>
-          <label className='block text-xs text-gray-400 mb-1'>
-            X Position
-          </label>
+          <label className='block text-xs text-gray-400 mb-1'>X Position</label>
           <input
             type='number'
             min='0'
@@ -247,9 +272,7 @@ export default function PositionControls({
           />
         </div>
         <div>
-          <label className='block text-xs text-gray-400 mb-1'>
-            Y Position
-          </label>
+          <label className='block text-xs text-gray-400 mb-1'>Y Position</label>
           <input
             type='number'
             min='0'

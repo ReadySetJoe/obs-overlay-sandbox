@@ -47,13 +47,17 @@ export default function SummaryTile({
   return (
     <div
       className={`relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl ${
-        disabled ? 'opacity-50 cursor-not-allowed' : `${colorMap[color]} cursor-pointer`
+        disabled
+          ? 'opacity-50 cursor-not-allowed'
+          : `${colorMap[color]} cursor-pointer`
       } transition-all group`}
     >
       <div onClick={disabled ? undefined : onClick} className='mb-4'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-3'>
-            <div className={`w-12 h-12 bg-gradient-to-br ${disabled ? 'from-gray-600 to-gray-700' : gradientMap[color]} rounded-xl flex items-center justify-center`}>
+            <div
+              className={`w-12 h-12 bg-gradient-to-br ${disabled ? 'from-gray-600 to-gray-700' : gradientMap[color]} rounded-xl flex items-center justify-center`}
+            >
               {icon}
             </div>
             <div>
@@ -68,27 +72,37 @@ export default function SummaryTile({
               stroke='currentColor'
               viewBox='0 0 24 24'
             >
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M9 5l7 7-7 7'
+              />
             </svg>
           )}
         </div>
       </div>
-      {onToggleVisibility !== undefined && isVisible !== undefined && !disabled && !authRequired && (
-        <div className='flex items-center justify-between'>
-          <span className='text-xs text-gray-500'>{isVisible ? 'Visible' : 'Hidden'}</span>
-          <ToggleSwitch
-            checked={isVisible}
-            onChange={onToggleVisibility}
-            color={color}
-          />
-        </div>
-      )}
+      {onToggleVisibility !== undefined &&
+        isVisible !== undefined &&
+        !disabled &&
+        !authRequired && (
+          <div className='flex items-center justify-between'>
+            <span className='text-xs text-gray-500'>
+              {isVisible ? 'Visible' : 'Hidden'}
+            </span>
+            <ToggleSwitch
+              checked={isVisible}
+              onChange={onToggleVisibility}
+              color={color}
+            />
+          </div>
+        )}
 
       {/* Authentication Overlay */}
       {authRequired && onAuthClick && (
         <div className='absolute inset-0 bg-gray-900/90 backdrop-blur-sm rounded-2xl flex items-center justify-center'>
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onAuthClick();
             }}

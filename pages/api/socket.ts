@@ -24,7 +24,8 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       path: '/api/socket',
       addTrailingSlash: false,
       cors: {
-        origin: '*',
+        origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+        credentials: true,
       },
     });
 

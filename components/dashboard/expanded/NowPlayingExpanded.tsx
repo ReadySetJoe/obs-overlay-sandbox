@@ -57,8 +57,18 @@ export default function NowPlayingExpanded({
             className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
             aria-label='Back'
           >
-            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M15 19l-7-7 7-7'
+              />
             </svg>
           </button>
           <div className='w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center'>
@@ -71,7 +81,9 @@ export default function NowPlayingExpanded({
         <button
           onClick={onToggleVisibility}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-            isVisible ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'
+            isVisible
+              ? 'bg-green-600 hover:bg-green-500'
+              : 'bg-gray-700 hover:bg-gray-600'
           }`}
         >
           {isVisible ? '👁️ Visible' : '🚫 Hidden'}
@@ -81,7 +93,8 @@ export default function NowPlayingExpanded({
       {!spotifyToken ? (
         <div className='text-center py-6'>
           <div className='mb-4 text-gray-300'>
-            Connect your Spotify account to display what you&apos;re listening to
+            Connect your Spotify account to display what you&apos;re listening
+            to
           </div>
           <a
             href={`/api/spotify/login?sessionId=${sessionId}`}
@@ -95,7 +108,9 @@ export default function NowPlayingExpanded({
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
               <div className='w-2 h-2 rounded-full bg-green-400 animate-pulse' />
-              <span className='text-xs text-gray-400'>Auto-updating every 5s</span>
+              <span className='text-xs text-gray-400'>
+                Auto-updating every 5s
+              </span>
             </div>
             <button
               onClick={onDisconnect}
@@ -116,8 +131,12 @@ export default function NowPlayingExpanded({
                   />
                 )}
                 <div className='flex-1 min-w-0'>
-                  <div className='font-bold text-white truncate'>{trackTitle}</div>
-                  <div className='text-sm text-gray-400 truncate'>{trackArtist}</div>
+                  <div className='font-bold text-white truncate'>
+                    {trackTitle}
+                  </div>
+                  <div className='text-sm text-gray-400 truncate'>
+                    {trackArtist}
+                  </div>
                   <div className='flex items-center gap-2 mt-2'>
                     {isPlaying ? (
                       <div className='flex items-center gap-1 text-xs text-green-400'>
@@ -137,7 +156,9 @@ export default function NowPlayingExpanded({
 
           {/* Position & Size Controls */}
           <div className='mt-4'>
-            <h4 className='text-sm font-semibold text-gray-300 mb-3'>Position & Size</h4>
+            <h4 className='text-sm font-semibold text-gray-300 mb-3'>
+              Position & Size
+            </h4>
             <PositionControls
               x={componentLayouts.nowPlaying.x || 0}
               y={componentLayouts.nowPlaying.y || 0}
@@ -158,7 +179,7 @@ export default function NowPlayingExpanded({
                   max='600'
                   step='50'
                   value={componentLayouts.nowPlaying.width || 400}
-                  onChange={(e) => onWidthChange(parseInt(e.target.value))}
+                  onChange={e => onWidthChange(parseInt(e.target.value))}
                   className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500'
                 />
               </div>
@@ -172,7 +193,7 @@ export default function NowPlayingExpanded({
                   max='2'
                   step='0.1'
                   value={componentLayouts.nowPlaying.scale || 1}
-                  onChange={(e) => onScaleChange(parseFloat(e.target.value))}
+                  onChange={e => onScaleChange(parseFloat(e.target.value))}
                   className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500'
                 />
               </div>
@@ -199,31 +220,37 @@ export default function NowPlayingExpanded({
             </summary>
             <div className='mt-4 space-y-3'>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Track Title</label>
+                <label className='block text-xs text-gray-400 mb-1'>
+                  Track Title
+                </label>
                 <input
                   type='text'
                   value={trackTitle}
-                  onChange={(e) => onTrackTitleChange(e.target.value)}
+                  onChange={e => onTrackTitleChange(e.target.value)}
                   className='w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-gray-500 focus:outline-none'
                   placeholder='Song name'
                 />
               </div>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Artist</label>
+                <label className='block text-xs text-gray-400 mb-1'>
+                  Artist
+                </label>
                 <input
                   type='text'
                   value={trackArtist}
-                  onChange={(e) => onTrackArtistChange(e.target.value)}
+                  onChange={e => onTrackArtistChange(e.target.value)}
                   className='w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-gray-500 focus:outline-none'
                   placeholder='Artist name'
                 />
               </div>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Album Art URL</label>
+                <label className='block text-xs text-gray-400 mb-1'>
+                  Album Art URL
+                </label>
                 <input
                   type='text'
                   value={trackAlbumArt}
-                  onChange={(e) => onTrackAlbumArtChange(e.target.value)}
+                  onChange={e => onTrackAlbumArtChange(e.target.value)}
                   className='w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-gray-500 focus:outline-none'
                   placeholder='https://...'
                 />
@@ -232,7 +259,7 @@ export default function NowPlayingExpanded({
                 <input
                   type='checkbox'
                   checked={isPlaying}
-                  onChange={(e) => onIsPlayingChange(e.target.checked)}
+                  onChange={e => onIsPlayingChange(e.target.checked)}
                   className='w-4 h-4 accent-green-500'
                 />
                 <span className='text-sm text-gray-300'>Currently Playing</span>
@@ -249,7 +276,9 @@ export default function NowPlayingExpanded({
       )}
 
       {/* Copy URL for OBS */}
-      <CopyURLButton url={`${window.location.origin}/overlay/${sessionId}/now-playing`} />
+      <CopyURLButton
+        url={`${window.location.origin}/overlay/${sessionId}/now-playing`}
+      />
     </div>
   );
 }

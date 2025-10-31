@@ -2,16 +2,31 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CountdownTimer as CountdownTimerType, CountdownLayout } from '@/types/overlay';
+import {
+  CountdownTimer as CountdownTimerType,
+  CountdownLayout,
+} from '@/types/overlay';
 
 interface CountdownTimerProps {
   timers: CountdownTimerType[];
   layout: CountdownLayout;
 }
 
-export default function CountdownTimer({ timers, layout }: CountdownTimerProps) {
+export default function CountdownTimer({
+  timers,
+  layout,
+}: CountdownTimerProps) {
   const [timeRemaining, setTimeRemaining] = useState<
-    Record<string, { days: number; hours: number; minutes: number; seconds: number; expired: boolean }>
+    Record<
+      string,
+      {
+        days: number;
+        hours: number;
+        minutes: number;
+        seconds: number;
+        expired: boolean;
+      }
+    >
   >({});
 
   useEffect(() => {
@@ -36,7 +51,9 @@ export default function CountdownTimer({ timers, layout }: CountdownTimerProps) 
         } else {
           newTimeRemaining[timer.id] = {
             days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+            hours: Math.floor(
+              (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            ),
             minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
             seconds: Math.floor((difference % (1000 * 60)) / 1000),
             expired: false,
@@ -62,7 +79,7 @@ export default function CountdownTimer({ timers, layout }: CountdownTimerProps) 
     'top-right': 'top-0 right-0',
     'bottom-left': 'bottom-0 left-0',
     'bottom-right': 'bottom-0 right-0',
-    'custom': '',
+    custom: '',
   };
 
   return (
@@ -90,7 +107,9 @@ export default function CountdownTimer({ timers, layout }: CountdownTimerProps) 
                 {timer.title}
               </h3>
               {timer.description && (
-                <p className='text-sm text-gray-400 mt-1'>{timer.description}</p>
+                <p className='text-sm text-gray-400 mt-1'>
+                  {timer.description}
+                </p>
               )}
             </div>
 

@@ -12,9 +12,7 @@ interface TwitchChatConnection {
 // Store active Twitch chat connections
 const activeConnections = new Map<string, TwitchChatConnection>();
 
-export function getTwitchUserRole(
-  tags: tmi.ChatUserstate
-): UserRole {
+export function getTwitchUserRole(tags: tmi.ChatUserstate): UserRole {
   if (tags.badges?.broadcaster === '1') return 'moderator';
   if (tags.mod) return 'moderator';
   if (tags.badges?.vip === '1') return 'vip';
@@ -67,7 +65,7 @@ export async function startTwitchChatMonitoring(
     // Connection successful
   });
 
-  client.on('disconnected', (reason) => {
+  client.on('disconnected', reason => {
     activeConnections.delete(sessionId);
   });
 
@@ -84,7 +82,9 @@ export async function startTwitchChatMonitoring(
   }
 }
 
-export async function stopTwitchChatMonitoring(sessionId: string): Promise<void> {
+export async function stopTwitchChatMonitoring(
+  sessionId: string
+): Promise<void> {
   const connection = activeConnections.get(sessionId);
   if (!connection) {
     return;

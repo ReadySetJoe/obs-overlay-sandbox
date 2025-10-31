@@ -32,6 +32,8 @@ export default async function handler(
     });
   } catch (error) {
     console.error('Error stopping Twitch chat monitoring:', error);
-    return res.status(500).json({ error: 'Failed to disconnect from Twitch chat' });
+    return res
+      .status(500)
+      .json({ error: 'Failed to disconnect from Twitch chat' });
   }
 }

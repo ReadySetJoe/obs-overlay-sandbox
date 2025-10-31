@@ -34,7 +34,10 @@ export default function CountdownOverlay() {
 
       {/* Countdown Timers */}
       {getLayerVisible('countdown') && (
-        <CountdownTimer timers={countdownTimers} layout={componentLayouts.countdown} />
+        <CountdownTimer
+          timers={countdownTimers}
+          layout={componentLayouts.countdown}
+        />
       )}
     </div>
   );

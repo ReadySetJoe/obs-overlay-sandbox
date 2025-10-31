@@ -31,12 +31,16 @@ export default function DashboardPage() {
   const { socket, isConnected } = useSocket(sessionId as string);
 
   // Save status
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
+    'saved'
+  );
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Spotify Authentication
   const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
-  const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(null);
+  const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(
+    null
+  );
 
   // Now Playing
   const [trackTitle, setTrackTitle] = useState('');
@@ -55,7 +59,9 @@ export default function DashboardPage() {
 
   // Chat messages and highlight
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatHighlight, setChatHighlight] = useState<ChatHighlight | null>(null);
+  const [chatHighlight, setChatHighlight] = useState<ChatHighlight | null>(
+    null
+  );
 
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
@@ -71,7 +77,9 @@ export default function DashboardPage() {
 
   // Emote wall
   const [emoteInput, setEmoteInput] = useState('🎉 🎊 ✨ 🌟 💫');
-  const [emoteIntensity, setEmoteIntensity] = useState<'light' | 'medium' | 'heavy'>('medium');
+  const [emoteIntensity, setEmoteIntensity] = useState<
+    'light' | 'medium' | 'heavy'
+  >('medium');
 
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
@@ -83,7 +91,13 @@ export default function DashboardPage() {
     nowPlaying: { position: 'top-left', x: 0, y: 0, width: 400, scale: 1 },
     countdown: { position: 'top-left', x: 0, y: 0, scale: 1, minWidth: 320 },
     weather: { density: 1 },
-    chatHighlight: { position: 'bottom-left', x: 20, y: 20, width: 500, scale: 1 },
+    chatHighlight: {
+      position: 'bottom-left',
+      x: 20,
+      y: 20,
+      width: 500,
+      scale: 1,
+    },
   });
 
   // Handle Spotify callback tokens from URL
@@ -97,7 +111,9 @@ export default function DashboardPage() {
       setSpotifyRefreshToken(refreshToken);
       localStorage.setItem('spotify_access_token', accessToken);
       localStorage.setItem('spotify_refresh_token', refreshToken);
-      const cleanUrl = sessionId ? `/dashboard/${sessionId}` : window.location.pathname;
+      const cleanUrl = sessionId
+        ? `/dashboard/${sessionId}`
+        : window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
     } else {
       const storedToken = localStorage.getItem('spotify_access_token');
@@ -115,7 +131,9 @@ export default function DashboardPage() {
 
     const loadLayout = async () => {
       try {
-        const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        const response = await fetch(
+          `/api/layouts/load?sessionId=${sessionId}`
+        );
         if (response.ok) {
           const { layout } = await response.json();
 
@@ -124,9 +142,21 @@ export default function DashboardPage() {
           setLayers([
             { id: 'weather', name: 'Weather', visible: layout.weatherVisible },
             { id: 'chat', name: 'Chat', visible: layout.chatVisible },
-            { id: 'nowplaying', name: 'Now Playing', visible: layout.nowPlayingVisible },
-            { id: 'countdown', name: 'Countdown', visible: layout.countdownVisible },
-            { id: 'chathighlight', name: 'Chat Highlight', visible: layout.chatHighlightVisible ?? true },
+            {
+              id: 'nowplaying',
+              name: 'Now Playing',
+              visible: layout.nowPlayingVisible,
+            },
+            {
+              id: 'countdown',
+              name: 'Countdown',
+              visible: layout.countdownVisible,
+            },
+            {
+              id: 'chathighlight',
+              name: 'Chat Highlight',
+              visible: layout.chatHighlightVisible ?? true,
+            },
           ]);
 
           if (layout.componentLayouts) {
@@ -134,11 +164,34 @@ export default function DashboardPage() {
               const parsedLayouts = JSON.parse(layout.componentLayouts);
               // Merge with defaults to ensure new properties exist
               setComponentLayouts({
-                chat: parsedLayouts.chat || { position: 'top-left', x: 0, y: 80, maxWidth: 400 },
-                nowPlaying: parsedLayouts.nowPlaying || { position: 'top-left', x: 0, y: 0, width: 400, scale: 1 },
-                countdown: parsedLayouts.countdown || { position: 'top-left', x: 0, y: 0, scale: 1, minWidth: 320 },
+                chat: parsedLayouts.chat || {
+                  position: 'top-left',
+                  x: 0,
+                  y: 80,
+                  maxWidth: 400,
+                },
+                nowPlaying: parsedLayouts.nowPlaying || {
+                  position: 'top-left',
+                  x: 0,
+                  y: 0,
+                  width: 400,
+                  scale: 1,
+                },
+                countdown: parsedLayouts.countdown || {
+                  position: 'top-left',
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                  minWidth: 320,
+                },
                 weather: parsedLayouts.weather || { density: 1 },
-                chatHighlight: parsedLayouts.chatHighlight || { position: 'bottom-left', x: 20, y: 20, width: 500, scale: 1 },
+                chatHighlight: parsedLayouts.chatHighlight || {
+                  position: 'bottom-left',
+                  x: 20,
+                  y: 20,
+                  width: 500,
+                  scale: 1,
+                },
               });
             } catch (error) {
               console.error('Error parsing component layouts:', error);
@@ -203,7 +256,14 @@ export default function DashboardPage() {
       console.error('Error saving layout:', error);
       setSaveStatus('unsaved');
     }
-  }, [session, sessionId, colorScheme, weatherEffect, layers, componentLayouts]);
+  }, [
+    session,
+    sessionId,
+    colorScheme,
+    weatherEffect,
+    layers,
+    componentLayouts,
+  ]);
 
   // Debounced auto-save
   useEffect(() => {
@@ -215,7 +275,14 @@ export default function DashboardPage() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [session, colorScheme, weatherEffect, layers, componentLayouts, saveLayout]);
+  }, [
+    session,
+    colorScheme,
+    weatherEffect,
+    layers,
+    componentLayouts,
+    saveLayout,
+  ]);
 
   // Poll Spotify API for now playing
   useEffect(() => {
@@ -223,7 +290,9 @@ export default function DashboardPage() {
 
     const pollSpotify = async () => {
       try {
-        const response = await fetch(`/api/spotify/now-playing?access_token=${spotifyToken}`);
+        const response = await fetch(
+          `/api/spotify/now-playing?access_token=${spotifyToken}`
+        );
 
         if (response.status === 401 && spotifyRefreshToken) {
           const refreshResponse = await fetch(
@@ -233,7 +302,10 @@ export default function DashboardPage() {
 
           if (refreshResponse.ok) {
             setSpotifyToken(refreshData.access_token);
-            localStorage.setItem('spotify_access_token', refreshData.access_token);
+            localStorage.setItem(
+              'spotify_access_token',
+              refreshData.access_token
+            );
             return;
           }
         }
@@ -302,11 +374,13 @@ export default function DashboardPage() {
   const toggleLayer = (layerId: string) => {
     if (!socket) return;
 
-    const layer = layers.find((l) => l.id === layerId);
+    const layer = layers.find(l => l.id === layerId);
     if (!layer) return;
 
     const newVisible = !layer.visible;
-    setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, visible: newVisible } : l)));
+    setLayers(prev =>
+      prev.map(l => (l.id === layerId ? { ...l, visible: newVisible } : l))
+    );
 
     socket.emit('scene-toggle', { layerId, visible: newVisible });
   };
@@ -356,7 +430,9 @@ export default function DashboardPage() {
 
         if (response.ok) {
           const { timer } = await response.json();
-          setTimers((prev) => prev.map((t) => (t.id === editingTimerId ? timer : t)));
+          setTimers(prev =>
+            prev.map(t => (t.id === editingTimerId ? timer : t))
+          );
           cancelTimerForm();
         }
       } else {
@@ -373,7 +449,7 @@ export default function DashboardPage() {
 
         if (response.ok) {
           const { timer } = await response.json();
-          setTimers((prev) => [...prev, timer]);
+          setTimers(prev => [...prev, timer]);
           cancelTimerForm();
         }
       }
@@ -391,7 +467,7 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
-        setTimers((prev) => prev.filter((t) => t.id !== timerId));
+        setTimers(prev => prev.filter(t => t.id !== timerId));
       }
     } catch (error) {
       console.error('Error deleting timer:', error);
@@ -410,7 +486,7 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const { timer } = await response.json();
-        setTimers((prev) => prev.map((t) => (t.id === timerId ? timer : t)));
+        setTimers(prev => prev.map(t => (t.id === timerId ? timer : t)));
       }
     } catch (error) {
       console.error('Error toggling timer:', error);
@@ -420,7 +496,7 @@ export default function DashboardPage() {
   const triggerEmoteWall = () => {
     if (!socket || !isConnected) return;
 
-    const emotes = emoteInput.split(/\s+/).filter((e) => e.trim());
+    const emotes = emoteInput.split(/\s+/).filter(e => e.trim());
     const config: EmoteWallConfig = {
       emotes,
       duration: 10000,
@@ -449,9 +525,9 @@ export default function DashboardPage() {
     if (!socket) return;
 
     const handleChatMessage = (message: ChatMessage) => {
-      setChatMessages((prev) => {
+      setChatMessages(prev => {
         // Check if message already exists (deduplicate)
-        const exists = prev.some((msg) => msg.id === message.id);
+        const exists = prev.some(msg => msg.id === message.id);
         if (exists) {
           return prev;
         }
@@ -601,31 +677,47 @@ export default function DashboardPage() {
                         : 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50'
                     }`}
                   />
-                  <span className='text-sm font-semibold'>{isConnected ? 'Live' : 'Offline'}</span>
+                  <span className='text-sm font-semibold'>
+                    {isConnected ? 'Live' : 'Offline'}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Session Info */}
-          {sessionId && <SessionInfo sessionId={sessionId as string} isAuthenticated={!!session} />}
+          {sessionId && (
+            <SessionInfo
+              sessionId={sessionId as string}
+              isAuthenticated={!!session}
+            />
+          )}
         </div>
 
         {/* Main Content */}
         {!expandedElement ? (
           /* Summary Tiles Grid */
-          <div key='summary-grid' className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-zoom-in'>
+          <div
+            key='summary-grid'
+            className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-zoom-in'
+          >
             {/* Now Playing Tile */}
             <SummaryTile
               title='Now Playing'
-              subtitle={spotifyToken ? trackTitle || 'Connected' : 'Not connected'}
+              subtitle={
+                spotifyToken ? trackTitle || 'Connected' : 'Not connected'
+              }
               icon={
-                <svg className='w-7 h-7' fill='currentColor' viewBox='0 0 24 24'>
+                <svg
+                  className='w-7 h-7'
+                  fill='currentColor'
+                  viewBox='0 0 24 24'
+                >
                   <path d='M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z' />
                 </svg>
               }
               color='green'
-              isVisible={layers.find((l) => l.id === 'nowplaying')?.visible}
+              isVisible={layers.find(l => l.id === 'nowplaying')?.visible}
               onToggleVisibility={() => toggleLayer('nowplaying')}
               onClick={() => handleExpandElement('nowplaying')}
             />
@@ -635,7 +727,12 @@ export default function DashboardPage() {
               title='Countdown Timers'
               subtitle={`${timers.length} timer${timers.length !== 1 ? 's' : ''}`}
               icon={
-                <svg className='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <svg
+                  className='w-7 h-7'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -645,7 +742,7 @@ export default function DashboardPage() {
                 </svg>
               }
               color='yellow'
-              isVisible={layers.find((l) => l.id === 'countdown')?.visible}
+              isVisible={layers.find(l => l.id === 'countdown')?.visible}
               onToggleVisibility={() => toggleLayer('countdown')}
               onClick={() => handleExpandElement('countdown')}
             />
@@ -657,11 +754,16 @@ export default function DashboardPage() {
                 !session
                   ? 'Connect Twitch to use'
                   : chatHighlight
-                  ? chatHighlight.message.username
-                  : `${chatMessages.length} messages`
+                    ? chatHighlight.message.username
+                    : `${chatMessages.length} messages`
               }
               icon={
-                <svg className='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <svg
+                  className='w-7 h-7'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -671,7 +773,7 @@ export default function DashboardPage() {
                 </svg>
               }
               color='yellow'
-              isVisible={layers.find((l) => l.id === 'chathighlight')?.visible}
+              isVisible={layers.find(l => l.id === 'chathighlight')?.visible}
               onToggleVisibility={() => toggleLayer('chathighlight')}
               onClick={() => handleExpandElement('chathighlight')}
               authRequired={!session}
@@ -683,7 +785,12 @@ export default function DashboardPage() {
               title='Weather Effects'
               subtitle={weatherEffect}
               icon={
-                <svg className='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <svg
+                  className='w-7 h-7'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -693,7 +800,7 @@ export default function DashboardPage() {
                 </svg>
               }
               color='cyan'
-              isVisible={layers.find((l) => l.id === 'weather')?.visible}
+              isVisible={layers.find(l => l.id === 'weather')?.visible}
               onToggleVisibility={() => toggleLayer('weather')}
               onClick={() => handleExpandElement('weather')}
             />
@@ -703,7 +810,12 @@ export default function DashboardPage() {
               title='Color Scheme'
               subtitle={colorScheme}
               icon={
-                <svg className='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <svg
+                  className='w-7 h-7'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -721,7 +833,12 @@ export default function DashboardPage() {
               title='Emote Wall'
               subtitle={`${emoteIntensity} intensity`}
               icon={
-                <svg className='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <svg
+                  className='w-7 h-7'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -736,10 +853,15 @@ export default function DashboardPage() {
           </div>
         ) : (
           /* Expanded Element View */
-          <div key={`expanded-${expandedElement}`} className={`relative ${isExpanding ? 'animate-tile-expand' : 'animate-zoom-in'}`}>
+          <div
+            key={`expanded-${expandedElement}`}
+            className={`relative ${isExpanding ? 'animate-tile-expand' : 'animate-zoom-in'}`}
+          >
             {/* Expanding placeholder - Show during expansion */}
             {isExpanding && (
-              <div className={`bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl min-h-[400px] flex items-center justify-center`}>
+              <div
+                className={`bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl min-h-[400px] flex items-center justify-center`}
+              >
                 <div className='w-16 h-16 border-4 border-gray-600 border-t-gray-400 rounded-full animate-spin' />
               </div>
             )}
@@ -757,11 +879,13 @@ export default function DashboardPage() {
               <WeatherExpanded
                 sessionId={sessionId as string}
                 weatherEffect={weatherEffect}
-                isVisible={layers.find((l) => l.id === 'weather')?.visible || false}
+                isVisible={
+                  layers.find(l => l.id === 'weather')?.visible || false
+                }
                 componentLayouts={componentLayouts}
                 onWeatherChange={changeWeather}
                 onToggleVisibility={() => toggleLayer('weather')}
-                onDensityChange={(density) =>
+                onDensityChange={density =>
                   setComponentLayouts({
                     ...componentLayouts,
                     weather: { ...componentLayouts.weather, density },
@@ -779,7 +903,9 @@ export default function DashboardPage() {
                 trackArtist={trackArtist}
                 trackAlbumArt={trackAlbumArt}
                 isPlaying={isPlaying}
-                isVisible={layers.find((l) => l.id === 'nowplaying')?.visible || false}
+                isVisible={
+                  layers.find(l => l.id === 'nowplaying')?.visible || false
+                }
                 componentLayouts={componentLayouts}
                 onDisconnect={() => {
                   setSpotifyToken(null);
@@ -791,16 +917,21 @@ export default function DashboardPage() {
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
                     ...componentLayouts,
-                    nowPlaying: { ...componentLayouts.nowPlaying, position: 'top-left', x, y },
+                    nowPlaying: {
+                      ...componentLayouts.nowPlaying,
+                      position: 'top-left',
+                      x,
+                      y,
+                    },
                   })
                 }
-                onWidthChange={(width) =>
+                onWidthChange={width =>
                   setComponentLayouts({
                     ...componentLayouts,
                     nowPlaying: { ...componentLayouts.nowPlaying, width },
                   })
                 }
-                onScaleChange={(scale) =>
+                onScaleChange={scale =>
                   setComponentLayouts({
                     ...componentLayouts,
                     nowPlaying: { ...componentLayouts.nowPlaying, scale },
@@ -819,7 +950,9 @@ export default function DashboardPage() {
               <CountdownExpanded
                 sessionId={sessionId as string}
                 timers={timers}
-                isVisible={layers.find((l) => l.id === 'countdown')?.visible || false}
+                isVisible={
+                  layers.find(l => l.id === 'countdown')?.visible || false
+                }
                 isAuthenticated={!!session}
                 showTimerForm={showTimerForm}
                 editingTimerId={editingTimerId}
@@ -840,16 +973,21 @@ export default function DashboardPage() {
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
                     ...componentLayouts,
-                    countdown: { ...componentLayouts.countdown, position: 'top-left', x, y },
+                    countdown: {
+                      ...componentLayouts.countdown,
+                      position: 'top-left',
+                      x,
+                      y,
+                    },
                   })
                 }
-                onScaleChange={(scale) =>
+                onScaleChange={scale =>
                   setComponentLayouts({
                     ...componentLayouts,
                     countdown: { ...componentLayouts.countdown, scale },
                   })
                 }
-                onMinWidthChange={(minWidth) =>
+                onMinWidthChange={minWidth =>
                   setComponentLayouts({
                     ...componentLayouts,
                     countdown: { ...componentLayouts.countdown, minWidth },
@@ -877,7 +1015,9 @@ export default function DashboardPage() {
                 sessionId={sessionId as string}
                 messages={chatMessages}
                 currentHighlight={chatHighlight}
-                isVisible={layers.find((l) => l.id === 'chathighlight')?.visible || false}
+                isVisible={
+                  layers.find(l => l.id === 'chathighlight')?.visible || false
+                }
                 isAuthenticated={!!session}
                 twitchUsername={session?.user?.name || null}
                 componentLayouts={componentLayouts}
@@ -890,13 +1030,13 @@ export default function DashboardPage() {
                     chatHighlight: { ...componentLayouts.chatHighlight, x, y },
                   })
                 }
-                onWidthChange={(width) =>
+                onWidthChange={width =>
                   setComponentLayouts({
                     ...componentLayouts,
                     chatHighlight: { ...componentLayouts.chatHighlight, width },
                   })
                 }
-                onScaleChange={(scale) =>
+                onScaleChange={scale =>
                   setComponentLayouts({
                     ...componentLayouts,
                     chatHighlight: { ...componentLayouts.chatHighlight, scale },

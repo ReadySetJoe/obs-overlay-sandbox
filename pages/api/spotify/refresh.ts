@@ -4,7 +4,7 @@ import { spotifyApi } from '@/lib/spotify';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse,
+  res: NextApiResponse
 ) {
   const { refresh_token } = req.query;
 

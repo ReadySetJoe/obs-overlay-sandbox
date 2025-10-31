@@ -68,12 +68,27 @@ export default function CountdownExpanded({
             className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
             aria-label='Back'
           >
-            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M15 19l-7-7 7-7'
+              />
             </svg>
           </button>
           <div className='w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center'>
-            <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <svg
+              className='w-6 h-6'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
               <path
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -88,7 +103,9 @@ export default function CountdownExpanded({
           <button
             onClick={onToggleVisibility}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-              isVisible ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-gray-700 hover:bg-gray-600'
+              isVisible
+                ? 'bg-yellow-600 hover:bg-yellow-500'
+                : 'bg-gray-700 hover:bg-gray-600'
             }`}
           >
             {isVisible ? '👁️ Visible' : '🚫 Hidden'}
@@ -117,31 +134,37 @@ export default function CountdownExpanded({
                 {editingTimerId ? 'Edit Timer' : 'Create New Timer'}
               </h3>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Event Title</label>
+                <label className='block text-xs text-gray-400 mb-1'>
+                  Event Title
+                </label>
                 <input
                   type='text'
                   value={newTimerTitle}
-                  onChange={(e) => onNewTimerTitleChange(e.target.value)}
+                  onChange={e => onNewTimerTitleChange(e.target.value)}
                   className='w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-yellow-500 focus:outline-none'
                   placeholder='Stream starts, Tournament begins...'
                 />
               </div>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Description (optional)</label>
+                <label className='block text-xs text-gray-400 mb-1'>
+                  Description (optional)
+                </label>
                 <input
                   type='text'
                   value={newTimerDescription}
-                  onChange={(e) => onNewTimerDescriptionChange(e.target.value)}
+                  onChange={e => onNewTimerDescriptionChange(e.target.value)}
                   className='w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-yellow-500 focus:outline-none'
                   placeholder='Get ready!'
                 />
               </div>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Target Date & Time</label>
+                <label className='block text-xs text-gray-400 mb-1'>
+                  Target Date & Time
+                </label>
                 <input
                   type='datetime-local'
                   value={newTimerDate}
-                  onChange={(e) => onNewTimerDateChange(e.target.value)}
+                  onChange={e => onNewTimerDateChange(e.target.value)}
                   className='w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-yellow-500 focus:outline-none'
                 />
               </div>
@@ -169,16 +192,20 @@ export default function CountdownExpanded({
             </div>
           ) : (
             <div className='space-y-3'>
-              {timers.map((timer) => (
+              {timers.map(timer => (
                 <div
                   key={timer.id}
                   className='bg-gray-700/30 rounded-xl p-4 border border-gray-600'
                 >
                   <div className='flex items-start justify-between'>
                     <div className='flex-1'>
-                      <div className='font-semibold text-yellow-400'>{timer.title}</div>
+                      <div className='font-semibold text-yellow-400'>
+                        {timer.title}
+                      </div>
                       {timer.description && (
-                        <div className='text-xs text-gray-400 mt-1'>{timer.description}</div>
+                        <div className='text-xs text-gray-400 mt-1'>
+                          {timer.description}
+                        </div>
                       )}
                       <div className='text-xs text-gray-500 mt-2'>
                         {new Date(timer.targetDate).toLocaleString()}
@@ -230,7 +257,9 @@ export default function CountdownExpanded({
 
           {/* Position & Size Controls */}
           <div className='mt-6 pt-6 border-t border-gray-600'>
-            <h4 className='text-sm font-semibold text-gray-300 mb-3'>Position & Size</h4>
+            <h4 className='text-sm font-semibold text-gray-300 mb-3'>
+              Position & Size
+            </h4>
             <PositionControls
               x={componentLayouts.countdown.x || 0}
               y={componentLayouts.countdown.y || 0}
@@ -251,7 +280,7 @@ export default function CountdownExpanded({
                   max='2'
                   step='0.1'
                   value={componentLayouts.countdown.scale || 1}
-                  onChange={(e) => onScaleChange(parseFloat(e.target.value))}
+                  onChange={e => onScaleChange(parseFloat(e.target.value))}
                   className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500'
                 />
               </div>
@@ -265,7 +294,7 @@ export default function CountdownExpanded({
                   max='500'
                   step='50'
                   value={componentLayouts.countdown.minWidth || 320}
-                  onChange={(e) => onMinWidthChange(parseInt(e.target.value))}
+                  onChange={e => onMinWidthChange(parseInt(e.target.value))}
                   className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500'
                 />
               </div>
@@ -275,7 +304,9 @@ export default function CountdownExpanded({
       )}
 
       {/* Copy URL for OBS */}
-      <CopyURLButton url={`${window.location.origin}/overlay/${sessionId}/countdown`} />
+      <CopyURLButton
+        url={`${window.location.origin}/overlay/${sessionId}/countdown`}
+      />
     </div>
   );
 }

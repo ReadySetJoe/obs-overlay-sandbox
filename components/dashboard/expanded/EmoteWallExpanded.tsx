@@ -32,12 +32,27 @@ export default function EmoteWallExpanded({
           className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
           aria-label='Back'
         >
-          <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+          <svg
+            className='w-5 h-5'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M15 19l-7-7 7-7'
+            />
           </svg>
         </button>
         <div className='w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center'>
-          <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <svg
+            className='w-6 h-6'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
             <path
               strokeLinecap='round'
               strokeLinejoin='round'
@@ -51,21 +66,25 @@ export default function EmoteWallExpanded({
 
       <div className='space-y-4'>
         <div>
-          <label className='block text-sm text-gray-300 mb-2'>Emotes (space-separated)</label>
+          <label className='block text-sm text-gray-300 mb-2'>
+            Emotes (space-separated)
+          </label>
           <input
             type='text'
             value={emoteInput}
-            onChange={(e) => onEmoteInputChange(e.target.value)}
+            onChange={e => onEmoteInputChange(e.target.value)}
             className='w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-pink-500 focus:outline-none'
             placeholder='🎉 🎊 ✨ 🌟 💫'
           />
-          <p className='text-xs text-gray-500 mt-1'>Use emoji or paste emote URLs</p>
+          <p className='text-xs text-gray-500 mt-1'>
+            Use emoji or paste emote URLs
+          </p>
         </div>
 
         <div>
           <label className='block text-sm text-gray-300 mb-2'>Intensity</label>
           <div className='grid grid-cols-3 gap-2'>
-            {(['light', 'medium', 'heavy'] as const).map((intensity) => (
+            {(['light', 'medium', 'heavy'] as const).map(intensity => (
               <button
                 key={intensity}
                 onClick={() => onIntensityChange(intensity)}
@@ -91,7 +110,9 @@ export default function EmoteWallExpanded({
       </div>
 
       {/* Copy URL for OBS */}
-      <CopyURLButton url={`${window.location.origin}/overlay/${sessionId}/emote-wall`} />
+      <CopyURLButton
+        url={`${window.location.origin}/overlay/${sessionId}/emote-wall`}
+      />
     </div>
   );
 }

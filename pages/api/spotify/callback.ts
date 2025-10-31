@@ -4,7 +4,7 @@ import { spotifyApi } from '@/lib/spotify';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse,
+  res: NextApiResponse
 ) {
   const { code, state } = req.query;
 
@@ -20,12 +20,10 @@ export default async function handler(
     const sessionId = state && state !== 'no-session' ? state : '';
 
     // Redirect back to dashboard with sessionId and tokens
-    const redirectPath = sessionId
-      ? `/dashboard/${sessionId}`
-      : '/dashboard';
+    const redirectPath = sessionId ? `/dashboard/${sessionId}` : '/dashboard';
 
     res.redirect(
-      `${redirectPath}?access_token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}`,
+      `${redirectPath}?access_token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}`
     );
   } catch (error) {
     console.error('Error getting tokens:', error);

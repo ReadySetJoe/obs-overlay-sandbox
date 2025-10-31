@@ -47,8 +47,8 @@ export default function EmoteWall() {
       wallConfig.intensity === 'light'
         ? 50
         : wallConfig.intensity === 'medium'
-        ? 100
-        : 200;
+          ? 100
+          : 200;
 
     const particles: EmoteParticle[] = [];
 

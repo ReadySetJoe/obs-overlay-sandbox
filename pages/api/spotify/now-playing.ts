@@ -4,7 +4,7 @@ import { spotifyApi } from '@/lib/spotify';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse,
+  res: NextApiResponse
 ) {
   const { access_token } = req.query;
 
@@ -30,7 +30,7 @@ export default async function handler(
     res.json({
       isPlaying: response.body.is_playing,
       title: track.name,
-      artist: track.artists.map((artist) => artist.name).join(', '),
+      artist: track.artists.map(artist => artist.name).join(', '),
       albumArt: track.album.images[0]?.url,
       progress: response.body.progress_ms,
       duration: track.duration_ms,
