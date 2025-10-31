@@ -656,7 +656,19 @@ export default function DashboardPage() {
       if (!paintByNumbersState) return;
 
       const region = paintByNumbersState.regions.find(r => r.id === data.regionId);
-      if (!region || region.filled) return; // Region doesn't exist or already filled
+      if (!region) return; // Region doesn't exist
+
+      // Check if region is already filled
+      if (region.filled) {
+        const COOLDOWN_MS = 60000; // 1 minute
+        const timeSinceFilled = data.timestamp - (region.filledAt || 0);
+        const isSameUser = region.filledBy === data.username;
+
+        // Only allow repainting if it's the same user AND cooldown has passed
+        if (!isSameUser || timeSinceFilled < COOLDOWN_MS) {
+          return; // Can't repaint yet
+        }
+      }
 
       // Parse and validate custom color if provided
       let validatedColor: string | undefined;
