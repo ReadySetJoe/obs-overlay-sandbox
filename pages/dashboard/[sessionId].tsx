@@ -89,12 +89,12 @@ export default function DashboardPage() {
   const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
     chat: { position: 'top-left', x: 0, y: 80, maxWidth: 400 },
     nowPlaying: { position: 'top-left', x: 0, y: 0, width: 400, scale: 1 },
-    countdown: { position: 'top-left', x: 0, y: 0, scale: 1, minWidth: 320 },
+    countdown: { position: 'custom', x: 960, y: 100, scale: 1, minWidth: 320 },
     weather: { density: 1 },
     chatHighlight: {
-      position: 'bottom-left',
-      x: 20,
-      y: 20,
+      position: 'custom',
+      x: 960,
+      y: 800,
       width: 500,
       scale: 1,
     },

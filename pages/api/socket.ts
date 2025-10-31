@@ -72,28 +72,6 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
-      socket.on('visualizer-config', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('visualizer-config', data);
-        }
-      });
-
-      socket.on('audio-data', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          // Broadcast to all sockets in the session EXCEPT the sender
-          socket.to(sessionId).emit('audio-data', data);
-        }
-      });
-
-      socket.on('custom-colors-change', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('custom-colors-change', data);
-        }
-      });
-
       socket.on('countdown-timers', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {

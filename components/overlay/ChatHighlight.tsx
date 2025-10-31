@@ -53,10 +53,12 @@ export default function ChatHighlight({
 
   return (
     <div
-      className={`absolute ${positionClasses[layout.position]} p-6`}
+      className={`fixed ${positionClasses[layout.position]} transform transition-all duration-500 translate-y-0 opacity-100`}
       style={{
-        transform: `translate(${layout.x}px, ${layout.y}px) scale(${layout.scale})`,
-        transformOrigin: 'top left',
+        zIndex: 10,
+        width: `${layout.width}px`,
+        transform: `translate(${layout.position.includes('right') ? '-' : ''}${layout.x}px, ${layout.position.includes('bottom') ? '-' : ''}${layout.y}px) scale(${layout.scale})`,
+        padding: '2rem',
       }}
     >
       <div className='animate-slide-in-bounce w-full h-full'>

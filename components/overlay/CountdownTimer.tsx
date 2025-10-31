@@ -84,9 +84,12 @@ export default function CountdownTimer({
 
   return (
     <div
-      className={`fixed ${positionClasses[layout.position]} space-y-4`}
+      className={`
+        fixed ${positionClasses[layout.position]} transform transition-all duration-500 translate-y-0 opacity-100
+      `}
       style={{
         zIndex: 15,
+        width: `400px`,
         transform: `translate(${layout.position.includes('right') ? '-' : ''}${layout.x}px, ${layout.position.includes('bottom') ? '-' : ''}${layout.y}px) scale(${layout.scale})`,
         padding: '2rem',
       }}
