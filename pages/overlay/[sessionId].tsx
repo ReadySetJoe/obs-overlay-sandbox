@@ -8,6 +8,7 @@ import NowPlaying from '@/components/overlay/NowPlaying';
 import CountdownTimer from '@/components/overlay/CountdownTimer';
 import EmoteWall from '@/components/overlay/EmoteWall';
 import ChatHighlight from '@/components/overlay/ChatHighlight';
+import PaintByNumbers from '@/components/overlay/PaintByNumbers';
 
 export default function OverlayPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function OverlayPage() {
     countdownTimers,
     componentLayouts,
     chatHighlight,
+    paintByNumbersState,
     getLayerVisible,
     colorScheme,
     colorSchemeStyles,
@@ -63,6 +65,20 @@ export default function OverlayPage() {
         <ChatHighlight
           highlight={chatHighlight}
           layout={componentLayouts.chatHighlight}
+        />
+      )}
+
+      {/* Paint by Numbers */}
+      {getLayerVisible('paintbynumbers') && (
+        <PaintByNumbers
+          paintState={paintByNumbersState}
+          layout={componentLayouts.paintByNumbers || {
+            position: 'top-left',
+            x: 0,
+            y: 0,
+            scale: 1,
+            gridSize: 20,
+          }}
         />
       )}
     </div>

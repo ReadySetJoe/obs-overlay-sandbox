@@ -69,13 +69,14 @@ model Layout {
   weatherEffect  String   @default("rain")
 
   // Scene layers visibility
-  weatherVisible     Boolean @default(true)
-  chatVisible        Boolean @default(true)
-  nowPlayingVisible  Boolean @default(true)
-  countdownVisible   Boolean @default(true)
+  weatherVisible        Boolean @default(true)
+  chatVisible           Boolean @default(true)
+  nowPlayingVisible     Boolean @default(true)
+  countdownVisible      Boolean @default(true)
+  paintByNumbersVisible Boolean @default(true)
 
   // Component layouts (JSON) - stores position, size, styling for each component
-  componentLayouts String? @default("{\"chat\":{\"position\":\"top-left\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1}}")
+  componentLayouts String? @default("{\"chat\":{\"position\":\"top-left\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1},\"paintByNumbers\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1,\"gridSize\":20}}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

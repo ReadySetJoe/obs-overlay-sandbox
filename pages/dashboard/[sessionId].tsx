@@ -14,7 +14,9 @@ import {
   ComponentLayouts,
   ChatMessage,
   ChatHighlight,
+  PaintByNumbersState,
 } from '@/types/overlay';
+import { createPaintStateFromTemplate } from '@/lib/paintTemplates';
 import SessionInfo from '@/components/dashboard/SessionInfo';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
 import ColorSchemeExpanded from '@/components/dashboard/expanded/ColorSchemeExpanded';
@@ -23,6 +25,7 @@ import EmoteWallExpanded from '@/components/dashboard/expanded/EmoteWallExpanded
 import NowPlayingExpanded from '@/components/dashboard/expanded/NowPlayingExpanded';
 import CountdownExpanded from '@/components/dashboard/expanded/CountdownExpanded';
 import ChatHighlightExpanded from '@/components/dashboard/expanded/ChatHighlightExpanded';
+import PaintByNumbersExpanded from '@/components/dashboard/expanded/PaintByNumbersExpanded';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -55,6 +58,7 @@ export default function DashboardPage() {
     { id: 'nowplaying', name: 'Now Playing', visible: true },
     { id: 'countdown', name: 'Countdown', visible: true },
     { id: 'chathighlight', name: 'Chat Highlight', visible: true },
+    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
   ]);
 
   // Chat messages and highlight
@@ -81,9 +85,28 @@ export default function DashboardPage() {
     'light' | 'medium' | 'heavy'
   >('medium');
 
+  // Paint by numbers
+  const [paintByNumbersState, setPaintByNumbersState] = useState<PaintByNumbersState | null>(null);
+
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
+
+  // Initialize paint-by-numbers with heart template
+  useEffect(() => {
+    if (!paintByNumbersState && socket && isConnected) {
+      const newTemplate = createPaintStateFromTemplate('heart');
+      if (newTemplate) {
+        const newState: PaintByNumbersState = {
+          templateId: 'heart',
+          regions: newTemplate.regions,
+          startedAt: Date.now(),
+        };
+        setPaintByNumbersState(newState);
+        socket.emit('paint-state', newState);
+      }
+    }
+  }, [socket, isConnected, paintByNumbersState]);
 
   // Component layouts
   const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
@@ -97,6 +120,13 @@ export default function DashboardPage() {
       y: 800,
       width: 500,
       scale: 1,
+    },
+    paintByNumbers: {
+      position: 'top-left',
+      x: 0,
+      y: 0,
+      scale: 1,
+      gridSize: 20,
     },
   });
 
@@ -157,6 +187,11 @@ export default function DashboardPage() {
               name: 'Chat Highlight',
               visible: layout.chatHighlightVisible ?? true,
             },
+            {
+              id: 'paintbynumbers',
+              name: 'Paint by Numbers',
+              visible: layout.paintByNumbersVisible ?? true,
+            },
           ]);
 
           if (layout.componentLayouts) {
@@ -192,6 +227,13 @@ export default function DashboardPage() {
                   width: 500,
                   scale: 1,
                 },
+                paintByNumbers: parsedLayouts.paintByNumbers || {
+                  position: 'top-left',
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                  gridSize: 20,
+                },
               });
             } catch (error) {
               console.error('Error parsing component layouts:', error);
@@ -226,6 +268,68 @@ export default function DashboardPage() {
 
     loadTimers();
   }, [session, sessionId]);
+
+  // Paint by numbers handlers
+  const handlePaintTemplateSelect = (templateId: string) => {
+    const newTemplate = createPaintStateFromTemplate(templateId);
+    if (!newTemplate) return;
+
+    const newState: PaintByNumbersState = {
+      templateId,
+      regions: newTemplate.regions,
+      startedAt: Date.now(),
+    };
+
+    setPaintByNumbersState(newState);
+    socket?.emit('paint-state', newState);
+  };
+
+  const handlePaintReset = () => {
+    if (!paintByNumbersState) return;
+
+    const newTemplate = createPaintStateFromTemplate(paintByNumbersState.templateId);
+    if (!newTemplate) return;
+
+    const resetState: PaintByNumbersState = {
+      templateId: paintByNumbersState.templateId,
+      regions: newTemplate.regions,
+      startedAt: Date.now(),
+    };
+
+    setPaintByNumbersState(resetState);
+    socket?.emit('paint-state', resetState);
+  };
+
+  const handlePaintPositionChange = (x: number, y: number) => {
+    setComponentLayouts(prev => ({
+      ...prev,
+      paintByNumbers: {
+        ...(prev.paintByNumbers || { position: 'top-left', scale: 1, gridSize: 20 }),
+        x,
+        y,
+      },
+    }));
+  };
+
+  const handlePaintScaleChange = (scale: number) => {
+    setComponentLayouts(prev => ({
+      ...prev,
+      paintByNumbers: {
+        ...(prev.paintByNumbers || { position: 'top-left', x: 0, y: 0, gridSize: 20 }),
+        scale,
+      },
+    }));
+  };
+
+  const handlePaintGridSizeChange = (gridSize: number) => {
+    setComponentLayouts(prev => ({
+      ...prev,
+      paintByNumbers: {
+        ...(prev.paintByNumbers || { position: 'top-left', x: 0, y: 0, scale: 1 }),
+        gridSize,
+      },
+    }));
+  };
 
   // Auto-save layout when settings change
   const saveLayout = useCallback(async () => {
@@ -544,6 +648,55 @@ export default function DashboardPage() {
     };
   }, [socket]);
 
+  // Handle paint commands from chat
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePaintCommand = (data: { regionId: number; username: string; timestamp: number; customColor?: string }) => {
+      if (!paintByNumbersState) return;
+
+      const region = paintByNumbersState.regions.find(r => r.id === data.regionId);
+      if (!region || region.filled) return; // Region doesn't exist or already filled
+
+      // Parse and validate custom color if provided
+      let validatedColor: string | undefined;
+      if (data.customColor) {
+        const { parseColor } = require('@/lib/colorUtils');
+        validatedColor = parseColor(data.customColor) || undefined;
+      }
+
+      // Update region as filled
+      const updatedRegions = paintByNumbersState.regions.map(r =>
+        r.id === data.regionId
+          ? {
+              ...r,
+              filled: true,
+              filledBy: data.username,
+              filledAt: data.timestamp,
+              customColor: validatedColor,
+            }
+          : r
+      );
+
+      const allFilled = updatedRegions.every(r => r.filled);
+      const updatedState: PaintByNumbersState = {
+        ...paintByNumbersState,
+        regions: updatedRegions,
+        completedAt: allFilled ? data.timestamp : paintByNumbersState.completedAt,
+        lastFilledBy: data.username,
+      };
+
+      setPaintByNumbersState(updatedState);
+      socket.emit('paint-state', updatedState);
+    };
+
+    socket.on('paint-command', handlePaintCommand);
+
+    return () => {
+      socket.off('paint-command', handlePaintCommand);
+    };
+  }, [socket, paintByNumbersState]);
+
   // Auto-connect to Twitch chat when authenticated
   useEffect(() => {
     if (!session || !sessionId) return;
@@ -850,6 +1003,19 @@ export default function DashboardPage() {
               color='pink'
               onClick={() => handleExpandElement('emote')}
             />
+
+            {/* Paint by Numbers Tile */}
+            <SummaryTile
+              title='Paint by Numbers'
+              subtitle={
+                paintByNumbersState
+                  ? `${paintByNumbersState.regions.filter(r => r.filled).length}/${paintByNumbersState.regions.length} filled`
+                  : 'Select template'
+              }
+              icon={<span className='text-3xl'>🎨</span>}
+              color='purple'
+              onClick={() => handleExpandElement('paint')}
+            />
           </div>
         ) : (
           /* Expanded Element View */
@@ -1006,6 +1172,24 @@ export default function DashboardPage() {
                 onEmoteInputChange={setEmoteInput}
                 onIntensityChange={setEmoteIntensity}
                 onTrigger={triggerEmoteWall}
+                onClose={handleCloseExpanded}
+              />
+            )}
+
+            {!isExpanding && expandedElement === 'paint' && (
+              <PaintByNumbersExpanded
+                sessionId={sessionId as string}
+                paintState={paintByNumbersState}
+                isVisible={
+                  layers.find(l => l.id === 'paintbynumbers')?.visible || false
+                }
+                componentLayouts={componentLayouts}
+                onToggleVisibility={() => toggleLayer('paintbynumbers')}
+                onTemplateSelect={handlePaintTemplateSelect}
+                onReset={handlePaintReset}
+                onPositionChange={handlePaintPositionChange}
+                onScaleChange={handlePaintScaleChange}
+                onGridSizeChange={handlePaintGridSizeChange}
                 onClose={handleCloseExpanded}
               />
             )}

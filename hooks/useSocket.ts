@@ -8,13 +8,19 @@ export const useSocket = (sessionId?: string) => {
 
   useEffect(() => {
     // Don't connect if no sessionId provided
-    if (!sessionId) return;
+    if (!sessionId) {
+      console.log('[useSocket] No sessionId provided, skipping connection');
+      return;
+    }
+
+    console.log('[useSocket] Initializing socket for session:', sessionId);
 
     const socketInstance = io({
       path: '/api/socket',
     });
 
     socketInstance.on('connect', () => {
+      console.log('[useSocket] Socket connected, joining session:', sessionId);
       // Join the session room
       socketInstance.emit('join-session', sessionId);
       setIsConnected(true);

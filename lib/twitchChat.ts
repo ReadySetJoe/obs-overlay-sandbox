@@ -59,6 +59,22 @@ export async function startTwitchChatMonitoring(
 
     // Emit to the session room
     io.to(sessionId).emit('chat-message', chatMessage);
+
+    // Check for paint-by-numbers commands
+    // Supports: !paint 1 red, !paint 2 #FF0000, !paint 3
+    const paintCommand = message.trim().match(/^!paint\s+(\d+)(?:\s+([#\w]+))?$/i);
+    if (paintCommand) {
+      const regionId = parseInt(paintCommand[1], 10);
+      const customColor = paintCommand[2]; // Optional color (name or hex)
+      const username = tags['display-name'] || tags.username || 'Anonymous';
+
+      io.to(sessionId).emit('paint-command', {
+        regionId,
+        username,
+        timestamp: Date.now(),
+        customColor: customColor || undefined,
+      });
+    }
   });
 
   client.on('connected', (address, port) => {

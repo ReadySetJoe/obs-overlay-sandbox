@@ -11,6 +11,7 @@ import {
   EmoteWallConfig,
   ComponentLayouts,
   ChatHighlight as ChatHighlightType,
+  PaintByNumbersState,
 } from '@/types/overlay';
 
 export function useOverlaySocket(sessionId: string) {
@@ -35,6 +36,13 @@ export function useOverlaySocket(sessionId: string) {
       width: 500,
       scale: 1,
     },
+    paintByNumbers: {
+      position: 'top-left',
+      x: 0,
+      y: 0,
+      scale: 1,
+      gridSize: 20,
+    },
   });
   const [sceneLayers, setSceneLayers] = useState<SceneLayer[]>([
     { id: 'weather', name: 'Weather', visible: true, zIndex: 2 },
@@ -42,8 +50,12 @@ export function useOverlaySocket(sessionId: string) {
     { id: 'nowplaying', name: 'Now Playing', visible: true, zIndex: 10 },
     { id: 'countdown', name: 'Countdown', visible: true, zIndex: 15 },
     { id: 'chathighlight', name: 'Chat Highlight', visible: true, zIndex: 20 },
+    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true, zIndex: 12 },
   ]);
   const [chatHighlight, setChatHighlight] = useState<ChatHighlightType | null>(
+    null
+  );
+  const [paintByNumbersState, setPaintByNumbersState] = useState<PaintByNumbersState | null>(
     null
   );
 
@@ -95,6 +107,10 @@ export function useOverlaySocket(sessionId: string) {
       setChatHighlight(highlight);
     });
 
+    socket.on('paint-state', (state: PaintByNumbersState | null) => {
+      setPaintByNumbersState(state);
+    });
+
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
@@ -105,6 +121,7 @@ export function useOverlaySocket(sessionId: string) {
       socket.off('emote-wall');
       socket.off('component-layouts');
       socket.off('chat-highlight');
+      socket.off('paint-state');
     };
   }, [socket]);
 
@@ -137,6 +154,7 @@ export function useOverlaySocket(sessionId: string) {
     componentLayouts,
     sceneLayers,
     chatHighlight,
+    paintByNumbersState,
     removeMessage,
     getLayerVisible,
     colorSchemeStyles,

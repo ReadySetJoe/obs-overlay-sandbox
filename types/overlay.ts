@@ -109,10 +109,47 @@ export interface ChatHighlight {
   timestamp: number; // when it was highlighted
 }
 
+export interface PaintRegion {
+  id: number;
+  color: string; // template/default hex color
+  pixels: [number, number][]; // [x, y] coordinates
+  filled: boolean;
+  filledBy?: string; // username
+  filledAt?: number; // timestamp
+  customColor?: string; // user-specified color (overrides template color)
+}
+
+export interface PaintTemplate {
+  id: string;
+  name: string;
+  description: string;
+  width: number; // grid width
+  height: number; // grid height
+  regions: PaintRegion[];
+  thumbnail?: string;
+}
+
+export interface PaintByNumbersState {
+  templateId: string;
+  regions: PaintRegion[];
+  startedAt: number;
+  completedAt?: number;
+  lastFilledBy?: string;
+}
+
+export interface PaintByNumbersLayout {
+  position: Position;
+  x: number;
+  y: number;
+  scale: number;
+  gridSize: number; // pixel size for each grid cell
+}
+
 export interface ComponentLayouts {
   chat: ChatLayout;
   nowPlaying: NowPlayingLayout;
   countdown: CountdownLayout;
   weather: WeatherLayout;
   chatHighlight: ChatHighlightLayout;
+  paintByNumbers?: PaintByNumbersLayout;
 }
