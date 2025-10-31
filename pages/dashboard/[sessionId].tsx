@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { useSocket } from '@/hooks/useSocket';
 import {
   ColorScheme,
@@ -674,7 +674,8 @@ export default function DashboardPage() {
               isVisible={layers.find((l) => l.id === 'chathighlight')?.visible}
               onToggleVisibility={() => toggleLayer('chathighlight')}
               onClick={() => handleExpandElement('chathighlight')}
-              disabled={!session}
+              authRequired={!session}
+              onAuthClick={() => signIn('twitch')}
             />
 
             {/* Weather Effects Tile */}
