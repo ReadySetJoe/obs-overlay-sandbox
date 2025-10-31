@@ -2,6 +2,7 @@
 'use client';
 
 import PositionControls from '../PositionControls';
+import CopyURLButton from '../CopyURLButton';
 import { ComponentLayouts } from '@/types/overlay';
 
 interface NowPlayingExpandedProps {
@@ -246,6 +247,9 @@ export default function NowPlayingExpanded({
           </details>
         </div>
       )}
+
+      {/* Copy URL for OBS */}
+      <CopyURLButton url={`${window.location.origin}/overlay/${sessionId}/now-playing`} />
     </div>
   );
 }

@@ -20,8 +20,6 @@ type NextApiResponseServerIO = NextApiResponse & {
 
 const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
   if (!res.socket.server.io) {
-    console.log('Setting up Socket.io...');
-
     const io = new SocketIOServer(res.socket.server, {
       path: '/api/socket',
       addTrailingSlash: false,
@@ -31,11 +29,8 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
     });
 
     io.on('connection', socket => {
-      console.log('Client connected:', socket.id);
-
       // Handle joining a session room
       socket.on('join-session', (sessionId: string) => {
-        console.log(`Socket ${socket.id} joining session: ${sessionId}`);
         socket.join(sessionId);
         socket.data.sessionId = sessionId;
       });
@@ -119,8 +114,15 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('chat-highlight', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('chat-highlight', data);
+        }
+      });
+
       socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
+        // Client disconnected
       });
     });
 

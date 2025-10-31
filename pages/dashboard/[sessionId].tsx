@@ -12,6 +12,8 @@ import {
   CountdownTimer,
   EmoteWallConfig,
   ComponentLayouts,
+  ChatMessage,
+  ChatHighlight,
 } from '@/types/overlay';
 import SessionInfo from '@/components/dashboard/SessionInfo';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
@@ -20,6 +22,7 @@ import WeatherExpanded from '@/components/dashboard/expanded/WeatherExpanded';
 import EmoteWallExpanded from '@/components/dashboard/expanded/EmoteWallExpanded';
 import NowPlayingExpanded from '@/components/dashboard/expanded/NowPlayingExpanded';
 import CountdownExpanded from '@/components/dashboard/expanded/CountdownExpanded';
+import ChatHighlightExpanded from '@/components/dashboard/expanded/ChatHighlightExpanded';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -47,7 +50,12 @@ export default function DashboardPage() {
     { id: 'chat', name: 'Chat', visible: true },
     { id: 'nowplaying', name: 'Now Playing', visible: true },
     { id: 'countdown', name: 'Countdown', visible: true },
+    { id: 'chathighlight', name: 'Chat Highlight', visible: true },
   ]);
+
+  // Chat messages and highlight
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatHighlight, setChatHighlight] = useState<ChatHighlight | null>(null);
 
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
@@ -75,6 +83,7 @@ export default function DashboardPage() {
     nowPlaying: { position: 'top-left', x: 0, y: 0, width: 400, scale: 1 },
     countdown: { position: 'top-left', x: 0, y: 0, scale: 1, minWidth: 320 },
     weather: { density: 1 },
+    chatHighlight: { position: 'bottom-left', x: 20, y: 20, width: 500, scale: 1 },
   });
 
   // Handle Spotify callback tokens from URL
@@ -117,12 +126,20 @@ export default function DashboardPage() {
             { id: 'chat', name: 'Chat', visible: layout.chatVisible },
             { id: 'nowplaying', name: 'Now Playing', visible: layout.nowPlayingVisible },
             { id: 'countdown', name: 'Countdown', visible: layout.countdownVisible },
+            { id: 'chathighlight', name: 'Chat Highlight', visible: layout.chatHighlightVisible ?? true },
           ]);
 
           if (layout.componentLayouts) {
             try {
               const parsedLayouts = JSON.parse(layout.componentLayouts);
-              setComponentLayouts(parsedLayouts);
+              // Merge with defaults to ensure new properties exist
+              setComponentLayouts({
+                chat: parsedLayouts.chat || { position: 'top-left', x: 0, y: 80, maxWidth: 400 },
+                nowPlaying: parsedLayouts.nowPlaying || { position: 'top-left', x: 0, y: 0, width: 400, scale: 1 },
+                countdown: parsedLayouts.countdown || { position: 'top-left', x: 0, y: 0, scale: 1, minWidth: 320 },
+                weather: parsedLayouts.weather || { density: 1 },
+                chatHighlight: parsedLayouts.chatHighlight || { position: 'bottom-left', x: 20, y: 20, width: 500, scale: 1 },
+              });
             } catch (error) {
               console.error('Error parsing component layouts:', error);
             }
@@ -427,6 +444,100 @@ export default function DashboardPage() {
     setIsExpanding(false);
   };
 
+  // Listen for chat messages
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleChatMessage = (message: ChatMessage) => {
+      setChatMessages((prev) => {
+        // Check if message already exists (deduplicate)
+        const exists = prev.some((msg) => msg.id === message.id);
+        if (exists) {
+          return prev;
+        }
+        // Add new message and keep only the last 100 messages
+        const updated = [...prev, message];
+        return updated.slice(-100);
+      });
+    };
+
+    socket.on('chat-message', handleChatMessage);
+
+    return () => {
+      socket.off('chat-message', handleChatMessage);
+    };
+  }, [socket]);
+
+  // Auto-connect to Twitch chat when authenticated
+  useEffect(() => {
+    if (!session || !sessionId) return;
+
+    let isActive = true; // Track if this effect is still active
+
+    const connectTwitchChat = async () => {
+      try {
+        const response = await fetch('/api/twitch/connect-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+
+        if (!response.ok && isActive) {
+          console.error('Failed to connect to Twitch chat');
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error('Error connecting to Twitch chat:', error);
+        }
+      }
+    };
+
+    connectTwitchChat();
+
+    // Cleanup: disconnect when component unmounts
+    return () => {
+      isActive = false;
+      fetch('/api/twitch/disconnect-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      }).catch(console.error);
+    };
+  }, [session, sessionId]);
+
+  // Handle chat highlight
+  const highlightChatMessage = (message: ChatMessage) => {
+    if (!socket) return;
+
+    const highlight: ChatHighlight = {
+      message,
+      timestamp: Date.now(),
+    };
+
+    setChatHighlight(highlight);
+
+    // Ensure layouts are synced BEFORE sending the highlight
+    socket.emit('component-layouts', componentLayouts);
+
+    // Small delay to ensure layout is received first
+    setTimeout(() => {
+      socket.emit('chat-highlight', highlight);
+    }, 50);
+  };
+
+  const clearChatHighlight = () => {
+    if (!socket) return;
+
+    setChatHighlight(null);
+
+    // Ensure layouts are synced before clearing
+    socket.emit('component-layouts', componentLayouts);
+
+    setTimeout(() => {
+      socket.emit('chat-highlight', null);
+    }, 50);
+  };
+
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8'>
       <div className='max-w-7xl mx-auto'>
@@ -539,6 +650,33 @@ export default function DashboardPage() {
               onClick={() => handleExpandElement('countdown')}
             />
 
+            {/* Chat Highlight Tile */}
+            <SummaryTile
+              title='Chat Highlight'
+              subtitle={
+                !session
+                  ? 'Connect Twitch to use'
+                  : chatHighlight
+                  ? chatHighlight.message.username
+                  : `${chatMessages.length} messages`
+              }
+              icon={
+                <svg className='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z'
+                  />
+                </svg>
+              }
+              color='yellow'
+              isVisible={layers.find((l) => l.id === 'chathighlight')?.visible}
+              onToggleVisibility={() => toggleLayer('chathighlight')}
+              onClick={() => handleExpandElement('chathighlight')}
+              disabled={!session}
+            />
+
             {/* Weather Effects Tile */}
             <SummaryTile
               title='Weather Effects'
@@ -616,6 +754,7 @@ export default function DashboardPage() {
 
             {!isExpanding && expandedElement === 'weather' && (
               <WeatherExpanded
+                sessionId={sessionId as string}
                 weatherEffect={weatherEffect}
                 isVisible={layers.find((l) => l.id === 'weather')?.visible || false}
                 componentLayouts={componentLayouts}
@@ -677,6 +816,7 @@ export default function DashboardPage() {
 
             {!isExpanding && expandedElement === 'countdown' && (
               <CountdownExpanded
+                sessionId={sessionId as string}
                 timers={timers}
                 isVisible={layers.find((l) => l.id === 'countdown')?.visible || false}
                 isAuthenticated={!!session}
@@ -720,12 +860,47 @@ export default function DashboardPage() {
 
             {!isExpanding && expandedElement === 'emote' && (
               <EmoteWallExpanded
+                sessionId={sessionId as string}
                 emoteInput={emoteInput}
                 emoteIntensity={emoteIntensity}
                 isConnected={isConnected}
                 onEmoteInputChange={setEmoteInput}
                 onIntensityChange={setEmoteIntensity}
                 onTrigger={triggerEmoteWall}
+                onClose={handleCloseExpanded}
+              />
+            )}
+
+            {!isExpanding && expandedElement === 'chathighlight' && (
+              <ChatHighlightExpanded
+                sessionId={sessionId as string}
+                messages={chatMessages}
+                currentHighlight={chatHighlight}
+                isVisible={layers.find((l) => l.id === 'chathighlight')?.visible || false}
+                isAuthenticated={!!session}
+                twitchUsername={session?.user?.name || null}
+                componentLayouts={componentLayouts}
+                onHighlightMessage={highlightChatMessage}
+                onClearHighlight={clearChatHighlight}
+                onToggleVisibility={() => toggleLayer('chathighlight')}
+                onPositionChange={(x, y) =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    chatHighlight: { ...componentLayouts.chatHighlight, x, y },
+                  })
+                }
+                onWidthChange={(width) =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    chatHighlight: { ...componentLayouts.chatHighlight, width },
+                  })
+                }
+                onScaleChange={(scale) =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    chatHighlight: { ...componentLayouts.chatHighlight, scale },
+                  })
+                }
                 onClose={handleCloseExpanded}
               />
             )}

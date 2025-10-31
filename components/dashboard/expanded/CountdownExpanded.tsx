@@ -3,9 +3,11 @@
 
 import { CountdownTimer, ComponentLayouts } from '@/types/overlay';
 import PositionControls from '../PositionControls';
+import CopyURLButton from '../CopyURLButton';
 import { Pencil } from 'lucide-react';
 
 interface CountdownExpandedProps {
+  sessionId: string;
   timers: CountdownTimer[];
   isVisible: boolean;
   isAuthenticated: boolean;
@@ -32,6 +34,7 @@ interface CountdownExpandedProps {
 }
 
 export default function CountdownExpanded({
+  sessionId,
   timers,
   isVisible,
   isAuthenticated,
@@ -270,6 +273,9 @@ export default function CountdownExpanded({
           </div>
         </>
       )}
+
+      {/* Copy URL for OBS */}
+      <CopyURLButton url={`${window.location.origin}/overlay/${sessionId}/countdown`} />
     </div>
   );
 }

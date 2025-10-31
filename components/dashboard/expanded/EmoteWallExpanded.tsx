@@ -1,7 +1,10 @@
 // components/dashboard/expanded/EmoteWallExpanded.tsx
 'use client';
 
+import CopyURLButton from '../CopyURLButton';
+
 interface EmoteWallExpandedProps {
+  sessionId: string;
   emoteInput: string;
   emoteIntensity: 'light' | 'medium' | 'heavy';
   isConnected: boolean;
@@ -12,6 +15,7 @@ interface EmoteWallExpandedProps {
 }
 
 export default function EmoteWallExpanded({
+  sessionId,
   emoteInput,
   emoteIntensity,
   isConnected,
@@ -85,6 +89,9 @@ export default function EmoteWallExpanded({
           {isConnected ? '🎉 Trigger Emote Wall! 🎉' : 'Not Connected'}
         </button>
       </div>
+
+      {/* Copy URL for OBS */}
+      <CopyURLButton url={`${window.location.origin}/overlay/${sessionId}/emote-wall`} />
     </div>
   );
 }

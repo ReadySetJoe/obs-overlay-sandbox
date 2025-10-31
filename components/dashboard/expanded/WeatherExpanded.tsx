@@ -2,8 +2,10 @@
 'use client';
 
 import { WeatherEffect, ComponentLayouts } from '@/types/overlay';
+import CopyURLButton from '../CopyURLButton';
 
 interface WeatherExpandedProps {
+  sessionId: string;
   weatherEffect: WeatherEffect;
   isVisible: boolean;
   componentLayouts: ComponentLayouts;
@@ -14,6 +16,7 @@ interface WeatherExpandedProps {
 }
 
 export default function WeatherExpanded({
+  sessionId,
   weatherEffect,
   isVisible,
   componentLayouts,
@@ -86,6 +89,9 @@ export default function WeatherExpanded({
           className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-500'
         />
       </div>
+
+      {/* Copy URL for OBS */}
+      <CopyURLButton url={`${window.location.origin}/overlay/${sessionId}/weather`} />
     </div>
   );
 }

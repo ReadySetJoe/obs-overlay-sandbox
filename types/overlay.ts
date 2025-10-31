@@ -91,9 +91,23 @@ export interface WeatherLayout {
   density: number; // 0.5 to 2.0
 }
 
+export interface ChatHighlightLayout {
+  position: Position;
+  x: number;
+  y: number;
+  width: number;
+  scale: number; // 0.5 to 2.0
+}
+
+export interface ChatHighlight {
+  message: ChatMessage;
+  timestamp: number; // when it was highlighted
+}
+
 export interface ComponentLayouts {
   chat: ChatLayout;
   nowPlaying: NowPlayingLayout;
   countdown: CountdownLayout;
   weather: WeatherLayout;
+  chatHighlight: ChatHighlightLayout;
 }

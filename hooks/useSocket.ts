@@ -15,14 +15,12 @@ export const useSocket = (sessionId?: string) => {
     });
 
     socketInstance.on('connect', () => {
-      console.log('Connected to WebSocket, joining session:', sessionId);
       // Join the session room
       socketInstance.emit('join-session', sessionId);
       setIsConnected(true);
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('Disconnected from WebSocket');
       setIsConnected(false);
     });
 

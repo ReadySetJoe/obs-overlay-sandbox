@@ -1,24 +1,17 @@
-// pages/overlay/[sessionId].tsx
+// pages/overlay/[sessionId]/now-playing.tsx
 'use client';
 
 import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
-import WeatherEffect from '@/components/overlay/WeatherEffect';
 import NowPlaying from '@/components/overlay/NowPlaying';
-import CountdownTimer from '@/components/overlay/CountdownTimer';
-import EmoteWall from '@/components/overlay/EmoteWall';
-import ChatHighlight from '@/components/overlay/ChatHighlight';
 
-export default function OverlayPage() {
+export default function NowPlayingOverlay() {
   const router = useRouter();
   const { sessionId } = router.query;
   const {
     isConnected,
-    weatherEffect,
     nowPlaying,
-    countdownTimers,
     componentLayouts,
-    chatHighlight,
     getLayerVisible,
     colorScheme,
     colorSchemeStyles,
@@ -39,25 +32,9 @@ export default function OverlayPage() {
         </div>
       )}
 
-      {/* Weather Effect */}
-      {getLayerVisible('weather') && <WeatherEffect effect={weatherEffect} />}
-
       {/* Now Playing */}
       {getLayerVisible('nowplaying') && (
         <NowPlaying track={nowPlaying} layout={componentLayouts.nowPlaying} />
-      )}
-
-      {/* Countdown Timers */}
-      {getLayerVisible('countdown') && (
-        <CountdownTimer timers={countdownTimers} layout={componentLayouts.countdown} />
-      )}
-
-      {/* Emote Wall */}
-      <EmoteWall />
-
-      {/* Chat Highlight */}
-      {getLayerVisible('chathighlight') && (
-        <ChatHighlight highlight={chatHighlight} layout={componentLayouts.chatHighlight} />
       )}
     </div>
   );

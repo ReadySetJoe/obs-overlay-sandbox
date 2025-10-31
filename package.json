@@ -29,7 +29,8 @@
     "react-dom": "19.2.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "spotify-web-api-node": "^5.0.2"
+    "spotify-web-api-node": "^5.0.2",
+    "tmi.js": "^1.8.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -38,6 +39,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/spotify-web-api-node": "^5.0.11",
+    "@types/tmi.js": "^1.8.6",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
