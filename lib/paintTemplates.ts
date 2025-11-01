@@ -6,7 +6,11 @@ import marioAndLuigiTemplate from './paint-templates/mario-and-luigi';
 import falcoTemplate from './paint-templates/falco';
 
 // Helper function to create pixel coordinates for a region
-export function createRegion(id: number, color: string, pixels: [number, number][]): PaintRegion {
+export function createRegion(
+  id: number,
+  color: string,
+  pixels: [number, number][]
+): PaintRegion {
   return {
     id,
     color,
@@ -21,14 +25,16 @@ export const paintTemplates: PaintTemplate[] = [
   pokeballTemplate,
   marioTemplate,
   marioAndLuigiTemplate,
-  falcoTemplate
+  falcoTemplate,
 ];
 
 /**
  * Creates a fresh paint state from a template
  * All regions will be reset to unfilled state
  */
-export function createPaintStateFromTemplate(templateId: string): PaintTemplate | null {
+export function createPaintStateFromTemplate(
+  templateId: string
+): PaintTemplate | null {
   const template = paintTemplates.find(t => t.id === templateId);
 
   if (!template) {

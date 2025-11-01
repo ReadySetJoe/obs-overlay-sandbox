@@ -62,7 +62,9 @@ export async function startTwitchChatMonitoring(
 
     // Check for paint-by-numbers commands
     // Supports: !paint 1 red, !paint 2 #FF0000, !paint 3
-    const paintCommand = message.trim().match(/^!paint\s+(\d+)(?:\s+([#\w]+))?$/i);
+    const paintCommand = message
+      .trim()
+      .match(/^!paint\s+(\d+)(?:\s+([#\w]+))?$/i);
     if (paintCommand) {
       const regionId = parseInt(paintCommand[1], 10);
       const customColor = paintCommand[2]; // Optional color (name or hex)

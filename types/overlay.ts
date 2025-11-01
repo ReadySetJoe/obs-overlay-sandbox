@@ -24,7 +24,15 @@ export type ColorScheme =
   | 'neon'
   | 'custom';
 
-export type WeatherEffect = 'rain' | 'snow' | 'confetti' | 'hearts' | 'stars' | 'bubbles' | 'leaves' | 'sakura';
+export type WeatherEffect =
+  | 'rain'
+  | 'snow'
+  | 'confetti'
+  | 'hearts'
+  | 'stars'
+  | 'bubbles'
+  | 'leaves'
+  | 'sakura';
 
 export interface NowPlaying {
   title: string;

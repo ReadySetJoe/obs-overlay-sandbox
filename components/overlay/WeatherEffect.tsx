@@ -22,7 +22,10 @@ interface Particle {
   pulseSpeed?: number; // For stars, hearts
 }
 
-export default function WeatherEffect({ effect, density = 1 }: WeatherEffectProps) {
+export default function WeatherEffect({
+  effect,
+  density = 1,
+}: WeatherEffectProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number>(0);
@@ -61,7 +64,14 @@ export default function WeatherEffect({ effect, density = 1 }: WeatherEffectProp
           };
 
         case 'confetti':
-          const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#ff69b4'];
+          const colors = [
+            '#ff6b6b',
+            '#4ecdc4',
+            '#45b7d1',
+            '#f9ca24',
+            '#6c5ce7',
+            '#ff69b4',
+          ];
           return {
             ...baseParticle,
             speed: Math.random() * 3 + 2,
@@ -101,7 +111,13 @@ export default function WeatherEffect({ effect, density = 1 }: WeatherEffectProp
           };
 
         case 'leaves':
-          const leafColors = ['#ff6b35', '#f7931e', '#fdc500', '#c1876b', '#96351e'];
+          const leafColors = [
+            '#ff6b35',
+            '#f7931e',
+            '#fdc500',
+            '#c1876b',
+            '#96351e',
+          ];
           return {
             ...baseParticle,
             speed: Math.random() * 2 + 1,
@@ -182,8 +198,22 @@ export default function WeatherEffect({ effect, density = 1 }: WeatherEffectProp
       ctx.fillStyle = 'rgba(255, 105, 180, 0.7)';
       ctx.beginPath();
       ctx.moveTo(p.x, p.y + size / 4);
-      ctx.bezierCurveTo(p.x, p.y, p.x - size / 2, p.y - size / 2, p.x, p.y - size / 4);
-      ctx.bezierCurveTo(p.x + size / 2, p.y - size / 2, p.x, p.y, p.x, p.y + size / 4);
+      ctx.bezierCurveTo(
+        p.x,
+        p.y,
+        p.x - size / 2,
+        p.y - size / 2,
+        p.x,
+        p.y - size / 4
+      );
+      ctx.bezierCurveTo(
+        p.x + size / 2,
+        p.y - size / 2,
+        p.x,
+        p.y,
+        p.x,
+        p.y + size / 4
+      );
       ctx.fill();
     };
 
@@ -335,7 +365,9 @@ export default function WeatherEffect({ effect, density = 1 }: WeatherEffectProp
 
           case 'stars':
             // Twinkling effect
-            p.opacity = (p.opacity || 0) + (p.pulseSpeed || 0.01) * (Math.random() > 0.5 ? 1 : -1);
+            p.opacity =
+              (p.opacity || 0) +
+              (p.pulseSpeed || 0.01) * (Math.random() > 0.5 ? 1 : -1);
             p.opacity = Math.max(0.1, Math.min(1, p.opacity));
             drawStar(p);
             break;

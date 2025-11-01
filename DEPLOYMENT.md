@@ -80,6 +80,7 @@ SPOTIFY_REDIRECT_URI=https://your-app.railway.app/api/spotify/callback
 ```
 
 **💡 Tips:**
+
 - Railway has a `DATABASE_URL` variable pre-filled - don't change it!
 - You can copy-paste all variables at once using "RAW Editor"
 - Your generated NEXTAUTH_SECRET is shown above (or generate a new one with `openssl rand -base64 32`)
@@ -161,6 +162,7 @@ Now that you have your deployment URL, update these variables:
 4. Watch the build logs
 
 **Look for:**
+
 - ✅ "Installing dependencies..."
 - ✅ "Running postinstall script..." (Prisma generate)
 - ✅ "Building Next.js app..."
@@ -168,6 +170,7 @@ Now that you have your deployment URL, update these variables:
 - ✅ "Starting server..."
 
 **If you see errors:**
+
 - Check that all environment variables are set correctly
 - Look for "Missing required environment variables" messages
 - Verify DATABASE_URL is connected to your PostgreSQL instance
@@ -183,6 +186,7 @@ Now that you have your deployment URL, update these variables:
 5. You should be redirected to your dashboard
 
 **Test checklist:**
+
 - [ ] Landing page loads
 - [ ] Twitch sign-in works
 - [ ] Dashboard loads with session ID
@@ -214,6 +218,7 @@ Repeat for each overlay component you want to use!
 ### Deployment fails with "Missing required environment variables"
 
 **Solution:** Check that all required env vars are set in Railway Variables tab:
+
 - `DATABASE_URL` (auto-set)
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
@@ -224,6 +229,7 @@ Repeat for each overlay component you want to use!
 ### "Error: connect ECONNREFUSED" in logs
 
 **Solution:** Database isn't connected. Make sure:
+
 - PostgreSQL service is running in Railway
 - `DATABASE_URL` variable references the database service
 - Try redeploying
@@ -231,6 +237,7 @@ Repeat for each overlay component you want to use!
 ### Twitch OAuth fails with "redirect_uri_mismatch"
 
 **Solution:**
+
 - Verify `NEXTAUTH_URL` in Railway matches your actual deployment URL
 - Check Twitch Developer Console has the correct redirect URI
 - Make sure there are no trailing slashes
@@ -238,6 +245,7 @@ Repeat for each overlay component you want to use!
 ### Overlays show "Failed to connect to socket"
 
 **Solution:**
+
 - Check browser console for errors
 - Verify you're using the production URL (not localhost)
 - Ensure WebSocket connections aren't blocked by firewall
@@ -245,6 +253,7 @@ Repeat for each overlay component you want to use!
 ### Database migration errors
 
 **Solution:**
+
 ```bash
 # In Railway, go to your database service
 # Click on "Data" tab
@@ -283,6 +292,7 @@ CREATE SCHEMA public;
    - Database storage
 
 **Free tier limits:**
+
 - $5 credit/month
 - Unused credits don't roll over
 
@@ -345,6 +355,7 @@ Want to use your own domain instead of `railway.app`?
 - ✅ Overlays in OBS
 
 **Now you can:**
+
 - Stream with your custom overlays!
 - Share your overlay dashboard with moderators
 - Create multiple sessions for different stream setups

@@ -72,13 +72,15 @@ export default function OverlayPage() {
       {getLayerVisible('paintbynumbers') && (
         <PaintByNumbers
           paintState={paintByNumbersState}
-          layout={componentLayouts.paintByNumbers || {
-            position: 'top-left',
-            x: 0,
-            y: 0,
-            scale: 1,
-            gridSize: 20,
-          }}
+          layout={
+            componentLayouts.paintByNumbers || {
+              position: 'top-left',
+              x: 0,
+              y: 0,
+              scale: 1,
+              gridSize: 20,
+            }
+          }
         />
       )}
     </div>

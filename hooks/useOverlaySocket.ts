@@ -50,14 +50,18 @@ export function useOverlaySocket(sessionId: string) {
     { id: 'nowplaying', name: 'Now Playing', visible: true, zIndex: 10 },
     { id: 'countdown', name: 'Countdown', visible: true, zIndex: 15 },
     { id: 'chathighlight', name: 'Chat Highlight', visible: true, zIndex: 20 },
-    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true, zIndex: 12 },
+    {
+      id: 'paintbynumbers',
+      name: 'Paint by Numbers',
+      visible: true,
+      zIndex: 12,
+    },
   ]);
   const [chatHighlight, setChatHighlight] = useState<ChatHighlightType | null>(
     null
   );
-  const [paintByNumbersState, setPaintByNumbersState] = useState<PaintByNumbersState | null>(
-    null
-  );
+  const [paintByNumbersState, setPaintByNumbersState] =
+    useState<PaintByNumbersState | null>(null);
 
   useEffect(() => {
     if (!socket) return;

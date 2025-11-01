@@ -67,7 +67,10 @@ export default function PositionControls({
     const visualHeight = elementHeight * scale;
 
     const clampedX = Math.max(0, Math.min(streamX, STREAM_WIDTH - visualWidth));
-    const clampedY = Math.max(0, Math.min(streamY, STREAM_HEIGHT - visualHeight));
+    const clampedY = Math.max(
+      0,
+      Math.min(streamY, STREAM_HEIGHT - visualHeight)
+    );
 
     onPositionChange(Math.round(clampedX), Math.round(clampedY));
   };
@@ -99,11 +102,14 @@ export default function PositionControls({
     const visualWidth = elementWidth * scale;
     const visualHeight = elementHeight * scale;
 
-    const targetX = (STREAM_WIDTH * xPercent) - (visualWidth * xPercent);
-    const targetY = (STREAM_HEIGHT * yPercent) - (visualHeight * yPercent);
+    const targetX = STREAM_WIDTH * xPercent - visualWidth * xPercent;
+    const targetY = STREAM_HEIGHT * yPercent - visualHeight * yPercent;
 
     const clampedX = Math.max(0, Math.min(targetX, STREAM_WIDTH - visualWidth));
-    const clampedY = Math.max(0, Math.min(targetY, STREAM_HEIGHT - visualHeight));
+    const clampedY = Math.max(
+      0,
+      Math.min(targetY, STREAM_HEIGHT - visualHeight)
+    );
 
     onPositionChange(Math.round(clampedX), Math.round(clampedY));
   };
@@ -135,51 +141,78 @@ export default function PositionControls({
           {/* Quick position buttons */}
           {/* Corners */}
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(0, 0); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(0, 0);
+            }}
             className='absolute top-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tl z-10'
             title='Top Left'
           />
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(1, 0); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(1, 0);
+            }}
             className='absolute top-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-tr z-10'
             title='Top Right'
           />
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(0, 1); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(0, 1);
+            }}
             className='absolute bottom-0 left-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-bl z-10'
             title='Bottom Left'
           />
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(1, 1); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(1, 1);
+            }}
             className='absolute bottom-0 right-0 w-3 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-br z-10'
             title='Bottom Right'
           />
 
           {/* Edges */}
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(0.5, 0); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(0.5, 0);
+            }}
             className='absolute top-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-t z-10'
             title='Top Center'
           />
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(0.5, 1); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(0.5, 1);
+            }}
             className='absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-b z-10'
             title='Bottom Center'
           />
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(0, 0.5); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(0, 0.5);
+            }}
             className='absolute top-1/2 left-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-l z-10'
             title='Left Center'
           />
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(1, 0.5); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(1, 0.5);
+            }}
             className='absolute top-1/2 right-0 -translate-y-1/2 w-2 h-3 bg-gray-600 hover:bg-gray-500 transition-colors rounded-r z-10'
             title='Right Center'
           />
 
           {/* Center */}
           <button
-            onClick={e => { e.stopPropagation(); snapToPosition(0.5, 0.5); }}
+            onClick={e => {
+              e.stopPropagation();
+              snapToPosition(0.5, 0.5);
+            }}
             className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-600 hover:bg-gray-500 transition-colors rounded-sm z-10'
             title='Center'
           />
@@ -250,7 +283,8 @@ export default function PositionControls({
 
       {/* Size info */}
       <div className='text-xs text-gray-500 bg-gray-800/50 rounded px-2 py-1'>
-        Element: {elementWidth}×{elementHeight}px × {scale}x scale = {Math.round(elementWidth * scale)}×{Math.round(elementHeight * scale)}px
+        Element: {elementWidth}×{elementHeight}px × {scale}x scale ={' '}
+        {Math.round(elementWidth * scale)}×{Math.round(elementHeight * scale)}px
       </div>
     </div>
   );

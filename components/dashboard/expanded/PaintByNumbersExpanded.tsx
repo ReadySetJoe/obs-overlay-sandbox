@@ -33,10 +33,13 @@ export default function PaintByNumbersExpanded({
   onGridSizeChange,
   onClose,
 }: PaintByNumbersExpandedProps) {
-  const currentTemplate = paintTemplates.find(t => t.id === paintState?.templateId);
+  const currentTemplate = paintTemplates.find(
+    t => t.id === paintState?.templateId
+  );
   const totalRegions = paintState?.regions.length || 0;
   const filledRegions = paintState?.regions.filter(r => r.filled).length || 0;
-  const progress = totalRegions > 0 ? Math.round((filledRegions / totalRegions) * 100) : 0;
+  const progress =
+    totalRegions > 0 ? Math.round((filledRegions / totalRegions) * 100) : 0;
   const isComplete = totalRegions > 0 && filledRegions === totalRegions;
 
   const layout = componentLayouts.paintByNumbers || {
@@ -105,7 +108,16 @@ export default function PaintByNumbersExpanded({
             >
               <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
               <div className='relative flex flex-col items-center gap-2'>
-                <span className='text-2xl'>{template.id === 'heart' ? '❤️' : template.id === 'pokeball' ? '⚪️' : template.id === 'mario' ? '🍄' : template.id === 'zelda' ? '🗡️' : '🎨'}
+                <span className='text-2xl'>
+                  {template.id === 'heart'
+                    ? '❤️'
+                    : template.id === 'pokeball'
+                      ? '⚪️'
+                      : template.id === 'mario'
+                        ? '🍄'
+                        : template.id === 'zelda'
+                          ? '🗡️'
+                          : '🎨'}
                 </span>
                 <span className='text-md'>{template.name}</span>
                 <span className='text-sm text-gray-300'>
@@ -154,7 +166,10 @@ export default function PaintByNumbersExpanded({
             </div>
             {paintState.lastFilledBy && (
               <div className='text-xs text-gray-400 text-center mt-2'>
-                Last filled by: <span className='text-purple-400'>{paintState.lastFilledBy}</span>
+                Last filled by:{' '}
+                <span className='text-purple-400'>
+                  {paintState.lastFilledBy}
+                </span>
               </div>
             )}
           </div>
@@ -167,18 +182,36 @@ export default function PaintByNumbersExpanded({
           How to Use
         </h3>
         <ul className='text-xs text-gray-300 space-y-1'>
-          <li>• Type <code className='bg-gray-800 px-1 rounded text-purple-400'>!paint [number] [color]</code> in chat</li>
+          <li>
+            • Type{' '}
+            <code className='bg-gray-800 px-1 rounded text-purple-400'>
+              !paint [number] [color]
+            </code>{' '}
+            in chat
+          </li>
           <li>• Examples:</li>
           <li className='ml-4'>
-            <code className='bg-gray-800 px-1 rounded text-purple-400'>!paint 1 red</code> - use color name
+            <code className='bg-gray-800 px-1 rounded text-purple-400'>
+              !paint 1 red
+            </code>{' '}
+            - use color name
           </li>
           <li className='ml-4'>
-            <code className='bg-gray-800 px-1 rounded text-purple-400'>!paint 2 #FF00FF</code> - use hex code
+            <code className='bg-gray-800 px-1 rounded text-purple-400'>
+              !paint 2 #FF00FF
+            </code>{' '}
+            - use hex code
           </li>
           <li className='ml-4'>
-            <code className='bg-gray-800 px-1 rounded text-purple-400'>!paint 3</code> - use template color
+            <code className='bg-gray-800 px-1 rounded text-purple-400'>
+              !paint 3
+            </code>{' '}
+            - use template color
           </li>
-          <li>• Supported colors: red, blue, green, yellow, orange, purple, pink, cyan, white, black, and more!</li>
+          <li>
+            • Supported colors: red, blue, green, yellow, orange, purple, pink,
+            cyan, white, black, and more!
+          </li>
           <li>• Each region can only be filled once</li>
         </ul>
       </div>

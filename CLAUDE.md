@@ -9,36 +9,43 @@
 ## Tech Stack
 
 ### Core Framework
+
 - **Next.js 16** (React 19) - Full-stack framework with Pages Router
 - **TypeScript** - Type safety throughout
 - **Tailwind CSS 4** - Styling
 
 ### Real-time Communication
+
 - **Socket.io** (v4.8.1) - WebSocket server/client for real-time updates
 - **Custom hooks** (`useSocket`, `useOverlaySocket`) - Socket connection management
 
 ### Authentication & Database
+
 - **NextAuth.js** (v4.24.13) - OAuth authentication (Twitch provider)
 - **Prisma** (v6.18.0) - ORM with PostgreSQL
 - **PostgreSQL** - Database (via DATABASE_URL env var)
 
 ### Integrations
+
 - **Twitch** - Authentication + live chat monitoring via `tmi.js`
 - **Spotify** - Now Playing integration via `spotify-web-api-node`
 - **ColorThief** - Album art color extraction for dynamic theming
 
 ### Build Tools
+
 - **ESLint** + **Prettier** - Code quality
 - **Turbopack** - Fast Next.js bundler
 
 ## Architecture Patterns
 
 ### Session-Based Isolation
+
 - Each user gets a unique `sessionId` (UUID stored in Prisma `Layout` model)
 - Sessions isolate overlay configurations between different streamers
 - Socket.io rooms use `sessionId` for targeted broadcasts
 
 ### Real-time Data Flow
+
 ```
 Dashboard UI → Socket.io Client → Socket.io Server → Socket.io Room (sessionId) → Overlay UI
 ```
@@ -49,6 +56,7 @@ Dashboard UI → Socket.io Client → Socket.io Server → Socket.io Room (sessi
 4. Overlay pages listening to that room update instantly
 
 ### Dual-View Pattern
+
 - **Dashboard view**: `/dashboard/[sessionId]` - Control panel for streamers
 - **Overlay views**: `/overlay/[sessionId]/*` - Individual components for OBS
   - Each overlay is a separate page that can be added to OBS as a browser source
@@ -135,10 +143,12 @@ obs-overlay-sandbox/
 ### Core Models
 
 **User** (NextAuth)
+
 - `id`, `name`, `email`, `emailVerified`, `image`
 - Relations: `accounts[]`, `sessions[]`, `layouts[]`
 
 **Layout** (User's overlay configuration)
+
 - `id`, `userId`, `sessionId` (unique)
 - `name` - Layout name
 - `colorScheme` - Color theme (default, sunset, ocean, etc.)
@@ -147,21 +157,23 @@ obs-overlay-sandbox/
 - `componentLayouts` - JSON string storing position/size for each component
   ```json
   {
-    "chat": {"position": "top-left", "x": 0, "y": 80, "maxWidth": 400},
-    "nowPlaying": {"position": "top-left", "x": 0, "y": 0, "width": 400},
-    "countdown": {"position": "top-left", "x": 0, "y": 0, "scale": 1},
-    "weather": {"density": 1}
+    "chat": { "position": "top-left", "x": 0, "y": 80, "maxWidth": 400 },
+    "nowPlaying": { "position": "top-left", "x": 0, "y": 0, "width": 400 },
+    "countdown": { "position": "top-left", "x": 0, "y": 0, "scale": 1 },
+    "weather": { "density": 1 }
   }
   ```
 - Relations: `countdowns[]`
 
 **CountdownTimer**
+
 - `id`, `layoutId`, `title`, `description`, `targetDate`, `isActive`
 - Stores individual countdown timers for a layout
 
 **Account, Session, VerificationToken** - NextAuth models
 
 ### Key Relationships
+
 ```
 User (1) ─── (many) Layout
 Layout (1) ─── (many) CountdownTimer
@@ -170,15 +182,18 @@ Layout (1) ─── (many) CountdownTimer
 ## Key Components & Features
 
 ### 1. Chat Highlight System
+
 **Flow**: Twitch Chat → `tmi.js` → Socket.io → Dashboard + Overlay
 
 **Files**:
+
 - `lib/twitchChat.ts` - Chat monitoring with `tmi.js` client
 - `pages/api/twitch/connect-chat.ts` - Start monitoring endpoint
 - `components/overlay/ChatHighlight.tsx` - Displays highlighted message
 - `components/dashboard/expanded/ChatHighlightExpanded.tsx` - Message selection UI
 
 **Data Flow**:
+
 1. User authenticates with Twitch (NextAuth)
 2. Dashboard calls `/api/twitch/connect-chat` with username
 3. Server creates `tmi.js` client, joins channel
@@ -190,14 +205,17 @@ Layout (1) ─── (many) CountdownTimer
 **User Roles**: `viewer`, `subscriber`, `moderator`, `vip`, `first-timer`
 
 ### 2. Now Playing (Spotify)
+
 **Flow**: Spotify OAuth → Polling → Socket.io → Overlay
 
 **Files**:
+
 - `lib/spotify.ts` - Spotify API client setup
 - `pages/api/spotify/*` - OAuth flow and now-playing endpoint
 - `components/overlay/NowPlaying.tsx` - Album art + track info display
 
 **Features**:
+
 - OAuth flow stores access/refresh tokens in localStorage
 - Dashboard polls `/api/spotify/now-playing` every 5 seconds
 - ColorThief extracts dominant color from album art
@@ -205,49 +223,60 @@ Layout (1) ─── (many) CountdownTimer
 - Emits `now-playing` event with track data to overlay
 
 ### 3. Countdown Timers
+
 **Files**:
+
 - `pages/api/timers/*` - CRUD operations
 - `components/overlay/CountdownTimer.tsx` - Display with animations
 
 **Features**:
+
 - Multiple timers per layout stored in database
 - Real-time countdown with days/hours/minutes/seconds
 - Confetti animation when timer reaches zero
 - Toggle active/inactive state
 
 ### 4. Emote Wall
+
 **Files**: `components/overlay/EmoteWall.tsx`
 
 **Features**:
+
 - Canvas-based particle system
 - Configurable emote (emoji), count, speed, scale
 - Physics simulation for floating emotes
 
 ### 5. Weather Effects
+
 **Files**: `components/overlay/WeatherEffect.tsx`
 
 **Types**: Rain, snow, fog, none
 **Features**: Canvas-based particle systems with configurable density
 
 ### 6. Color Schemes
+
 Predefined themes that change overlay styling:
+
 - `default`, `sunset`, `ocean`, `forest`, `purple-haze`, `neon`, `monochrome`
 - Emits `color-scheme-change` and `custom-colors-change` events
 
 ## API Routes Reference
 
 ### Authentication
+
 - `GET /api/auth/signin` - NextAuth sign-in page
 - `POST /api/auth/signout` - Sign out
 - `GET/POST /api/auth/[...nextauth]` - NextAuth handler
 
 ### Layouts
+
 - `GET /api/layouts/list?userId={userId}` - Get all user layouts
 - `GET /api/layouts/load?sessionId={sessionId}` - Load specific layout
 - `POST /api/layouts/save` - Save layout (creates if doesn't exist)
   - Body: `{ userId, sessionId, name?, colorScheme?, weatherEffect?, *Visible, componentLayouts }`
 
 ### Timers
+
 - `GET /api/timers/list?sessionId={sessionId}` - Get all timers for layout
 - `POST /api/timers/create` - Create timer
   - Body: `{ sessionId, title, description?, targetDate, isActive }`
@@ -255,6 +284,7 @@ Predefined themes that change overlay styling:
 - `DELETE /api/timers/[timerId]` - Delete timer
 
 ### Spotify
+
 - `GET /api/spotify/login?sessionId={sessionId}` - Get OAuth URL
 - `GET /api/spotify/callback?code={code}&state={sessionId}` - OAuth callback
 - `GET /api/spotify/now-playing?sessionId={sessionId}` - Get current track
@@ -262,12 +292,14 @@ Predefined themes that change overlay styling:
   - Body: `{ refreshToken }`
 
 ### Twitch
+
 - `POST /api/twitch/connect-chat` - Start monitoring Twitch chat
   - Body: `{ twitchUsername, sessionId }`
 - `POST /api/twitch/disconnect-chat` - Stop monitoring
   - Body: `{ sessionId }`
 
 ### WebSockets
+
 - `GET /api/socket` - Initialize Socket.io server
   - Idempotent - only creates server once
   - CORS restricted to `NEXTAUTH_URL`
@@ -275,6 +307,7 @@ Predefined themes that change overlay styling:
 ## Socket.io Events
 
 ### Client → Server
+
 - `join-session` - Join a session room (payload: `sessionId`)
 - `chat-message` - Forward chat message (payload: `ChatMessage`)
 - `chat-highlight` - Highlight a chat message (payload: `ChatHighlight`)
@@ -290,6 +323,7 @@ Predefined themes that change overlay styling:
 - `audio-data` - Audio visualization data
 
 ### Server → Client
+
 Same event names, broadcasted to session room
 
 ## Environment Variables
@@ -297,6 +331,7 @@ Same event names, broadcasted to session room
 See `.env.example` for full reference.
 
 ### Required
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `NEXTAUTH_SECRET` - NextAuth encryption secret (generate with `openssl rand -base64 32`)
 - `NEXTAUTH_URL` - Application URL (http://localhost:3000 or production URL)
@@ -304,16 +339,19 @@ See `.env.example` for full reference.
 - `TWITCH_CLIENT_SECRET` - Twitch OAuth app secret
 
 ### Optional (Spotify features)
+
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REDIRECT_URI`
 
 ### Validation
+
 `lib/env.ts` validates all required variables on server startup. Missing required vars will throw an error with clear message.
 
 ## Common Development Tasks
 
 ### Setup
+
 ```bash
 # Install dependencies
 npm install
@@ -329,6 +367,7 @@ npm run dev
 ```
 
 ### Database Changes
+
 ```bash
 # After modifying schema.prisma
 npx prisma db push          # Push schema to database
@@ -337,6 +376,7 @@ npx prisma studio           # Open database GUI
 ```
 
 ### Code Quality
+
 ```bash
 npm run lint                # Check for errors
 npm run format              # Format code
@@ -357,6 +397,7 @@ npm run build               # Test production build
    - Include `<CopyURLButton>` for OBS URL
 
 3. **Create overlay page** in `pages/overlay/[sessionId]/your-overlay.tsx`
+
    ```tsx
    export default function YourOverlayPage() {
      const router = useRouter();
@@ -377,29 +418,35 @@ npm run build               # Test production build
 ## Performance Considerations
 
 ### Socket.io Optimization
+
 - Events are room-scoped (only sessionId participants receive updates)
 - Audio data uses `socket.to(sessionId)` (excludes sender) to prevent echo
 
 ### Database
+
 - Prisma query logging disabled in production (see `lib/prisma.ts`)
 - `componentLayouts` stored as JSON string for flexibility (trade-off: not queryable)
 
 ### Next.js
+
 - Static generation where possible (`○` routes in build output)
 - API routes are serverless functions (cold start consideration)
 
 ## Security Notes
 
 ### CORS Configuration
+
 - Socket.io restricted to `NEXTAUTH_URL` origin (see `pages/api/socket.ts:27`)
 - Never use `origin: '*'` in production
 
 ### Authentication
+
 - All dashboard/settings endpoints should validate session
 - Overlay endpoints are public (needed for OBS browser sources)
 - Twitch chat monitoring requires authenticated user
 
 ### Secrets
+
 - Never commit `.env` files (`.gitignore` configured)
 - Use environment variables for all secrets
 - `lib/env.ts` validates presence but doesn't log values
@@ -419,21 +466,25 @@ npm run build               # Test production build
 ## Known Issues & Limitations
 
 ### Linting
+
 - Some React hooks optimization warnings (dependency arrays)
 - Performance suggestions (Next.js Image component vs img tags)
 - These don't affect functionality, address as needed
 
 ### Twitch Chat
+
 - Chat monitoring runs in-memory (not persisted)
 - Server restart disconnects all chat monitors
 - One active connection per sessionId
 
 ### Spotify
+
 - Tokens stored in localStorage (client-side only)
 - Requires manual re-auth if tokens expire
 - No server-side token refresh implementation
 
 ### Socket.io
+
 - Requires WebSocket support from hosting platform
 - Some platforms (Vercel) may need special configuration
 - Consider persistent connection services for production
@@ -441,6 +492,7 @@ npm run build               # Test production build
 ## Useful File Patterns
 
 ### Adding a new API route
+
 ```typescript
 // pages/api/your-route.ts
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -469,6 +521,7 @@ export default async function handler(
 ```
 
 ### Socket event pattern (Dashboard)
+
 ```typescript
 const socket = useSocket();
 
@@ -479,7 +532,7 @@ socket?.emit('your-event', { sessionId, ...data });
 useEffect(() => {
   if (!socket) return;
 
-  socket.on('your-event', (data) => {
+  socket.on('your-event', data => {
     // Handle event
   });
 
@@ -490,13 +543,14 @@ useEffect(() => {
 ```
 
 ### Socket event pattern (Overlay)
+
 ```typescript
 const socket = useOverlaySocket(sessionId);
 
 useEffect(() => {
   if (!socket) return;
 
-  socket.on('your-event', (data) => {
+  socket.on('your-event', data => {
     setYourState(data);
   });
 

@@ -77,39 +77,48 @@ export default function WeatherExpanded({
         </button>
       </div>
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6'>
-        {(['rain', 'snow', 'confetti', 'hearts', 'stars', 'bubbles', 'leaves', 'sakura'] as WeatherEffect[]).map(
-          effect => {
-            // Define emoji icons for each effect
-            const icons: Record<WeatherEffect, string> = {
-              rain: '🌧️',
-              snow: '❄️',
-              confetti: '🎉',
-              hearts: '💖',
-              stars: '⭐',
-              bubbles: '🫧',
-              leaves: '🍂',
-              sakura: '🌸',
-            };
+        {(
+          [
+            'rain',
+            'snow',
+            'confetti',
+            'hearts',
+            'stars',
+            'bubbles',
+            'leaves',
+            'sakura',
+          ] as WeatherEffect[]
+        ).map(effect => {
+          // Define emoji icons for each effect
+          const icons: Record<WeatherEffect, string> = {
+            rain: '🌧️',
+            snow: '❄️',
+            confetti: '🎉',
+            hearts: '💖',
+            stars: '⭐',
+            bubbles: '🫧',
+            leaves: '🍂',
+            sakura: '🌸',
+          };
 
-            return (
-              <button
-                key={effect}
-                onClick={() => onWeatherChange(effect)}
-                className={`group relative rounded-xl px-3 py-3 font-semibold capitalize transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden border ${
-                  weatherEffect === effect
-                    ? 'bg-gradient-to-br from-cyan-600/80 to-blue-600/80 border-cyan-500'
-                    : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
-                }`}
-              >
-                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
-                <div className='relative flex flex-col items-center gap-1'>
-                  <span className='text-2xl'>{icons[effect]}</span>
-                  <span className='text-xs'>{effect}</span>
-                </div>
-              </button>
-            );
-          }
-        )}
+          return (
+            <button
+              key={effect}
+              onClick={() => onWeatherChange(effect)}
+              className={`group relative rounded-xl px-3 py-3 font-semibold capitalize transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden border ${
+                weatherEffect === effect
+                  ? 'bg-gradient-to-br from-cyan-600/80 to-blue-600/80 border-cyan-500'
+                  : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
+              }`}
+            >
+              <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
+              <div className='relative flex flex-col items-center gap-1'>
+                <span className='text-2xl'>{icons[effect]}</span>
+                <span className='text-xs'>{effect}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
       <div>
         <label className='block text-xs text-gray-400 mb-1'>

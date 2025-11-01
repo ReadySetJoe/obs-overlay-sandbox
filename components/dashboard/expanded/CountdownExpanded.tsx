@@ -266,7 +266,10 @@ export default function CountdownExpanded({
               onPositionChange={onPositionChange}
               color='yellow'
               elementWidth={400}
-              elementHeight={Math.max(150, 120 * (timers.filter(t => t.isActive).length || 1))}
+              elementHeight={Math.max(
+                150,
+                120 * (timers.filter(t => t.isActive).length || 1)
+              )}
               scale={componentLayouts.countdown.scale || 1}
               isDynamicSize={true}
             />

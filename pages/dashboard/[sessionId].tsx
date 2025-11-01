@@ -86,7 +86,8 @@ export default function DashboardPage() {
   >('medium');
 
   // Paint by numbers
-  const [paintByNumbersState, setPaintByNumbersState] = useState<PaintByNumbersState | null>(null);
+  const [paintByNumbersState, setPaintByNumbersState] =
+    useState<PaintByNumbersState | null>(null);
 
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
@@ -287,7 +288,9 @@ export default function DashboardPage() {
   const handlePaintReset = () => {
     if (!paintByNumbersState) return;
 
-    const newTemplate = createPaintStateFromTemplate(paintByNumbersState.templateId);
+    const newTemplate = createPaintStateFromTemplate(
+      paintByNumbersState.templateId
+    );
     if (!newTemplate) return;
 
     const resetState: PaintByNumbersState = {
@@ -304,7 +307,11 @@ export default function DashboardPage() {
     setComponentLayouts(prev => ({
       ...prev,
       paintByNumbers: {
-        ...(prev.paintByNumbers || { position: 'top-left', scale: 1, gridSize: 20 }),
+        ...(prev.paintByNumbers || {
+          position: 'top-left',
+          scale: 1,
+          gridSize: 20,
+        }),
         x,
         y,
       },
@@ -315,7 +322,12 @@ export default function DashboardPage() {
     setComponentLayouts(prev => ({
       ...prev,
       paintByNumbers: {
-        ...(prev.paintByNumbers || { position: 'top-left', x: 0, y: 0, gridSize: 20 }),
+        ...(prev.paintByNumbers || {
+          position: 'top-left',
+          x: 0,
+          y: 0,
+          gridSize: 20,
+        }),
         scale,
       },
     }));
@@ -325,7 +337,12 @@ export default function DashboardPage() {
     setComponentLayouts(prev => ({
       ...prev,
       paintByNumbers: {
-        ...(prev.paintByNumbers || { position: 'top-left', x: 0, y: 0, scale: 1 }),
+        ...(prev.paintByNumbers || {
+          position: 'top-left',
+          x: 0,
+          y: 0,
+          scale: 1,
+        }),
         gridSize,
       },
     }));
@@ -652,10 +669,17 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!socket) return;
 
-    const handlePaintCommand = (data: { regionId: number; username: string; timestamp: number; customColor?: string }) => {
+    const handlePaintCommand = (data: {
+      regionId: number;
+      username: string;
+      timestamp: number;
+      customColor?: string;
+    }) => {
       if (!paintByNumbersState) return;
 
-      const region = paintByNumbersState.regions.find(r => r.id === data.regionId);
+      const region = paintByNumbersState.regions.find(
+        r => r.id === data.regionId
+      );
       if (!region) return; // Region doesn't exist
 
       // Check if region is already filled
@@ -694,7 +718,9 @@ export default function DashboardPage() {
       const updatedState: PaintByNumbersState = {
         ...paintByNumbersState,
         regions: updatedRegions,
-        completedAt: allFilled ? data.timestamp : paintByNumbersState.completedAt,
+        completedAt: allFilled
+          ? data.timestamp
+          : paintByNumbersState.completedAt,
         lastFilledBy: data.username,
       };
 

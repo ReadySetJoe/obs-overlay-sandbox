@@ -33,8 +33,8 @@ export default async function handler(
           ?.visible,
         countdownVisible: layers.find((l: any) => l.id === 'countdown')
           ?.visible,
-        paintByNumbersVisible: layers.find((l: any) => l.id === 'paintbynumbers')
-          ?.visible ?? true,
+        paintByNumbersVisible:
+          layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
         componentLayouts: componentLayouts || null,
       },
       create: {
@@ -48,8 +48,8 @@ export default async function handler(
           ?.visible,
         countdownVisible: layers.find((l: any) => l.id === 'countdown')
           ?.visible,
-        paintByNumbersVisible: layers.find((l: any) => l.id === 'paintbynumbers')
-          ?.visible ?? true,
+        paintByNumbersVisible:
+          layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
         componentLayouts: componentLayouts || null,
       },
     });

@@ -42,10 +42,7 @@ export default function PaintByNumbersOverlay() {
 
       {/* Paint by Numbers */}
       {getLayerVisible('paintbynumbers') && paintByNumbersState && (
-        <PaintByNumbers
-          paintState={paintByNumbersState}
-          layout={layout}
-        />
+        <PaintByNumbers paintState={paintByNumbersState} layout={layout} />
       )}
     </div>
   );

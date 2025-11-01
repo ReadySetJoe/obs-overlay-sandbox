@@ -10,7 +10,10 @@ interface PaintByNumbersProps {
   layout: PaintByNumbersLayout;
 }
 
-export default function PaintByNumbers({ paintState, layout }: PaintByNumbersProps) {
+export default function PaintByNumbers({
+  paintState,
+  layout,
+}: PaintByNumbersProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
@@ -194,7 +197,11 @@ export default function PaintByNumbers({ paintState, layout }: PaintByNumbersPro
               Paint by Numbers
             </h3>
             <p className='text-sm text-gray-400 mt-1'>
-              Type <span className='text-purple-400 font-mono'>!paint [number] [color]</span> in chat!
+              Type{' '}
+              <span className='text-purple-400 font-mono'>
+                !paint [number] [color]
+              </span>{' '}
+              in chat!
             </p>
           </div>
 
@@ -212,46 +219,45 @@ export default function PaintByNumbers({ paintState, layout }: PaintByNumbersPro
             {/* Legend - sorted by pixel count (largest first) */}
             <div className='flex-1 overflow-y-auto'>
               <div className='space-y-2'>
-                {[...paintState.regions]
-                  .map(region => {
-                    const displayColor = region.filled
-                      ? (region.customColor || region.color)
-                      : region.color;
+                {[...paintState.regions].map(region => {
+                  const displayColor = region.filled
+                    ? region.customColor || region.color
+                    : region.color;
 
-                    return (
+                  return (
+                    <div
+                      key={region.id}
+                      className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                        region.filled
+                          ? 'bg-gray-700/50 opacity-60'
+                          : 'bg-gray-800/50 hover:bg-gray-700/50'
+                      }`}
+                    >
+                      {/* Color swatch */}
                       <div
-                        key={region.id}
-                        className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
-                          region.filled
-                            ? 'bg-gray-700/50 opacity-60'
-                            : 'bg-gray-800/50 hover:bg-gray-700/50'
-                        }`}
-                      >
-                        {/* Color swatch */}
-                        <div
-                          className='w-8 h-8 rounded border-2 border-gray-600 flex-shrink-0'
-                          style={{ backgroundColor: displayColor }}
-                        />
+                        className='w-8 h-8 rounded border-2 border-gray-600 flex-shrink-0'
+                        style={{ backgroundColor: displayColor }}
+                      />
 
-                        {/* Region number */}
-                        <div className='flex items-center gap-2 flex-1'>
-                          <span className='font-bold text-lg text-white'>
-                            #{region.id}
-                          </span>
-                          {region.filled && (
-                            <span className='text-green-400 text-sm'>✓</span>
-                          )}
-                        </div>
-
-                        {/* Filled by info */}
-                        {region.filled && region.filledBy && (
-                          <span className='text-xs text-gray-400'>
-                            by {region.filledBy}
-                          </span>
+                      {/* Region number */}
+                      <div className='flex items-center gap-2 flex-1'>
+                        <span className='font-bold text-lg text-white'>
+                          #{region.id}
+                        </span>
+                        {region.filled && (
+                          <span className='text-green-400 text-sm'>✓</span>
                         )}
                       </div>
-                    );
-                  })}
+
+                      {/* Filled by info */}
+                      {region.filled && region.filledBy && (
+                        <span className='text-xs text-gray-400'>
+                          by {region.filledBy}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
