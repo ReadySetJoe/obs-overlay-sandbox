@@ -22,12 +22,41 @@ export type ColorScheme =
   | 'energetic'
   | 'dark'
   | 'neon'
+  // Gaming themes
+  | 'cyberpunk'
+  | 'retro-arcade'
+  | 'fps-modern'
+  // Chill themes
+  | 'sunset'
+  | 'ocean'
+  | 'forest'
+  | 'lavender'
+  // Vibrant themes
+  | 'synthwave'
+  | 'vaporwave'
+  | 'rainbow'
+  | 'candy'
+  // Minimal themes
+  | 'monochrome'
+  | 'pastel'
+  | 'noir'
+  // Custom
   | 'custom';
 
+export interface CustomColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+  gradientType: 'linear' | 'radial';
+  gradientDirection: 'to-r' | 'to-l' | 'to-t' | 'to-b' | 'to-tr' | 'to-tl' | 'to-br' | 'to-bl';
+}
+
+export type ColorSchemeCategory = 'all' | 'gaming' | 'chill' | 'vibrant' | 'minimal' | 'custom';
+
 export type WeatherEffect =
+  | 'none'
   | 'rain'
   | 'snow'
-  | 'confetti'
   | 'hearts'
   | 'stars'
   | 'bubbles'

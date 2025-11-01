@@ -14,15 +14,17 @@ export default function WeatherOverlay() {
     getLayerVisible,
     colorScheme,
     colorSchemeStyles,
+    customGradientCSS,
   } = useOverlaySocket(sessionId as string);
 
   return (
     <div
       className={`
         relative w-screen h-screen overflow-hidden
-        bg-gradient-to-br ${colorSchemeStyles[colorScheme]}
+        ${customGradientCSS ? '' : `bg-gradient-to-br ${colorSchemeStyles[colorScheme]}`}
         transition-all duration-1000
       `}
+      style={customGradientCSS ? { background: customGradientCSS } : {}}
     >
       {/* Connection Status */}
       {!isConnected && (

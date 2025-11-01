@@ -3,7 +3,7 @@ import { PaintTemplate } from "@/types/overlay";
 const monaLisaTemplate: PaintTemplate = {
   "id": "mona-lisa",
   "name": "Mona Lisa",
-  "description": "Shes' defintely smiling, right?",
+  "description": "She's defintely smiling, right?",
   "width": 134,
   "height": 200,
   "regions": [

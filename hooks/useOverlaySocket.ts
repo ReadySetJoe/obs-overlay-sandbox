@@ -1,9 +1,10 @@
 // hooks/useOverlaySocket.ts
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSocket } from '@/hooks/useSocket';
 import {
   ChatMessage as ChatMessageType,
   ColorScheme,
+  CustomColors,
   WeatherEffect as WeatherEffectType,
   NowPlaying as NowPlayingType,
   SceneLayer,
@@ -13,13 +14,15 @@ import {
   ChatHighlight as ChatHighlightType,
   PaintByNumbersState,
 } from '@/types/overlay';
+import { colorSchemePresets } from '@/lib/colorSchemes';
 
 export function useOverlaySocket(sessionId: string) {
   const { socket, isConnected } = useSocket(sessionId);
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
-  const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('rain');
+  const [customColors, setCustomColors] = useState<CustomColors | null>(null);
+  const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('none');
   const [nowPlaying, setNowPlaying] = useState<NowPlayingType | null>(null);
   const [countdownTimers, setCountdownTimers] = useState<CountdownTimerType[]>(
     []
@@ -63,6 +66,87 @@ export function useOverlaySocket(sessionId: string) {
   const [paintByNumbersState, setPaintByNumbersState] =
     useState<PaintByNumbersState | null>(null);
 
+  // Load initial layout state from database
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadInitialState = async () => {
+      try {
+        const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        if (response.ok) {
+          const { layout } = await response.json();
+
+          // Color scheme
+          if (layout.colorScheme) {
+            setColorScheme(layout.colorScheme);
+          }
+
+          // Custom colors
+          if (layout.customColors) {
+            try {
+              const parsedCustomColors = JSON.parse(layout.customColors);
+              setCustomColors(parsedCustomColors);
+            } catch (error) {
+              console.error('Error parsing custom colors:', error);
+            }
+          }
+
+          // Weather effect
+          if (layout.weatherEffect) {
+            setWeatherEffect(layout.weatherEffect);
+          }
+
+          // Component layouts
+          if (layout.componentLayouts) {
+            try {
+              const parsedLayouts = JSON.parse(layout.componentLayouts);
+              setComponentLayouts(parsedLayouts);
+            } catch (error) {
+              console.error('Error parsing component layouts:', error);
+            }
+          }
+
+          // Scene layer visibility
+          setSceneLayers(prev =>
+            prev.map(layer => {
+              if (layer.id === 'weather')
+                return { ...layer, visible: layout.weatherVisible ?? true };
+              if (layer.id === 'chat')
+                return { ...layer, visible: layout.chatVisible ?? true };
+              if (layer.id === 'nowplaying')
+                return { ...layer, visible: layout.nowPlayingVisible ?? true };
+              if (layer.id === 'countdown')
+                return { ...layer, visible: layout.countdownVisible ?? true };
+              if (layer.id === 'chathighlight')
+                return { ...layer, visible: layout.chatHighlightVisible ?? true };
+              if (layer.id === 'paintbynumbers')
+                return { ...layer, visible: layout.paintByNumbersVisible ?? true };
+              return layer;
+            })
+          );
+
+          // Load countdown timers
+          try {
+            const timersResponse = await fetch(`/api/timers/list?sessionId=${sessionId}`);
+            if (timersResponse.ok) {
+              const { timers } = await timersResponse.json();
+              setCountdownTimers(timers);
+            }
+          } catch (error) {
+            console.error('Error loading countdown timers:', error);
+          }
+
+          // Note: Paint by numbers state is handled by the dashboard and sent via socket
+          // We don't load it here because we need template data to reconstruct the full state
+        }
+      } catch (error) {
+        console.error('Error loading initial layout state:', error);
+      }
+    };
+
+    loadInitialState();
+  }, [sessionId]);
+
   useEffect(() => {
     if (!socket) return;
 
@@ -72,6 +156,10 @@ export function useOverlaySocket(sessionId: string) {
 
     socket.on('color-scheme-change', (scheme: ColorScheme) => {
       setColorScheme(scheme);
+    });
+
+    socket.on('custom-colors-change', (colors: CustomColors) => {
+      setCustomColors(colors);
     });
 
     socket.on('weather-change', (effect: WeatherEffectType) => {
@@ -118,6 +206,7 @@ export function useOverlaySocket(sessionId: string) {
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
+      socket.off('custom-colors-change');
       socket.off('weather-change');
       socket.off('now-playing');
       socket.off('scene-toggle');
@@ -137,21 +226,67 @@ export function useOverlaySocket(sessionId: string) {
     return sceneLayers.find(l => l.id === layerId)?.visible ?? true;
   };
 
-  const colorSchemeStyles: Record<ColorScheme, string> = {
-    default: 'from-blue-900/20 to-purple-900/20',
-    gaming: 'from-red-900/20 to-orange-900/20',
-    chill: 'from-cyan-900/20 to-purple-900/20',
-    energetic: 'from-orange-900/20 to-pink-900/20',
-    dark: 'from-gray-900/20 to-black/20',
-    neon: 'from-cyan-500/20 to-fuchsia-500/20',
-    custom: 'from-blue-900/20 to-purple-900/20',
-  };
+  // Generate color scheme styles from presets
+  const colorSchemeStyles: Record<ColorScheme, string> = colorSchemePresets.reduce(
+    (acc, preset) => {
+      acc[preset.id] = preset.gradient;
+      return acc;
+    },
+    {} as Record<ColorScheme, string>
+  );
+
+  // Add custom scheme fallback
+  if (!colorSchemeStyles.custom) {
+    colorSchemeStyles.custom = 'from-blue-900/20 to-purple-900/20';
+  }
+
+  // Generate custom gradient CSS from CustomColors using useMemo for proper React tracking
+  const customGradientCSS = useMemo(() => {
+    if (!customColors || colorScheme !== 'custom') {
+      return '';
+    }
+
+    // Helper to convert hex to rgba for better OBS browser compatibility
+    const hexToRgba = (hex: string, alpha: number): string => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
+    // Use rgba() instead of hex+alpha for better browser compatibility (especially OBS)
+    // 0.8 = 80% opacity for vibrant colors
+    const primaryColor = hexToRgba(customColors.primary, 0.8);
+    const secondaryColor = hexToRgba(customColors.secondary, 0.8);
+
+    let gradient = '';
+    if (customColors.gradientType === 'linear') {
+      // Simplified direction mapping - use degrees for maximum compatibility
+      const directionMap: Record<string, string> = {
+        'to-r': '90deg',
+        'to-l': '270deg',
+        'to-t': '0deg',
+        'to-b': '180deg',
+        'to-tr': '45deg',
+        'to-tl': '315deg',
+        'to-br': '135deg',
+        'to-bl': '225deg',
+      };
+      const direction = directionMap[customColors.gradientDirection] || '135deg';
+      gradient = `linear-gradient(${direction}, ${primaryColor}, ${secondaryColor})`;
+    } else {
+      gradient = `radial-gradient(circle, ${primaryColor}, ${secondaryColor})`;
+    }
+    return gradient;
+  }, [customColors, colorScheme]);
 
   return {
     socket,
     isConnected,
     messages,
     colorScheme,
+    customColors,
+    customGradientCSS,
     weatherEffect,
     nowPlaying,
     countdownTimers,

@@ -39,8 +39,8 @@ export default function CopyURLButton({
           onClick={handleCopy}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
             copied
-              ? 'bg-green-600 hover:bg-green-500'
-              : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400'
+              ? 'bg-green-600 hover:bg-green-500 scale-105 shadow-lg shadow-green-500/50'
+              : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 hover:scale-105'
           }`}
         >
           {copied ? (

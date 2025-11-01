@@ -79,9 +79,9 @@ export default function WeatherExpanded({
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6'>
         {(
           [
+            'none',
             'rain',
             'snow',
-            'confetti',
             'hearts',
             'stars',
             'bubbles',
@@ -91,9 +91,9 @@ export default function WeatherExpanded({
         ).map(effect => {
           // Define emoji icons for each effect
           const icons: Record<WeatherEffect, string> = {
+            none: '🚫',
             rain: '🌧️',
             snow: '❄️',
-            confetti: '🎉',
             hearts: '💖',
             stars: '⭐',
             bubbles: '🫧',

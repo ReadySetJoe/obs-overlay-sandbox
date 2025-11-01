@@ -17,7 +17,7 @@ interface Particle {
   wobble?: number; // For leaves, sakura
   rotation?: number; // For leaves, sakura
   rotationSpeed?: number; // For leaves, sakura
-  color?: string; // For leaves, confetti
+  color?: string; // For leaves
   opacity?: number; // For stars
   pulseSpeed?: number; // For stars, hearts
 }
@@ -61,24 +61,6 @@ export default function WeatherEffect({
             ...baseParticle,
             speed: Math.random() * 1 + 0.5,
             size: Math.random() * 3 + 2,
-          };
-
-        case 'confetti':
-          const colors = [
-            '#ff6b6b',
-            '#4ecdc4',
-            '#45b7d1',
-            '#f9ca24',
-            '#6c5ce7',
-            '#ff69b4',
-          ];
-          return {
-            ...baseParticle,
-            speed: Math.random() * 3 + 2,
-            size: Math.random() * 3 + 2,
-            rotation: Math.random() * 360,
-            rotationSpeed: Math.random() * 10 - 5,
-            color: colors[Math.floor(Math.random() * colors.length)],
           };
 
         case 'hearts':
@@ -146,9 +128,9 @@ export default function WeatherEffect({
     // Initialize particles
     const getParticleCount = () => {
       const baseCounts: Record<WeatherEffectType, number> = {
+        none: 0,
         rain: 150,
         snow: 100,
-        confetti: 80,
         hearts: 30,
         stars: 50,
         bubbles: 40,
@@ -182,15 +164,6 @@ export default function WeatherEffect({
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
-    };
-
-    const drawConfetti = (p: Particle) => {
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(((p.rotation || 0) * Math.PI) / 180);
-      ctx.fillStyle = p.color || '#ff6b6b';
-      ctx.fillRect(-p.size, -p.size, p.size * 2, p.size * 3);
-      ctx.restore();
     };
 
     const drawHeart = (p: Particle) => {
@@ -339,16 +312,6 @@ export default function WeatherEffect({
               p.x = Math.random() * canvas.width;
             }
             drawSnow(p);
-            break;
-
-          case 'confetti':
-            p.y += p.speed;
-            p.rotation = (p.rotation || 0) + (p.rotationSpeed || 0);
-            if (p.y > canvas.height) {
-              p.y = -10;
-              p.x = Math.random() * canvas.width;
-            }
-            drawConfetti(p);
             break;
 
           case 'hearts':

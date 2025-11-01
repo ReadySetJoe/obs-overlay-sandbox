@@ -7,6 +7,7 @@ import { useSession, signIn } from 'next-auth/react';
 import { useSocket } from '@/hooks/useSocket';
 import {
   ColorScheme,
+  CustomColors,
   WeatherEffect,
   NowPlaying,
   CountdownTimer,
@@ -69,7 +70,8 @@ export default function DashboardPage() {
 
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
-  const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('rain');
+  const [customColors, setCustomColors] = useState<CustomColors | null>(null);
+  const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
 
   // Countdown timers
   const [timers, setTimers] = useState<CountdownTimer[]>([]);
@@ -233,6 +235,17 @@ export default function DashboardPage() {
           const { layout } = await response.json();
 
           setColorScheme(layout.colorScheme);
+
+          // Restore custom colors if they exist
+          if (layout.customColors) {
+            try {
+              const parsedCustomColors = JSON.parse(layout.customColors);
+              setCustomColors(parsedCustomColors);
+            } catch (error) {
+              console.error('Error parsing custom colors:', error);
+            }
+          }
+
           setWeatherEffect(layout.weatherEffect);
           setLayers([
             { id: 'weather', name: 'Weather', visible: layout.weatherVisible },
@@ -508,6 +521,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           sessionId,
           colorScheme,
+          customColors: customColors ? JSON.stringify(customColors) : null,
           weatherEffect,
           layers,
           componentLayouts: JSON.stringify(componentLayouts),
@@ -529,6 +543,7 @@ export default function DashboardPage() {
     session,
     sessionId,
     colorScheme,
+    customColors,
     weatherEffect,
     layers,
     componentLayouts,
@@ -548,6 +563,7 @@ export default function DashboardPage() {
   }, [
     session,
     colorScheme,
+    customColors,
     weatherEffect,
     layers,
     componentLayouts,
@@ -621,6 +637,23 @@ export default function DashboardPage() {
     if (!socket) return;
     setColorScheme(scheme);
     socket.emit('color-scheme-change', scheme);
+
+    // Emit custom colors if using custom scheme
+    if (scheme === 'custom' && customColors) {
+      socket.emit('custom-colors-change', customColors);
+    }
+  };
+
+  const handleCustomColorsChange = (colors: CustomColors) => {
+    if (!socket) return;
+    setCustomColors(colors);
+    socket.emit('custom-colors-change', colors);
+
+    // If not already on custom scheme, switch to it
+    if (colorScheme !== 'custom') {
+      setColorScheme('custom');
+      socket.emit('color-scheme-change', 'custom');
+    }
   };
 
   const changeWeather = (effect: WeatherEffect) => {
@@ -1252,7 +1285,9 @@ export default function DashboardPage() {
             {!isExpanding && expandedElement === 'color' && (
               <ColorSchemeExpanded
                 colorScheme={colorScheme}
+                customColors={customColors}
                 onColorSchemeChange={changeColorScheme}
+                onCustomColorsChange={handleCustomColorsChange}
                 onClose={handleCloseExpanded}
               />
             )}
