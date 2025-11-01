@@ -18,7 +18,7 @@ export default async function handler(
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { sessionId, colorScheme, weatherEffect, layers, componentLayouts } =
+  const { sessionId, colorScheme, weatherEffect, layers, componentLayouts, paintByNumbersState } =
     req.body;
 
   try {
@@ -36,6 +36,7 @@ export default async function handler(
         paintByNumbersVisible:
           layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
         componentLayouts: componentLayouts || null,
+        paintByNumbersState: paintByNumbersState || null,
       },
       create: {
         userId: session.user.id,
@@ -51,6 +52,7 @@ export default async function handler(
         paintByNumbersVisible:
           layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
         componentLayouts: componentLayouts || null,
+        paintByNumbersState: paintByNumbersState || null,
       },
     });
 

@@ -93,21 +93,85 @@ export default function DashboardPage() {
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
 
-  // Initialize paint-by-numbers with heart template
+  // Initialize paint-by-numbers (load last template or default to heart)
   useEffect(() => {
-    if (!paintByNumbersState && socket && isConnected) {
-      const newTemplate = createPaintStateFromTemplate('heart');
-      if (newTemplate) {
-        const newState: PaintByNumbersState = {
-          templateId: 'heart',
-          regions: newTemplate.regions,
-          startedAt: Date.now(),
-        };
-        setPaintByNumbersState(newState);
-        socket.emit('paint-state', newState);
-      }
+    if (!paintByNumbersState && socket && isConnected && session) {
+      const initializeTemplate = async () => {
+        try {
+          const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+          if (response.ok) {
+            const { layout } = await response.json();
+
+            // Check if we have any saved states
+            if (layout.paintByNumbersState) {
+              const savedStates = JSON.parse(layout.paintByNumbersState);
+              const templateIds = Object.keys(savedStates);
+
+              if (templateIds.length > 0) {
+                // Find the most recently worked on template
+                let mostRecentTemplateId = templateIds[0];
+                let mostRecentTime = savedStates[mostRecentTemplateId].startedAt || 0;
+
+                for (const templateId of templateIds) {
+                  const state = savedStates[templateId];
+                  const lastTime = state.completedAt || state.startedAt || 0;
+                  if (lastTime > mostRecentTime) {
+                    mostRecentTime = lastTime;
+                    mostRecentTemplateId = templateId;
+                  }
+                }
+
+                // Load the most recent template with its saved state
+                const template = createPaintStateFromTemplate(mostRecentTemplateId);
+                if (template) {
+                  const savedTemplateState = savedStates[mostRecentTemplateId];
+                  const reconstructedState: PaintByNumbersState = {
+                    templateId: mostRecentTemplateId,
+                    startedAt: savedTemplateState.startedAt,
+                    completedAt: savedTemplateState.completedAt,
+                    lastFilledBy: savedTemplateState.lastFilledBy,
+                    regions: template.regions.map(region => {
+                      const filledData = savedTemplateState.filledRegions[region.id];
+                      if (filledData) {
+                        return {
+                          ...region,
+                          filled: true,
+                          filledBy: filledData.filledBy,
+                          filledAt: filledData.filledAt,
+                          customColor: filledData.customColor,
+                        };
+                      }
+                      return region;
+                    }),
+                  };
+
+                  setPaintByNumbersState(reconstructedState);
+                  socket.emit('paint-state', reconstructedState);
+                }
+                return;
+              }
+            }
+
+            // No saved state found, initialize with heart template
+            const newTemplate = createPaintStateFromTemplate('heart');
+            if (newTemplate) {
+              const newState: PaintByNumbersState = {
+                templateId: 'heart',
+                regions: newTemplate.regions,
+                startedAt: Date.now(),
+              };
+              setPaintByNumbersState(newState);
+              socket.emit('paint-state', newState);
+            }
+          }
+        } catch (error) {
+          console.error('Error initializing paint state:', error);
+        }
+      };
+
+      initializeTemplate();
     }
-  }, [socket, isConnected, paintByNumbersState]);
+  }, [socket, isConnected, paintByNumbersState, session, sessionId]);
 
   // Component layouts
   const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
@@ -241,6 +305,10 @@ export default function DashboardPage() {
             }
           }
 
+          // Load paint by numbers state - check if we have a saved state for the current template
+          // (We'll load the actual state when a template is selected, this is just for initial load)
+          // The saved state is now a map of templateId -> state
+
           setLastSaved(new Date(layout.updatedAt));
         }
       } catch (error) {
@@ -249,7 +317,7 @@ export default function DashboardPage() {
     };
 
     loadLayout();
-  }, [session, sessionId]);
+  }, [session, sessionId, socket, isConnected]);
 
   // Load timers when session is ready
   useEffect(() => {
@@ -271,10 +339,52 @@ export default function DashboardPage() {
   }, [session, sessionId]);
 
   // Paint by numbers handlers
-  const handlePaintTemplateSelect = (templateId: string) => {
+  const handlePaintTemplateSelect = async (templateId: string) => {
     const newTemplate = createPaintStateFromTemplate(templateId);
     if (!newTemplate) return;
 
+    // Check if we have saved state for this template
+    try {
+      const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+      if (response.ok) {
+        const { layout } = await response.json();
+        if (layout.paintByNumbersState) {
+          const savedStates = JSON.parse(layout.paintByNumbersState);
+          const savedTemplateState = savedStates[templateId];
+
+          if (savedTemplateState) {
+            // Reconstruct state from saved data
+            const reconstructedState: PaintByNumbersState = {
+              templateId,
+              startedAt: savedTemplateState.startedAt,
+              completedAt: savedTemplateState.completedAt,
+              lastFilledBy: savedTemplateState.lastFilledBy,
+              regions: newTemplate.regions.map(region => {
+                const filledData = savedTemplateState.filledRegions[region.id];
+                if (filledData) {
+                  return {
+                    ...region,
+                    filled: true,
+                    filledBy: filledData.filledBy,
+                    filledAt: filledData.filledAt,
+                    customColor: filledData.customColor,
+                  };
+                }
+                return region;
+              }),
+            };
+
+            setPaintByNumbersState(reconstructedState);
+            socket?.emit('paint-state', reconstructedState);
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved template state:', error);
+    }
+
+    // No saved state found, create fresh state
     const newState: PaintByNumbersState = {
       templateId,
       regions: newTemplate.regions,
@@ -355,6 +465,43 @@ export default function DashboardPage() {
     setSaveStatus('saving');
 
     try {
+      // Load existing saved states
+      const loadResponse = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+      let existingStates: Record<string, any> = {};
+
+      if (loadResponse.ok) {
+        const { layout } = await loadResponse.json();
+        if (layout.paintByNumbersState) {
+          try {
+            existingStates = JSON.parse(layout.paintByNumbersState);
+          } catch (error) {
+            console.error('Error parsing existing paint states:', error);
+          }
+        }
+      }
+
+      // Create compact paint state for current template (only save filled region metadata, not pixel data)
+      if (paintByNumbersState) {
+        const filledRegions: Record<number, { filledBy: string; filledAt: number; customColor?: string }> = {};
+        paintByNumbersState.regions.forEach(region => {
+          if (region.filled) {
+            filledRegions[region.id] = {
+              filledBy: region.filledBy!,
+              filledAt: region.filledAt!,
+              customColor: region.customColor,
+            };
+          }
+        });
+
+        // Update state for current template
+        existingStates[paintByNumbersState.templateId] = {
+          startedAt: paintByNumbersState.startedAt,
+          completedAt: paintByNumbersState.completedAt,
+          lastFilledBy: paintByNumbersState.lastFilledBy,
+          filledRegions,
+        };
+      }
+
       const response = await fetch('/api/layouts/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -364,6 +511,7 @@ export default function DashboardPage() {
           weatherEffect,
           layers,
           componentLayouts: JSON.stringify(componentLayouts),
+          paintByNumbersState: JSON.stringify(existingStates),
         }),
       });
 
@@ -384,6 +532,7 @@ export default function DashboardPage() {
     weatherEffect,
     layers,
     componentLayouts,
+    paintByNumbersState,
   ]);
 
   // Debounced auto-save
@@ -402,6 +551,7 @@ export default function DashboardPage() {
     weatherEffect,
     layers,
     componentLayouts,
+    paintByNumbersState,
     saveLayout,
   ]);
 

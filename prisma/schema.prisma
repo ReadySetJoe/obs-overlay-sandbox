@@ -78,6 +78,9 @@ model Layout {
   // Component layouts (JSON) - stores position, size, styling for each component
   componentLayouts String? @default("{\"chat\":{\"position\":\"top-left\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1},\"paintByNumbers\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1,\"gridSize\":20}}")
 
+  // Paint by numbers state (JSON) - stores current painting progress
+  paintByNumbersState String? // JSON string of PaintByNumbersState
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
