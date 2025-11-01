@@ -126,7 +126,6 @@ export interface PaintTemplate {
   width: number; // grid width
   height: number; // grid height
   regions: PaintRegion[];
-  thumbnail?: string;
 }
 
 export interface PaintByNumbersState {

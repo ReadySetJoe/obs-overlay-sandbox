@@ -105,10 +105,12 @@ export default function PaintByNumbersExpanded({
             >
               <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
               <div className='relative flex flex-col items-center gap-2'>
-                <span className='text-2xl'>
-                  {template.id === 'heart' ? '❤️' : template.id === 'pokeball' ? '⚪' : '🎨'}
+                <span className='text-2xl'>{template.id === 'heart' ? '❤️' : template.id === 'pokeball' ? '⚪️' : template.id === 'mario' ? '🍄' : template.id === 'zelda' ? '🗡️' : '🎨'}
                 </span>
-                <span className='text-sm'>{template.name}</span>
+                <span className='text-md'>{template.name}</span>
+                <span className='text-sm text-gray-300'>
+                  {template.description}
+                </span>
                 <span className='text-xs text-gray-400'>
                   {template.regions.length} regions
                 </span>
@@ -116,9 +118,6 @@ export default function PaintByNumbersExpanded({
             </button>
           ))}
         </div>
-        {currentTemplate && (
-          <p className='text-xs text-gray-400 mt-2'>{currentTemplate.description}</p>
-        )}
       </div>
 
       {/* Current Progress */}
@@ -219,9 +218,9 @@ export default function PaintByNumbersExpanded({
             </label>
             <input
               type='range'
-              min='10'
+              min='1'
               max='40'
-              step='5'
+              step='1'
               value={layout.gridSize}
               onChange={e => onGridSizeChange(parseInt(e.target.value))}
               className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500'

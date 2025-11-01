@@ -64,7 +64,20 @@ export default function PaintByNumbers({ paintState, layout }: PaintByNumbersPro
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
-    // Draw each region
+    // Create a map of coordinates to region IDs for quick lookup
+    const pixelToRegion = new Map<string, number>();
+    regions.forEach(region => {
+      region.pixels.forEach(([x, y]) => {
+        pixelToRegion.set(`${x},${y}`, region.id);
+      });
+    });
+
+    // Helper function to get region ID at a coordinate
+    const getRegionAt = (x: number, y: number): number | null => {
+      return pixelToRegion.get(`${x},${y}`) ?? null;
+    };
+
+    // Draw filled regions
     regions.forEach(region => {
       region.pixels.forEach(([x, y]) => {
         const pixelX = x * gridSize;
@@ -75,38 +88,56 @@ export default function PaintByNumbers({ paintState, layout }: PaintByNumbersPro
           ctx.fillStyle = region.customColor || region.color;
           ctx.fillRect(pixelX, pixelY, gridSize, gridSize);
         } else {
-          // Draw unfilled pixel with number
-          // Semi-transparent preview of final color
+          // Draw unfilled pixel with semi-transparent preview
           ctx.fillStyle = region.color + '20'; // 20 = ~12% opacity
           ctx.fillRect(pixelX, pixelY, gridSize, gridSize);
+        }
+      });
+    });
 
-          // Dashed border
-          ctx.strokeStyle = '#888';
-          ctx.setLineDash([2, 2]);
-          ctx.lineWidth = 1;
-          ctx.strokeRect(pixelX + 0.5, pixelY + 0.5, gridSize - 1, gridSize - 1);
-          ctx.setLineDash([]);
+    // Draw region borders (only between different regions)
+    // Use a Set to track unique edges and avoid drawing twice
+    const edgesDrawn = new Set<string>();
 
-          // Draw region number in center of region (only once)
-          // Find center pixel of region
-          const centerPixel = region.pixels[Math.floor(region.pixels.length / 2)];
-          if (x === centerPixel[0] && y === centerPixel[1]) {
-            ctx.fillStyle = '#fff';
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 3;
-            ctx.font = `bold ${gridSize * 0.6}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            const textX = pixelX + gridSize / 2;
-            const textY = pixelY + gridSize / 2;
-            ctx.strokeText(region.id.toString(), textX, textY);
-            ctx.fillText(region.id.toString(), textX, textY);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    regions.forEach(region => {
+      region.pixels.forEach(([x, y]) => {
+        const pixelX = x * gridSize;
+        const pixelY = y * gridSize;
+
+        // Check right neighbor
+        const rightRegionId = getRegionAt(x + 1, y);
+        if (rightRegionId !== region.id) {
+          const edgeKey = `v${x + 1},${y}`;
+          if (!edgesDrawn.has(edgeKey)) {
+            edgesDrawn.add(edgeKey);
+            ctx.moveTo(pixelX + gridSize, pixelY);
+            ctx.lineTo(pixelX + gridSize, pixelY + gridSize);
+          }
+        }
+
+        // Check bottom neighbor
+        const bottomRegionId = getRegionAt(x, y + 1);
+        if (bottomRegionId !== region.id) {
+          const edgeKey = `h${x},${y + 1}`;
+          if (!edgesDrawn.has(edgeKey)) {
+            edgesDrawn.add(edgeKey);
+            ctx.moveTo(pixelX, pixelY + gridSize);
+            ctx.lineTo(pixelX + gridSize, pixelY + gridSize);
           }
         }
       });
+    });
 
-      // Draw filled region indicator (checkmark)
+    ctx.stroke();
+
+    // Draw checkmarks on filled regions
+    regions.forEach(region => {
       if (region.filled) {
+        // Find center pixel of region
         const centerPixel = region.pixels[Math.floor(region.pixels.length / 2)];
         const [cx, cy] = centerPixel;
         const pixelX = cx * gridSize;
@@ -167,13 +198,63 @@ export default function PaintByNumbers({ paintState, layout }: PaintByNumbersPro
             </p>
           </div>
 
-          {/* Canvas */}
-          <div className='flex justify-center mb-4'>
-            <canvas
-              ref={canvasRef}
-              className='rounded-lg shadow-lg'
-              style={{ imageRendering: 'pixelated' }}
-            />
+          {/* Canvas and Legend */}
+          <div className='flex gap-4 mb-4'>
+            {/* Canvas */}
+            <div className='flex-shrink-0'>
+              <canvas
+                ref={canvasRef}
+                className='rounded-lg shadow-lg'
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
+
+            {/* Legend - sorted by pixel count (largest first) */}
+            <div className='flex-1 overflow-y-auto'>
+              <div className='space-y-2'>
+                {[...paintState.regions]
+                  .sort((a, b) => b.pixels.length - a.pixels.length)
+                  .map(region => {
+                    const displayColor = region.filled
+                      ? (region.customColor || region.color)
+                      : region.color;
+
+                    return (
+                      <div
+                        key={region.id}
+                        className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                          region.filled
+                            ? 'bg-gray-700/50 opacity-60'
+                            : 'bg-gray-800/50 hover:bg-gray-700/50'
+                        }`}
+                      >
+                        {/* Color swatch */}
+                        <div
+                          className='w-8 h-8 rounded border-2 border-gray-600 flex-shrink-0'
+                          style={{ backgroundColor: displayColor }}
+                        />
+
+                        {/* Region number */}
+                        <div className='flex items-center gap-2 flex-1'>
+                          <span className='font-bold text-lg text-white'>
+                            #{region.id}
+                          </span>
+                          {region.filled && (
+                            <span className='text-green-400 text-sm'>✓</span>
+                          )}
+                        </div>
+
+                        {/* Filled by info */}
+                        {region.filled && region.filledBy && (
+                          <span className='text-xs text-gray-400'>
+                            by {region.filledBy}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
           </div>
 
           {/* Progress */}
