@@ -108,6 +108,20 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('paint-command', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('paint-command', data);
+        }
+      });
+
+      socket.on('paint-all-command', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('paint-all-command', data);
+        }
+      });
+
       socket.on('disconnect', () => {
         // Client disconnected
       });

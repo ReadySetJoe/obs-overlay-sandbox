@@ -728,10 +728,38 @@ export default function DashboardPage() {
       socket.emit('paint-state', updatedState);
     };
 
+    const handlePaintAllCommand = (data: {
+      username: string;
+      timestamp: number;
+    }) => {
+      if (!paintByNumbersState) return;
+
+      // Fill all regions with their default colors
+      const updatedRegions = paintByNumbersState.regions.map(r => ({
+        ...r,
+        filled: true,
+        filledBy: data.username,
+        filledAt: data.timestamp,
+        customColor: undefined, // Use default template color
+      }));
+
+      const updatedState: PaintByNumbersState = {
+        ...paintByNumbersState,
+        regions: updatedRegions,
+        completedAt: data.timestamp,
+        lastFilledBy: data.username,
+      };
+
+      setPaintByNumbersState(updatedState);
+      socket.emit('paint-state', updatedState);
+    };
+
     socket.on('paint-command', handlePaintCommand);
+    socket.on('paint-all-command', handlePaintAllCommand);
 
     return () => {
       socket.off('paint-command', handlePaintCommand);
+      socket.off('paint-all-command', handlePaintAllCommand);
     };
   }, [socket, paintByNumbersState]);
 

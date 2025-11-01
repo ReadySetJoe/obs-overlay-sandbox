@@ -61,7 +61,17 @@ export async function startTwitchChatMonitoring(
     io.to(sessionId).emit('chat-message', chatMessage);
 
     // Check for paint-by-numbers commands
-    // Supports: !paint 1 red, !paint 2 #FF0000, !paint 3
+    // Debug command: !paint all (development only)
+    if (process.env.NODE_ENV === 'development' && message.trim().match(/^!paint\s+all$/i)) {
+      const username = tags['display-name'] || tags.username || 'Anonymous';
+      io.to(sessionId).emit('paint-all-command', {
+        username,
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    // Regular paint commands: !paint 1 red, !paint 2 #FF0000, !paint 3
     const paintCommand = message
       .trim()
       .match(/^!paint\s+(\d+)(?:\s+([#\w]+))?$/i);

@@ -105,6 +105,7 @@ export default function PaintByNumbersExpanded({
                   ? 'bg-gradient-to-br from-purple-600/80 to-pink-600/80 border-purple-500'
                   : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
               }`}
+              disabled={paintState?.templateId === template.id}
             >
               <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
               <div className='relative flex flex-col items-center gap-2'>
@@ -115,8 +116,12 @@ export default function PaintByNumbersExpanded({
                       ? '⚪️'
                       : template.id === 'mario'
                         ? '🍄'
-                        : template.id === 'zelda'
-                          ? '🗡️'
+                        : template.id === 'mario-and-luigi'
+                          ? '👨‍🍳👨‍🍳'
+                          : template.id === 'falco'
+                            ? '🦅'
+                            : template.id === 'mona-lisa'
+                              ? '🖼️'
                           : '🎨'}
                 </span>
                 <span className='text-md'>{template.name}</span>

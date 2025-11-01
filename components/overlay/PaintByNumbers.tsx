@@ -98,45 +98,6 @@ export default function PaintByNumbers({
       });
     });
 
-    // Draw region borders (only between different regions)
-    // Use a Set to track unique edges and avoid drawing twice
-    const edgesDrawn = new Set<string>();
-
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-
-    regions.forEach(region => {
-      region.pixels.forEach(([x, y]) => {
-        const pixelX = x * gridSize;
-        const pixelY = y * gridSize;
-
-        // Check right neighbor
-        const rightRegionId = getRegionAt(x + 1, y);
-        if (rightRegionId !== region.id) {
-          const edgeKey = `v${x + 1},${y}`;
-          if (!edgesDrawn.has(edgeKey)) {
-            edgesDrawn.add(edgeKey);
-            ctx.moveTo(pixelX + gridSize, pixelY);
-            ctx.lineTo(pixelX + gridSize, pixelY + gridSize);
-          }
-        }
-
-        // Check bottom neighbor
-        const bottomRegionId = getRegionAt(x, y + 1);
-        if (bottomRegionId !== region.id) {
-          const edgeKey = `h${x},${y + 1}`;
-          if (!edgesDrawn.has(edgeKey)) {
-            edgesDrawn.add(edgeKey);
-            ctx.moveTo(pixelX, pixelY + gridSize);
-            ctx.lineTo(pixelX + gridSize, pixelY + gridSize);
-          }
-        }
-      });
-    });
-
-    ctx.stroke();
-
     // Draw checkmarks on filled regions
     regions.forEach(region => {
       if (region.filled) {
@@ -217,7 +178,7 @@ export default function PaintByNumbers({
             </div>
 
             {/* Legend - sorted by pixel count (largest first) */}
-            <div className='flex-1 overflow-y-auto'>
+            <div className='flex-1 overflow-y-auto max-h-[600px]'>
               <div className='space-y-2'>
                 {[...paintState.regions].map(region => {
                   const displayColor = region.filled
