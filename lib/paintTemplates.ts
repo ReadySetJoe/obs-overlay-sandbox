@@ -3,6 +3,7 @@ import heartTemplate from './paint-templates/heart';
 import pokeballTemplate from './paint-templates/pokeball';
 import marioTemplate from './paint-templates/mario';
 import marioAndLuigiTemplate from './paint-templates/mario-and-luigi';
+import falcoTemplate from './paint-templates/falco';
 
 // Helper function to create pixel coordinates for a region
 export function createRegion(id: number, color: string, pixels: [number, number][]): PaintRegion {
@@ -19,7 +20,8 @@ export const paintTemplates: PaintTemplate[] = [
   heartTemplate,
   pokeballTemplate,
   marioTemplate,
-  marioAndLuigiTemplate
+  marioAndLuigiTemplate,
+  falcoTemplate
 ];
 
 /**
