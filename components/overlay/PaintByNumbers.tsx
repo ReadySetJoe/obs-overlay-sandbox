@@ -213,7 +213,6 @@ export default function PaintByNumbers({ paintState, layout }: PaintByNumbersPro
             <div className='flex-1 overflow-y-auto'>
               <div className='space-y-2'>
                 {[...paintState.regions]
-                  .sort((a, b) => b.pixels.length - a.pixels.length)
                   .map(region => {
                     const displayColor = region.filled
                       ? (region.customColor || region.color)

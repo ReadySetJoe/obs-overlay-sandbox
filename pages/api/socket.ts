@@ -27,6 +27,7 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
         credentials: true,
       },
+      maxHttpBufferSize: 1e8, // 100 MB (default is 1 MB)
     });
 
     io.on('connection', socket => {
