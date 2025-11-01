@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from 'next-auth/react';
+import Footer from '@/components/Footer';
 
 export default function HomePage() {
   const router = useRouter();
@@ -38,11 +39,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white flex items-center justify-center p-4'>
+    <div className='min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-gray-900 text-white flex items-center justify-center p-4'>
       <div className='max-w-2xl w-full'>
         {/* User Info */}
         {session && (
-          <div className='absolute top-4 right-4 flex items-center gap-3 bg-gray-800/90 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-700'>
+          <div className='absolute top-2 right-2 flex items-center gap-3 bg-gray-800/90 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-700'>
             {session.user?.image && (
               <img
                 src={session.user.image}
@@ -62,32 +63,18 @@ export default function HomePage() {
 
         {/* Hero Section */}
         <div className='text-center mb-12'>
-          <div className='mb-6'>
-            <div className='inline-block p-4 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl shadow-2xl mb-6'>
-              <svg
-                className='w-16 h-16'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'
-                />
-              </svg>
-            </div>
+          <div className='my-8'>
+          <img
+            src='/title.png'
+            alt='Joe-verlay'
+            className='mx-auto mb-4 max-w-md md:max-w-2xl w-full'
+          />
           </div>
-          <h1 className='text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent'>
-            Joe-verlay
-          </h1>
           <p className='text-xl text-gray-300 mb-2'>
-            Audio-reactive stream overlays that vibe with your music
+            Professional stream overlays for Twitch and OBS
           </p>
           <p className='text-sm text-gray-400'>
-            Create a session, share with friends, and let the beats do the
-            talking
+            Real-time chat highlights, music integration, timers, and interactive effects
           </p>
         </div>
 
@@ -199,37 +186,70 @@ export default function HomePage() {
         {/* Features */}
         <div className='bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30'>
           <h3 className='text-lg font-bold mb-4 text-center'>
-            What Makes Joe-verlay Special
+            Features
           </h3>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm'>
             <div className='text-gray-300'>
-              <div className='text-2xl mb-1'>🎵</div>
-              <div>Real-time Audio</div>
+              <div className='text-2xl mb-1'>🎨</div>
+              <div>Paint by Numbers</div>
               <div className='text-xs text-gray-500 mt-1'>
-                Reacts to frequencies
+                Interactive canvas
               </div>
             </div>
             <div className='text-gray-300'>
-              <div className='text-2xl mb-1'>🎨</div>
-              <div>Custom Themes</div>
-              <div className='text-xs text-gray-500 mt-1'>6 color schemes</div>
+              <div className='text-2xl mb-1'>📐</div>
+              <div>Layouts</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Drag & position
+              </div>
             </div>
             <div className='text-gray-300'>
-              <div className='text-2xl mb-1'>☁️</div>
-              <div>Visual Effects</div>
+              <div className='text-2xl mb-1'>💬</div>
+              <div>Chat Highlights</div>
               <div className='text-xs text-gray-500 mt-1'>
-                Weather & particles
+                Twitch chat integration
               </div>
             </div>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🎧</div>
-              <div>Spotify Sync</div>
+              <div>Now Playing</div>
               <div className='text-xs text-gray-500 mt-1'>
-                Now playing widget
+                Spotify integration
+              </div>
+            </div>
+            <div className='text-gray-300'>
+              <div className='text-2xl mb-1'>⏱️</div>
+              <div>Countdown Timers</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Multiple timers
+              </div>
+            </div>
+            <div className='text-gray-300'>
+              <div className='text-2xl mb-1'>🎨</div>
+              <div>Custom Colors</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Presets + builder
+              </div>
+            </div>
+            <div className='text-gray-300'>
+              <div className='text-2xl mb-1'>🌧️</div>
+              <div>Weather Overlay</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Particle effects
+              </div>
+            </div>
+            <div className='text-gray-300'>
+              <div className='text-2xl mb-1'>🎭</div>
+              <div>Emote Wall</div>
+              <div className='text-xs text-gray-500 mt-1'>
+                Floating emojis
               </div>
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );

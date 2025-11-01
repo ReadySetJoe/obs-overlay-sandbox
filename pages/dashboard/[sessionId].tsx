@@ -27,6 +27,8 @@ import NowPlayingExpanded from '@/components/dashboard/expanded/NowPlayingExpand
 import CountdownExpanded from '@/components/dashboard/expanded/CountdownExpanded';
 import ChatHighlightExpanded from '@/components/dashboard/expanded/ChatHighlightExpanded';
 import PaintByNumbersExpanded from '@/components/dashboard/expanded/PaintByNumbersExpanded';
+import Footer from '@/components/Footer';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -38,7 +40,7 @@ export default function DashboardPage() {
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
     'saved'
   );
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [_lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Spotify Authentication
   const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
@@ -1021,11 +1023,16 @@ export default function DashboardPage() {
       <div className='max-w-7xl mx-auto'>
         {/* Header */}
         <div className='mb-8 md:mb-12'>
+          <Link href='/' className='block'>
+          <img
+            src='/title-white.png'
+            alt='Joe-verlay'
+            className='mx-auto mb-6 max-w-md md:max-w-lg w-full'
+          />
+          </Link>
           <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
             <div>
-              <h1 className='text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2'>
-                Joe-verlay Control
-              </h1>
+              <h1 className='text-3xl md:text-4xl font-bold'>Overlay Dashboard</h1>
               <p className='text-gray-400 text-sm md:text-base'>
                 Configure your stream overlay in real-time
               </p>
@@ -1482,6 +1489,9 @@ export default function DashboardPage() {
             )}
           </div>
         )}
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );
