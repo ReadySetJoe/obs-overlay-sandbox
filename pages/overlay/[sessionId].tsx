@@ -23,6 +23,7 @@ export default function OverlayPage() {
     paintByNumbersState,
     getLayerVisible,
     colorScheme,
+    customColors,
     colorSchemeStyles,
     customGradientCSS,
   } = useOverlaySocket(sessionId as string);
@@ -56,6 +57,8 @@ export default function OverlayPage() {
         <CountdownTimer
           timers={countdownTimers}
           layout={componentLayouts.countdown}
+          colorScheme={colorScheme}
+          customColors={customColors}
         />
       )}
 
@@ -67,6 +70,8 @@ export default function OverlayPage() {
         <ChatHighlight
           highlight={chatHighlight}
           layout={componentLayouts.chatHighlight}
+          colorScheme={colorScheme}
+          customColors={customColors}
         />
       )}
 
@@ -83,6 +88,8 @@ export default function OverlayPage() {
               gridSize: 20,
             }
           }
+          colorScheme={colorScheme}
+          customColors={customColors}
         />
       )}
     </div>

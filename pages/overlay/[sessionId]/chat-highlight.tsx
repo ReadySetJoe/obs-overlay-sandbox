@@ -14,6 +14,7 @@ export default function ChatHighlightOverlay() {
     componentLayouts,
     getLayerVisible,
     colorScheme,
+    customColors,
     colorSchemeStyles,
     customGradientCSS,
   } = useOverlaySocket(sessionId as string);
@@ -39,6 +40,8 @@ export default function ChatHighlightOverlay() {
         <ChatHighlight
           highlight={chatHighlight}
           layout={componentLayouts.chatHighlight}
+          colorScheme={colorScheme}
+          customColors={customColors}
         />
       )}
     </div>

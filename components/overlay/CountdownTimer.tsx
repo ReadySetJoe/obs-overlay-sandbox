@@ -5,17 +5,27 @@ import { useEffect, useState } from 'react';
 import {
   CountdownTimer as CountdownTimerType,
   CountdownLayout,
+  ColorScheme,
+  CustomColors,
 } from '@/types/overlay';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface CountdownTimerProps {
   timers: CountdownTimerType[];
   layout: CountdownLayout;
+  colorScheme: ColorScheme;
+  customColors: CustomColors | null;
 }
 
 export default function CountdownTimer({
   timers,
   layout,
+  colorScheme,
+  customColors,
 }: CountdownTimerProps) {
+  // Get theme colors
+  const theme = useThemeColors(colorScheme, customColors);
+
   const [timeRemaining, setTimeRemaining] = useState<
     Record<
       string,
@@ -101,12 +111,20 @@ export default function CountdownTimer({
         return (
           <div
             key={timer.id}
-            className='bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30 shadow-2xl animate-fade-in'
-            style={{ minWidth: `${layout.minWidth}px` }}
+            className='bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg rounded-2xl p-6 shadow-2xl animate-fade-in'
+            style={{
+              minWidth: `${layout.minWidth}px`,
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: `${theme.primary}4D`, // 30% opacity
+            }}
           >
             {/* Timer Title */}
             <div className='mb-4 text-center'>
-              <h3 className='text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent'>
+              <h3
+                className='text-2xl font-bold bg-clip-text text-transparent'
+                style={{ backgroundImage: theme.gradientText }}
+              >
                 {timer.title}
               </h3>
               {timer.description && (
@@ -126,8 +144,19 @@ export default function CountdownTimer({
             ) : (
               <div className='grid grid-cols-4 gap-3'>
                 {/* Days */}
-                <div className='bg-purple-900/30 rounded-xl p-3 text-center border border-purple-500/20'>
-                  <div className='text-3xl font-bold text-purple-400'>
+                <div
+                  className='rounded-xl p-3 text-center'
+                  style={{
+                    backgroundColor: `${theme.primary}4D`, // 30% opacity
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: `${theme.primaryText}33`, // 20% opacity
+                  }}
+                >
+                  <div
+                    className='text-3xl font-bold'
+                    style={{ color: theme.primaryText }}
+                  >
                     {String(time.days).padStart(2, '0')}
                   </div>
                   <div className='text-xs text-gray-400 mt-1 uppercase tracking-wide'>
@@ -136,8 +165,19 @@ export default function CountdownTimer({
                 </div>
 
                 {/* Hours */}
-                <div className='bg-blue-900/30 rounded-xl p-3 text-center border border-blue-500/20'>
-                  <div className='text-3xl font-bold text-blue-400'>
+                <div
+                  className='rounded-xl p-3 text-center'
+                  style={{
+                    backgroundColor: `${theme.secondary}4D`, // 30% opacity
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: `${theme.secondaryText}33`, // 20% opacity
+                  }}
+                >
+                  <div
+                    className='text-3xl font-bold'
+                    style={{ color: theme.secondaryText }}
+                  >
                     {String(time.hours).padStart(2, '0')}
                   </div>
                   <div className='text-xs text-gray-400 mt-1 uppercase tracking-wide'>
@@ -146,8 +186,19 @@ export default function CountdownTimer({
                 </div>
 
                 {/* Minutes */}
-                <div className='bg-pink-900/30 rounded-xl p-3 text-center border border-pink-500/20'>
-                  <div className='text-3xl font-bold text-pink-400'>
+                <div
+                  className='rounded-xl p-3 text-center'
+                  style={{
+                    backgroundColor: `${theme.accent}4D`, // 30% opacity
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: `${theme.accentText}33`, // 20% opacity
+                  }}
+                >
+                  <div
+                    className='text-3xl font-bold'
+                    style={{ color: theme.accentText }}
+                  >
                     {String(time.minutes).padStart(2, '0')}
                   </div>
                   <div className='text-xs text-gray-400 mt-1 uppercase tracking-wide'>
@@ -156,8 +207,19 @@ export default function CountdownTimer({
                 </div>
 
                 {/* Seconds */}
-                <div className='bg-cyan-900/30 rounded-xl p-3 text-center border border-cyan-500/20'>
-                  <div className='text-3xl font-bold text-cyan-400'>
+                <div
+                  className='rounded-xl p-3 text-center'
+                  style={{
+                    backgroundColor: `${theme.accentLight}4D`, // 30% opacity
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: `${theme.accentText}33`, // 20% opacity
+                  }}
+                >
+                  <div
+                    className='text-3xl font-bold'
+                    style={{ color: theme.accentText }}
+                  >
                     {String(time.seconds).padStart(2, '0')}
                   </div>
                   <div className='text-xs text-gray-400 mt-1 uppercase tracking-wide'>
@@ -172,8 +234,9 @@ export default function CountdownTimer({
               <div className='mt-4'>
                 <div className='h-2 bg-gray-700/50 rounded-full overflow-hidden'>
                   <div
-                    className='h-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-full transition-all duration-1000'
+                    className='h-full rounded-full transition-all duration-1000'
                     style={{
+                      backgroundImage: theme.gradientBg,
                       width: `${
                         ((new Date(timer.targetDate).getTime() -
                           new Date().getTime()) /

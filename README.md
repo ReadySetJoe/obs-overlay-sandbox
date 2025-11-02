@@ -67,10 +67,15 @@ Visit `http://localhost:3000`, sign in with Twitch, and start customizing your o
   - Adjustable particle density
   - Canvas-based rendering for smooth performance
 
-- **Color Schemes** - 7 mood-based themes
-  - Default, Sunset, Ocean, Forest, Purple Haze, Neon, Monochrome
-  - Apply globally or customize individual components
-  - Real-time preview in dashboard
+- **Color Schemes & Theming** - 18 professionally designed themes + custom colors
+  - **Gaming**: Cyberpunk, Retro Arcade, FPS Modern
+  - **Chill**: Sunset, Ocean, Forest, Lavender
+  - **Vibrant**: Synthwave, Vaporwave, Rainbow, Neon, Candy
+  - **Minimal**: Dark, Monochrome, Pastel, Noir
+  - **Custom Builder**: Create your own with custom primary/secondary/accent colors
+  - **Intelligent Contrast**: Automatic text color adjustment for readability on all themes
+  - **Themed Components**: Countdown timers, chat highlights, and paint by numbers adapt to your chosen theme
+  - Real-time theme switching across all overlays
 
 ### 🎛️ Dashboard Features
 
@@ -262,7 +267,12 @@ Your dashboard at `/dashboard/[sessionId]` is the control center for all overlay
 
 #### 🎨 Visual Customization
 
-- **Color Schemes**: Choose from 7 themes (Default, Sunset, Ocean, Forest, Purple Haze, Neon, Monochrome)
+- **Color Schemes & Themes**: Choose from 18 professionally designed themes or create your own
+  - **5 Categories**: Gaming, Chill, Vibrant, Minimal, and All
+  - **Custom Color Builder**: Set your own primary, secondary, and accent colors with linear or radial gradients
+  - **Smart Theming**: Overlay components (countdown timers, chat highlights, paint by numbers) automatically adapt their colors to match your selected theme
+  - **Contrast Detection**: Text colors intelligently adjust based on theme luminance to ensure readability
+  - Example themes: Cyberpunk (neon pink/cyan), Ocean (deep blues), Synthwave (80s retro), Noir (film noir black/white)
 - **Weather Effects**: Add rain, snow, or fog with adjustable density
 - **Emote Wall**: Configure floating emotes with custom count, speed, and scale
 - **Component Positioning**: Drag and adjust x/y coordinates, width, and scale for each component
@@ -341,18 +351,47 @@ FPS: 60
 
 ## Customization
 
-### Adding Custom Color Schemes
+### Creating Custom Color Schemes
 
-Edit the color scheme styles in `overlay/[sessionId].tsx`:
+The application includes a **Custom Color Builder** accessible from the dashboard:
+
+1. Navigate to the **Color Scheme** panel in your dashboard
+2. Select the **Custom** category
+3. Choose your colors:
+   - **Primary Color**: Main theme color
+   - **Secondary Color**: Complementary color for gradients
+   - **Accent Color**: Highlight color for UI elements
+4. Configure your gradient:
+   - **Type**: Linear or Radial
+   - **Direction**: 8 directional options (to-right, to-left, to-top, to-bottom, diagonals)
+5. Watch your overlays update in real-time!
+
+**Behind the Scenes**: The `useThemeColors` hook automatically:
+- Generates lighter/darker color variants
+- Calculates optimal text colors using luminance detection
+- Ensures readability on dark backgrounds (critical for OBS)
+- Creates CSS gradients for backgrounds and text
+
+### Adding New Preset Themes
+
+To add a permanent preset theme to the system, edit `lib/colorSchemes.ts`:
 
 ```typescript
-const colorSchemeStyles: Record<ColorScheme, string> = {
-  default: 'from-blue-900/20 to-purple-900/20',
-  gaming: 'from-red-900/20 to-orange-900/20',
-  // Add your custom scheme
-  myScheme: 'from-color1-900/20 to-color2-900/20',
-};
+{
+  id: 'my-theme',
+  name: 'My Theme',
+  category: 'vibrant', // or 'gaming', 'chill', 'minimal'
+  description: 'Description of your theme',
+  gradient: 'from-color1-900/20 to-color2-900/20', // Tailwind classes
+  preview: {
+    primary: '#hexcolor1',
+    secondary: '#hexcolor2',
+    accent: '#hexcolor3'
+  }
+}
 ```
+
+The theme system uses **WCAG-compliant luminance calculations** to ensure your colors are accessible.
 
 ### Adjusting Chat Message Duration
 
@@ -613,7 +652,8 @@ netstat -ano | findstr :3000  # Windows
 - ✅ Multiple countdown timers with database persistence
 - ✅ Emote wall particle system
 - ✅ Weather effects (rain, snow, fog)
-- ✅ 7 color schemes with custom color support
+- ✅ 18 color schemes with custom color builder and intelligent contrast detection
+- ✅ Theme system with automatic color adaptation for all overlay components
 - ✅ Component positioning system (x/y, width, scale)
 - ✅ Individual overlay pages for granular OBS control
 - ✅ Auto-save functionality

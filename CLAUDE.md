@@ -122,13 +122,16 @@ obs-overlay-sandbox/
 │   ├── _document.tsx               # Custom document for viewport
 │   └── index.tsx                   # Landing page
 ├── lib/
+│   ├── colorSchemes.ts             # 18 preset color scheme definitions
+│   ├── colorUtils.ts               # Color validation and parsing utilities
 │   ├── env.ts                      # Environment variable validation
 │   ├── prisma.ts                   # Prisma client singleton
 │   ├── spotify.ts                  # Spotify API configuration
 │   └── twitchChat.ts               # Twitch chat monitoring logic
 ├── hooks/
 │   ├── useSocket.ts                # Socket connection hook
-│   └── useOverlaySocket.ts         # Overlay-specific socket hook
+│   ├── useOverlaySocket.ts         # Overlay-specific socket hook
+│   └── useThemeColors.ts           # Theme color generation with contrast detection
 ├── types/
 │   ├── next-auth.d.ts              # NextAuth type extensions
 │   └── overlay.ts                  # Shared types for overlays
@@ -253,12 +256,119 @@ Layout (1) ─── (many) CountdownTimer
 **Types**: Rain, snow, fog, none
 **Features**: Canvas-based particle systems with configurable density
 
-### 6. Color Schemes
+### 6. Color Schemes & Theme System
 
-Predefined themes that change overlay styling:
+**Files**:
+- `lib/colorSchemes.ts` - 18 preset color scheme definitions
+- `hooks/useThemeColors.ts` - Theme color generation hook with contrast detection
+- `types/overlay.ts` - ColorScheme and CustomColors types
 
-- `default`, `sunset`, `ocean`, `forest`, `purple-haze`, `neon`, `monochrome`
-- Emits `color-scheme-change` and `custom-colors-change` events
+**Architecture**:
+
+The theme system provides centralized color management for all overlay components. Each overlay component (CountdownTimer, ChatHighlight, PaintByNumbers) receives the active `colorScheme` and `customColors` props and uses the `useThemeColors` hook to generate consistent, contrast-aware colors.
+
+**Available Presets** (18 total):
+- **All**: `default`
+- **Gaming**: `gaming`, `cyberpunk`, `retro-arcade`, `fps-modern`
+- **Chill**: `chill`, `sunset`, `ocean`, `forest`, `lavender`
+- **Vibrant**: `energetic`, `neon`, `synthwave`, `vaporwave`, `rainbow`, `candy`
+- **Minimal**: `dark`, `monochrome`, `pastel`, `noir`
+- **Custom**: User-created with custom primary/secondary/accent colors and gradient settings
+
+**Color Scheme Preset Structure** (`lib/colorSchemes.ts`):
+```typescript
+{
+  id: 'ocean',
+  name: 'Ocean',
+  category: 'chill',
+  description: 'Deep blue ocean depths',
+  gradient: 'from-blue-900/20 via-cyan-900/20 to-teal-900/20', // Tailwind classes for backgrounds
+  preview: {
+    primary: '#1e3a8a',   // Base color 1
+    secondary: '#164e63', // Base color 2
+    accent: '#14b8a6'     // Accent color
+  }
+}
+```
+
+**Theme Colors Hook** (`useThemeColors`):
+
+Generates a comprehensive color palette from the active color scheme:
+
+```typescript
+const theme = useThemeColors(colorScheme, customColors);
+
+// Returns:
+{
+  // Base colors
+  primary: string,
+  secondary: string,
+  accent: string,
+
+  // Variants (+/- 20% lightness)
+  primaryLight: string,
+  primaryDark: string,
+  secondaryLight: string,
+  secondaryDark: string,
+  accentLight: string,
+  accentDark: string,
+
+  // Contrast-aware text colors (guaranteed visibility on dark backgrounds)
+  primaryText: string,    // Auto-adjusted based on luminance
+  secondaryText: string,
+  accentText: string,
+
+  // Pre-generated CSS gradients
+  gradientBg: string,     // For backgrounds
+  gradientText: string    // For text with bg-clip-text
+}
+```
+
+**Contrast Detection**:
+
+The hook includes intelligent luminance-based contrast detection:
+- Colors with luminance < 0.1 (very dark) → lightened by 80%
+- Colors with luminance 0.1-0.3 (dark) → lightened by 60%
+- Colors with luminance > 0.3 (bright) → lightened by 20%
+
+This ensures text remains readable on dark overlay backgrounds across all themes, including `dark`, `noir`, and `monochrome`.
+
+**Usage in Components**:
+
+All themed overlay components follow this pattern:
+
+```typescript
+import { useThemeColors } from '@/hooks/useThemeColors';
+
+function CountdownTimer({ colorScheme, customColors, ...props }) {
+  const theme = useThemeColors(colorScheme, customColors);
+
+  return (
+    <div style={{ borderColor: theme.primary }}>
+      <h1 style={{ backgroundImage: theme.gradientText }}>Title</h1>
+      <span style={{ color: theme.primaryText }}>Count: 42</span>
+      <div style={{ backgroundImage: theme.gradientBg }} />
+    </div>
+  );
+}
+```
+
+**Themed Components**:
+- ✅ **CountdownTimer** - Title gradient, time cell colors, progress bar
+- ✅ **ChatHighlight** - Role-based backgrounds using theme variants, highlight badge
+- ✅ **PaintByNumbers** - Header gradient, instruction text, progress bar
+
+**Real-time Updates**:
+
+When a user changes the color scheme in the dashboard:
+1. Dashboard emits `color-scheme-change` event (for presets) or `custom-colors-change` (for custom)
+2. `useOverlaySocket` receives the event and updates `colorScheme`/`customColors` state
+3. Components re-render with new theme colors via `useThemeColors` hook
+4. Colors transition smoothly to match the selected theme
+
+**Socket Events**:
+- `color-scheme-change` - Emitted when preset scheme selected (payload: ColorScheme string)
+- `custom-colors-change` - Emitted when custom colors modified (payload: CustomColors object)
 
 ## API Routes Reference
 

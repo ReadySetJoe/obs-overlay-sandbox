@@ -1027,7 +1027,7 @@ export default function DashboardPage() {
           <img
             src='/title-white.png'
             alt='Joe-verlay'
-            className='mx-auto mb-6 max-w-md md:max-w-lg w-full'
+            className='mx-auto mb-6 max-w-sm md:max-w-md w-full'
           />
           </Link>
           <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>

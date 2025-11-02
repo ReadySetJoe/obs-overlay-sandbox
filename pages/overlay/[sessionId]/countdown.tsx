@@ -14,6 +14,7 @@ export default function CountdownOverlay() {
     componentLayouts,
     getLayerVisible,
     colorScheme,
+    customColors,
     colorSchemeStyles,
     customGradientCSS,
   } = useOverlaySocket(sessionId as string);
@@ -39,6 +40,8 @@ export default function CountdownOverlay() {
         <CountdownTimer
           timers={countdownTimers}
           layout={componentLayouts.countdown}
+          colorScheme={colorScheme}
+          customColors={customColors}
         />
       )}
     </div>

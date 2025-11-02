@@ -2,18 +2,31 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { PaintByNumbersState, PaintByNumbersLayout } from '@/types/overlay';
+import {
+  PaintByNumbersState,
+  PaintByNumbersLayout,
+  ColorScheme,
+  CustomColors,
+} from '@/types/overlay';
 import Confetti from 'react-confetti';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface PaintByNumbersProps {
   paintState: PaintByNumbersState | null;
   layout: PaintByNumbersLayout;
+  colorScheme: ColorScheme;
+  customColors: CustomColors | null;
 }
 
 export default function PaintByNumbers({
   paintState,
   layout,
+  colorScheme,
+  customColors,
 }: PaintByNumbersProps) {
+  // Get theme colors
+  const theme = useThemeColors(colorScheme, customColors);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
@@ -151,15 +164,25 @@ export default function PaintByNumbers({
           zIndex: 12,
         }}
       >
-        <div className='bg-gray-900/95 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/50 shadow-2xl'>
+        <div
+          className='bg-gray-900/95 backdrop-blur-lg rounded-2xl p-6 shadow-2xl'
+          style={{
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: `${theme.primary}80`, // 50% opacity
+          }}
+        >
           {/* Header */}
           <div className='mb-4 text-center'>
-            <h3 className='text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent'>
+            <h3
+              className='text-2xl font-bold bg-clip-text text-transparent'
+              style={{ backgroundImage: theme.gradientText }}
+            >
               Paint by Numbers
             </h3>
             <p className='text-sm text-gray-400 mt-1'>
               Type{' '}
-              <span className='text-purple-400 font-mono'>
+              <span className='font-mono' style={{ color: theme.accentText }}>
                 !paint [number] [color]
               </span>{' '}
               in chat!
@@ -229,12 +252,17 @@ export default function PaintByNumbers({
               <span className='text-gray-300'>
                 {filledRegions} / {totalRegions} regions filled
               </span>
-              <span className='text-purple-400 font-bold'>{progress}%</span>
+              <span className='font-bold' style={{ color: theme.accentText }}>
+                {progress}%
+              </span>
             </div>
             <div className='h-3 bg-gray-700/50 rounded-full overflow-hidden'>
               <div
-                className='h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500'
-                style={{ width: `${progress}%` }}
+                className='h-full transition-all duration-500'
+                style={{
+                  width: `${progress}%`,
+                  backgroundImage: theme.gradientBg,
+                }}
               />
             </div>
             {isComplete && (

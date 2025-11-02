@@ -14,6 +14,7 @@ export default function PaintByNumbersOverlay() {
     componentLayouts,
     getLayerVisible,
     colorScheme,
+    customColors,
     colorSchemeStyles,
     customGradientCSS,
   } = useOverlaySocket(sessionId as string);
@@ -44,7 +45,12 @@ export default function PaintByNumbersOverlay() {
 
       {/* Paint by Numbers */}
       {getLayerVisible('paintbynumbers') && paintByNumbersState && (
-        <PaintByNumbers paintState={paintByNumbersState} layout={layout} />
+        <PaintByNumbers
+          paintState={paintByNumbersState}
+          layout={layout}
+          colorScheme={colorScheme}
+          customColors={customColors}
+        />
       )}
     </div>
   );

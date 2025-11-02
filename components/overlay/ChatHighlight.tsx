@@ -4,23 +4,17 @@
 import {
   ChatHighlight as ChatHighlightType,
   ChatHighlightLayout,
+  ColorScheme,
+  CustomColors,
 } from '@/types/overlay';
+import { useThemeColors, hexToRgba } from '@/hooks/useThemeColors';
 
 interface ChatHighlightProps {
   highlight: ChatHighlightType | null;
   layout: ChatHighlightLayout;
+  colorScheme: ColorScheme;
+  customColors: CustomColors | null;
 }
-
-const roleStyles: Record<string, string> = {
-  viewer: 'bg-gradient-to-br from-gray-900/95 to-black/95 border-gray-600',
-  subscriber:
-    'bg-gradient-to-br from-purple-950/95 to-purple-900/95 border-purple-500',
-  moderator:
-    'bg-gradient-to-br from-gray-900/95 to-black/95 border-emerald-500',
-  vip: 'bg-gradient-to-br from-pink-950/95 to-pink-900/95 border-pink-500',
-  'first-timer':
-    'bg-gradient-to-br from-blue-950/95 to-blue-900/95 border-blue-500',
-};
 
 const roleIcons: Record<string, string> = {
   viewer: '💬',
@@ -33,7 +27,12 @@ const roleIcons: Record<string, string> = {
 export default function ChatHighlight({
   highlight,
   layout,
+  colorScheme,
+  customColors,
 }: ChatHighlightProps) {
+  // Get theme colors
+  const theme = useThemeColors(colorScheme, customColors);
+
   if (!highlight) return null;
 
   // Don't render if layout is not properly initialized (prevents flash at top-left)
@@ -42,6 +41,40 @@ export default function ChatHighlight({
   }
 
   const { message } = highlight;
+
+  // Generate role-specific styled using theme colors instead of hardcoded colors
+  // Each role gets a variation of the theme to maintain differentiation
+  const getRoleStyle = (role: string) => {
+    switch (role) {
+      case 'subscriber':
+        return {
+          background: `linear-gradient(to bottom right, ${hexToRgba(theme.primary, 0.95)}, ${hexToRgba(theme.primaryDark, 0.95)})`,
+          borderColor: theme.primaryText,
+        };
+      case 'moderator':
+        return {
+          background: `linear-gradient(to bottom right, ${hexToRgba(theme.secondary, 0.95)}, ${hexToRgba(theme.secondaryDark, 0.95)})`,
+          borderColor: theme.secondaryText,
+        };
+      case 'vip':
+        return {
+          background: `linear-gradient(to bottom right, ${hexToRgba(theme.accent, 0.95)}, ${hexToRgba(theme.accentDark, 0.95)})`,
+          borderColor: theme.accentText,
+        };
+      case 'first-timer':
+        return {
+          background: `linear-gradient(to bottom right, ${hexToRgba(theme.primaryLight, 0.95)}, ${hexToRgba(theme.primary, 0.95)})`,
+          borderColor: theme.primaryText,
+        };
+      default: // viewer
+        return {
+          background: `linear-gradient(to bottom right, rgba(31, 41, 55, 0.95), rgba(0, 0, 0, 0.95))`,
+          borderColor: theme.accentText,
+        };
+    }
+  };
+
+  const roleStyle = getRoleStyle(message.role);
 
   const positionClasses: Record<string, string> = {
     'top-left': 'top-0 left-0',
@@ -63,13 +96,12 @@ export default function ChatHighlight({
     >
       <div className='animate-slide-in-bounce w-full h-full'>
         <div
-          className={`
-          ${roleStyles[message.role]}
-          border-l-4 rounded-2xl p-6 shadow-2xl
-          backdrop-blur-md
-          relative overflow-hidden
-        `}
-          style={{ width: `${layout.width}px` }}
+          className='border-l-4 rounded-2xl p-6 shadow-2xl backdrop-blur-md relative overflow-hidden'
+          style={{
+            width: `${layout.width}px`,
+            background: roleStyle.background,
+            borderColor: roleStyle.borderColor,
+          }}
         >
           {/* Subtle shine animation */}
           <div className='absolute inset-0 shine-effect pointer-events-none' />
@@ -79,7 +111,10 @@ export default function ChatHighlight({
               <div className='text-4xl mb-2 animate-bounce-gentle'>
                 {roleIcons[message.role]}
               </div>
-              <div className='text-xs text-yellow-400 uppercase tracking-wider font-bold flex items-center gap-1'>
+              <div
+                className='text-xs uppercase tracking-wider font-bold flex items-center gap-1'
+                style={{ color: theme.accentText }}
+              >
                 <svg
                   className='w-3 h-3'
                   fill='currentColor'
