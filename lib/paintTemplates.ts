@@ -35,9 +35,11 @@ export const paintTemplates: PaintTemplate[] = [
  * All regions will be reset to unfilled state
  */
 export function createPaintStateFromTemplate(
-  templateId: string
+  templateId: string,
+  allTemplates?: PaintTemplate[]
 ): PaintTemplate | null {
-  const template = paintTemplates.find(t => t.id === templateId);
+  const templates = allTemplates || paintTemplates;
+  const template = templates.find(t => t.id === templateId);
 
   if (!template) {
     return null;
@@ -54,4 +56,13 @@ export function createPaintStateFromTemplate(
       customColor: undefined,
     })),
   };
+}
+
+/**
+ * Merge built-in templates with custom templates
+ */
+export function mergeTemplates(
+  customTemplates: PaintTemplate[]
+): PaintTemplate[] {
+  return [...paintTemplates, ...customTemplates];
 }

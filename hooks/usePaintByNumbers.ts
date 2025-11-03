@@ -40,7 +40,7 @@ export function usePaintByNumbers({
             socket.emit('paint-state', loadedState);
           } else {
             // No saved state found, initialize with heart template
-            const heartState = createFreshTemplate('heart');
+            const heartState = await createFreshTemplate('heart');
             if (heartState) {
               setPaintByNumbersState(heartState);
               socket.emit('paint-state', heartState);
@@ -70,10 +70,10 @@ export function usePaintByNumbers({
   );
 
   // Handle template reset
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback(async () => {
     if (!paintByNumbersState || !socket) return;
 
-    const resetState = resetTemplate(paintByNumbersState);
+    const resetState = await resetTemplate(paintByNumbersState);
     if (resetState) {
       setPaintByNumbersState(resetState);
       socket.emit('paint-state', resetState);

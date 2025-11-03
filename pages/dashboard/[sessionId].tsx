@@ -42,8 +42,20 @@ export default function DashboardPage() {
   );
   const [_lastSaved, setLastSaved] = useState<Date | null>(null);
 
+  // Scene Layers
+  const [layers, setLayers] = useState([
+    { id: 'weather', name: 'Weather', visible: true },
+    { id: 'chat', name: 'Chat', visible: true },
+    { id: 'nowplaying', name: 'Now Playing', visible: true },
+    { id: 'countdown', name: 'Countdown', visible: true },
+    { id: 'chathighlight', name: 'Chat Highlight', visible: true },
+    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
+  ]);
+
   // Use extracted hooks
-  const spotify = useSpotify({ socket, isConnected });
+  const nowPlayingVisible =
+    layers.find(l => l.id === 'nowplaying')?.visible ?? true;
+  const spotify = useSpotify({ socket, isConnected, nowPlayingVisible });
   const timersHook = useTimers({ sessionId: sessionId as string, session });
   const paintHook = usePaintByNumbers({
     sessionId: sessionId as string,
@@ -56,16 +68,6 @@ export default function DashboardPage() {
     session,
     socket,
   });
-
-  // Scene Layers
-  const [layers, setLayers] = useState([
-    { id: 'weather', name: 'Weather', visible: true },
-    { id: 'chat', name: 'Chat', visible: true },
-    { id: 'nowplaying', name: 'Now Playing', visible: true },
-    { id: 'countdown', name: 'Countdown', visible: true },
-    { id: 'chathighlight', name: 'Chat Highlight', visible: true },
-    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
-  ]);
 
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');

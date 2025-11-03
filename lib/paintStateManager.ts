@@ -1,6 +1,33 @@
 // lib/paintStateManager.ts
-import { PaintByNumbersState } from '@/types/overlay';
-import { createPaintStateFromTemplate } from '@/lib/paintTemplates';
+import { PaintByNumbersState, PaintTemplate } from '@/types/overlay';
+import {
+  createPaintStateFromTemplate,
+  mergeTemplates,
+} from '@/lib/paintTemplates';
+
+/**
+ * Fetch custom templates for the current user
+ */
+async function fetchCustomTemplates(): Promise<PaintTemplate[]> {
+  try {
+    const response = await fetch('/api/paint-templates/list');
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    return data.templates || [];
+  } catch (error) {
+    console.error('Error fetching custom templates:', error);
+    return [];
+  }
+}
+
+/**
+ * Get all templates (built-in + custom)
+ */
+async function getAllTemplates(): Promise<PaintTemplate[]> {
+  const customTemplates = await fetchCustomTemplates();
+  return mergeTemplates(customTemplates);
+}
 
 /**
  * Load the most recent paint template from saved states
@@ -76,11 +103,12 @@ export async function loadTemplateState(
 /**
  * Reconstruct a paint state from saved data
  */
-function reconstructTemplateState(
+async function reconstructTemplateState(
   templateId: string,
   savedState: any
-): PaintByNumbersState | null {
-  const template = createPaintStateFromTemplate(templateId);
+): Promise<PaintByNumbersState | null> {
+  const allTemplates = await getAllTemplates();
+  const template = createPaintStateFromTemplate(templateId, allTemplates);
   if (!template) return null;
 
   return {
@@ -107,10 +135,11 @@ function reconstructTemplateState(
 /**
  * Create a fresh template state (no saved progress)
  */
-export function createFreshTemplate(
+export async function createFreshTemplate(
   templateId: string
-): PaintByNumbersState | null {
-  const template = createPaintStateFromTemplate(templateId);
+): Promise<PaintByNumbersState | null> {
+  const allTemplates = await getAllTemplates();
+  const template = createPaintStateFromTemplate(templateId, allTemplates);
   if (!template) return null;
 
   return {
@@ -123,10 +152,14 @@ export function createFreshTemplate(
 /**
  * Reset a template to its initial state
  */
-export function resetTemplate(
+export async function resetTemplate(
   currentState: PaintByNumbersState
-): PaintByNumbersState | null {
-  const template = createPaintStateFromTemplate(currentState.templateId);
+): Promise<PaintByNumbersState | null> {
+  const allTemplates = await getAllTemplates();
+  const template = createPaintStateFromTemplate(
+    currentState.templateId,
+    allTemplates
+  );
   if (!template) return null;
 
   return {

@@ -47,6 +47,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   layouts       Layout[]
+  paintTemplates PaintTemplateCustom[]
 }
 
 model VerificationToken {
@@ -148,4 +149,25 @@ model AlertConfig {
   layout Layout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
 
   @@unique([layoutId, eventType])
+}
+
+model PaintTemplateCustom {
+  id          String   @id @default(cuid())
+  userId      String
+
+  name        String
+  description String?
+  width       Int      // Grid width
+  height      Int      // Grid height
+  regions     String   @db.Text // JSON stringified array of PaintRegion objects
+
+  // Cloudinary storage
+  imageUrl        String  // Original image URL
+  imagePublicId   String  // For deletion
+  thumbnailUrl    String? // Preview thumbnail (200x200)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

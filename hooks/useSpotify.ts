@@ -6,9 +6,14 @@ import { Socket } from 'socket.io-client';
 interface UseSpotifyProps {
   socket: Socket | null;
   isConnected: boolean;
+  nowPlayingVisible: boolean;
 }
 
-export function useSpotify({ socket, isConnected }: UseSpotifyProps) {
+export function useSpotify({
+  socket,
+  isConnected,
+  nowPlayingVisible,
+}: UseSpotifyProps) {
   const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
   const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(
     null
@@ -45,7 +50,7 @@ export function useSpotify({ socket, isConnected }: UseSpotifyProps) {
 
   // Poll Spotify API for now playing
   useEffect(() => {
-    if (!spotifyToken || !socket || !isConnected) return;
+    if (!spotifyToken || !socket || !isConnected || !nowPlayingVisible) return;
 
     const pollSpotify = async () => {
       try {
@@ -107,6 +112,7 @@ export function useSpotify({ socket, isConnected }: UseSpotifyProps) {
     spotifyToken,
     socket,
     isConnected,
+    nowPlayingVisible,
     spotifyRefreshToken,
     trackTitle,
     trackArtist,
