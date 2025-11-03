@@ -119,17 +119,6 @@ export default function EventLabelsExpanded({
         </div>
       </div>
 
-      {/* Copy URL */}
-      <div className='mb-6 space-y-3'>
-        <CopyURLButton
-          url={`${window.location.origin}/overlay/${sessionId}/event-labels`}
-          label='Event Labels Overlay URL'
-        />
-        <p className='text-xs text-gray-400 mt-2'>
-          Individual overlay showing only event labels
-        </p>
-      </div>
-
       {/* Position & Scale */}
       <div className='mb-6'>
         <h4 className='text-sm font-semibold text-gray-200 mb-3'>
@@ -398,6 +387,17 @@ export default function EventLabelsExpanded({
           <li>Customize the label text for each event type</li>
           <li>Position and scale using the Position Controls</li>
         </ul>
+      </div>
+
+      {/* Copy URL */}
+      <div className='mb-6 space-y-3'>
+        <CopyURLButton
+          url={`${window.location.origin}/overlay/${sessionId}/event-labels`}
+          label='Event Labels Overlay URL'
+        />
+        <p className='text-xs text-gray-400 mt-2'>
+          Individual overlay showing only event labels
+        </p>
       </div>
     </div>
   );

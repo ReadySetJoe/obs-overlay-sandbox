@@ -8,6 +8,7 @@ import {
   AlertAnimationType,
   AlertPosition,
 } from '@/types/overlay';
+import CopyURLButton from '../CopyURLButton';
 
 interface AlertsExpandedProps {
   sessionId: string;
@@ -832,6 +833,17 @@ export default function AlertsExpanded({
             occur
           </li>
         </ol>
+      </div>
+
+      {/* Copy URL */}
+      <div className='mb-6 space-y-3'>
+        <CopyURLButton
+          url={`${window.location.origin}/overlay/${sessionId}/alerts`}
+          label='Alerts Overlay URL'
+        />
+        <p className='text-xs text-gray-400 mt-2'>
+          Individual overlay showing only alerts
+        </p>
       </div>
     </div>
   );

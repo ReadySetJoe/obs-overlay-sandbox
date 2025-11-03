@@ -42,6 +42,8 @@ export function getSocketServer(): SocketIOServer | null {
 
 const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
   if (!res.socket.server.io) {
+    console.log('[Socket Server] Initializing Socket.io server...');
+
     const io = new SocketIOServer(res.socket.server, {
       path: '/api/socket',
       addTrailingSlash: false,
@@ -50,13 +52,27 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         credentials: true,
       },
       maxHttpBufferSize: 1e8, // 100 MB (default is 1 MB)
+      // OBS-compatible settings
+      pingTimeout: 60000, // 60 seconds (increased from default 5s for OBS)
+      pingInterval: 25000, // 25 seconds (keep connection alive)
+      upgradeTimeout: 30000, // 30 seconds for WebSocket upgrade
+      connectTimeout: 45000, // 45 seconds for initial connection
+      transports: ['websocket', 'polling'], // Support both transports
+      allowUpgrades: true, // Allow transport upgrades (polling → websocket)
     });
 
+    console.log('[Socket Server] Socket.io server initialized successfully');
+
     io.on('connection', socket => {
+      console.log('[Socket Server] Client connected:', socket.id);
+      console.log('[Socket Server] Transport:', socket.conn.transport.name);
+
       // Handle joining a session room
       socket.on('join-session', (sessionId: string) => {
+        console.log(`[Socket Server] Client ${socket.id} joining session: ${sessionId}`);
         socket.join(sessionId);
         socket.data.sessionId = sessionId;
+        console.log(`[Socket Server] Client ${socket.id} successfully joined session: ${sessionId}`);
       });
 
       // Emit events to the specific session room
@@ -191,8 +207,8 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
-      socket.on('disconnect', () => {
-        // Client disconnected
+      socket.on('disconnect', (reason) => {
+        console.log(`[Socket Server] Client ${socket.id} disconnected. Reason: ${reason}`);
       });
     });
 

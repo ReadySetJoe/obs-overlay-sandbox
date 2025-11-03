@@ -6,14 +6,14 @@ import { useState, useEffect } from 'react';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import WeatherEffect from '@/components/overlay/WeatherEffect';
 import NowPlaying from '@/components/overlay/NowPlaying';
-import CountdownTimer from '@/components/overlay/CountdownTimer';
+import CountdownTimerComponent from '@/components/overlay/CountdownTimer';
 import EmoteWall from '@/components/overlay/EmoteWall';
 import ChatHighlight from '@/components/overlay/ChatHighlight';
 import PaintByNumbers from '@/components/overlay/PaintByNumbers';
 import EventLabels from '@/components/overlay/EventLabels';
 import StreamStats from '@/components/overlay/StreamStats';
 import Alert from '@/components/overlay/Alert';
-import { AlertConfig, AlertEvent } from '@/types/overlay';
+import { AlertConfig, AlertEvent, CountdownTimer, EventLabelsData, EventLabelsConfig, StreamStatsData, StreamStatsConfig } from '@/types/overlay';
 
 export default function OverlayPage() {
   const router = useRouter();
@@ -22,7 +22,7 @@ export default function OverlayPage() {
     isConnected,
     weatherEffect,
     nowPlaying,
-    countdownTimers,
+    countdownTimers: socketCountdownTimers,
     componentLayouts,
     chatHighlight,
     paintByNumbersState,
@@ -35,12 +35,27 @@ export default function OverlayPage() {
     backgroundImageUrl,
     backgroundOpacity,
     backgroundBlur,
-    eventLabelsData,
-    eventLabelsConfig,
-    streamStatsData,
-    streamStatsConfig,
+    eventLabelsData: socketEventLabelsData,
+    eventLabelsConfig: socketEventLabelsConfig,
+    streamStatsData: socketStreamStatsData,
+    streamStatsConfig: socketStreamStatsConfig,
     socket,
   } = useOverlaySocket(sessionId as string);
+
+  // Local state for initial data (takes precedence until socket updates)
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const [localCountdownTimers, setLocalCountdownTimers] = useState<CountdownTimer[]>([]);
+  const [localEventLabelsData, setLocalEventLabelsData] = useState<EventLabelsData>({});
+  const [localEventLabelsConfig, setLocalEventLabelsConfig] = useState<EventLabelsConfig | null>(null);
+  const [localStreamStatsData, setLocalStreamStatsData] = useState<StreamStatsData | null>(null);
+  const [localStreamStatsConfig, setLocalStreamStatsConfig] = useState<StreamStatsConfig | null>(null);
+
+  // Use local data if not yet replaced by socket data
+  const countdownTimers = initialDataLoaded && socketCountdownTimers.length === 0 ? localCountdownTimers : socketCountdownTimers;
+  const eventLabelsData = initialDataLoaded && Object.keys(socketEventLabelsData).length === 0 ? localEventLabelsData : socketEventLabelsData;
+  const eventLabelsConfig = initialDataLoaded && !socketEventLabelsConfig ? localEventLabelsConfig : socketEventLabelsConfig;
+  const streamStatsData = initialDataLoaded && !socketStreamStatsData ? localStreamStatsData : socketStreamStatsData;
+  const streamStatsConfig = initialDataLoaded && !socketStreamStatsConfig ? localStreamStatsConfig : socketStreamStatsConfig;
 
   // Alert state
   const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
@@ -49,6 +64,77 @@ export default function OverlayPage() {
     config: AlertConfig;
     event: AlertEvent;
   } | null>(null);
+
+  // Load initial data from database (critical for OBS where page loads fresh each time)
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadInitialData = async () => {
+      console.log('[Overlay] Loading initial data from database for session:', sessionId);
+
+      try {
+        // Load layout data (includes streamStatsData, streamStatsConfig, eventLabelsData, etc.)
+        const layoutResponse = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        if (layoutResponse.ok) {
+          const { layout } = await layoutResponse.json();
+          console.log('[Overlay] Layout data loaded:', layout);
+
+          // Parse and set event labels data
+          if (layout.eventLabelsData) {
+            try {
+              const parsedEventLabelsData = JSON.parse(layout.eventLabelsData);
+              setLocalEventLabelsData(parsedEventLabelsData);
+              console.log('[Overlay] Event labels data loaded:', parsedEventLabelsData);
+            } catch (error) {
+              console.error('[Overlay] Error parsing event labels data:', error);
+            }
+          }
+
+          // Parse and set stream stats data
+          if (layout.streamStatsData) {
+            try {
+              const parsedStreamStatsData = JSON.parse(layout.streamStatsData);
+              setLocalStreamStatsData(parsedStreamStatsData);
+              console.log('[Overlay] Stream stats data loaded:', parsedStreamStatsData);
+            } catch (error) {
+              console.error('[Overlay] Error parsing stream stats data:', error);
+            }
+          }
+
+          // Parse and set stream stats config
+          if (layout.streamStatsConfig) {
+            try {
+              const parsedStreamStatsConfig = JSON.parse(layout.streamStatsConfig);
+              setLocalStreamStatsConfig(parsedStreamStatsConfig);
+              console.log('[Overlay] Stream stats config loaded:', parsedStreamStatsConfig);
+            } catch (error) {
+              console.error('[Overlay] Error parsing stream stats config:', error);
+            }
+          }
+
+          // Event labels config is part of the socket hook's state
+          // If needed, we can extract it from layout data here too
+        }
+
+        // Load countdown timers
+        const timersResponse = await fetch(`/api/timers/list?sessionId=${sessionId}`);
+        if (timersResponse.ok) {
+          const { timers } = await timersResponse.json();
+          setLocalCountdownTimers(timers);
+          console.log('[Overlay] Countdown timers loaded:', timers);
+        }
+
+        // Mark initial data as loaded
+        setInitialDataLoaded(true);
+        console.log('[Overlay] ✅ All initial data loaded successfully');
+      } catch (error) {
+        console.error('[Overlay] Error loading initial data:', error);
+        setInitialDataLoaded(true); // Set anyway to allow socket updates
+      }
+    };
+
+    loadInitialData();
+  }, [sessionId]);
 
   // Load alert configurations
   useEffect(() => {
@@ -166,7 +252,7 @@ export default function OverlayPage() {
 
       {/* Countdown Timers */}
       {getLayerVisible('countdown') && (
-        <CountdownTimer
+        <CountdownTimerComponent
           timers={countdownTimers}
           layout={componentLayouts.countdown}
           colorScheme={colorScheme}
@@ -206,7 +292,7 @@ export default function OverlayPage() {
       )}
 
       {/* Event Labels */}
-      {getLayerVisible('eventlabels') &&
+      {getLayerVisible('eventlabels') && eventLabelsConfig &&
         (() => {
           const layout = componentLayouts.eventLabels || {
             position: 'top-right',
@@ -236,7 +322,7 @@ export default function OverlayPage() {
         })()}
 
       {/* Stream Stats */}
-      {getLayerVisible('streamstats') &&
+      {getLayerVisible('streamstats') && streamStatsData && streamStatsConfig &&
         (() => {
           const layout = componentLayouts.streamStats || {
             position: 'top-right',

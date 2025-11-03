@@ -128,17 +128,6 @@ export default function StreamStatsExpanded({
         </div>
       </div>
 
-      {/* Copy URL */}
-      <div className='mb-6 space-y-3'>
-        <CopyURLButton
-          url={`${window.location.origin}/overlay/${sessionId}/stream-stats`}
-          label='Stream Stats Overlay URL'
-        />
-        <p className='text-xs text-gray-400 mt-2'>
-          Individual overlay showing only stream stats
-        </p>
-      </div>
-
       {/* Position & Scale */}
       <div className='mb-6'>
         <h4 className='text-sm font-semibold text-gray-200 mb-3'>
@@ -210,7 +199,9 @@ export default function StreamStatsExpanded({
       {/* Goals Configuration */}
       <div className='mb-6'>
         <div className='flex items-center justify-between mb-3'>
-          <h4 className='text-sm font-semibold text-gray-200'>🎯 Goal Targets</h4>
+          <h4 className='text-sm font-semibold text-gray-200'>
+            🎯 Goal Targets
+          </h4>
           <button
             onClick={handleSyncTwitch}
             disabled={syncing}
@@ -427,6 +418,17 @@ export default function StreamStatsExpanded({
             starts
           </li>
         </ul>
+      </div>
+
+      {/* Copy URL */}
+      <div className='mb-6 space-y-3'>
+        <CopyURLButton
+          url={`${window.location.origin}/overlay/${sessionId}/stream-stats`}
+          label='Stream Stats Overlay URL'
+        />
+        <p className='text-xs text-gray-400 mt-2'>
+          Individual overlay showing only stream stats
+        </p>
       </div>
     </div>
   );
