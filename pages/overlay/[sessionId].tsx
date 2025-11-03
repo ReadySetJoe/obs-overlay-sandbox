@@ -26,17 +26,38 @@ export default function OverlayPage() {
     customColors,
     colorSchemeStyles,
     customGradientCSS,
+    backgroundImageUrl,
+    backgroundOpacity,
+    backgroundBlur,
   } = useOverlaySocket(sessionId as string);
 
   return (
-    <div
-      className={`
-        relative w-screen h-screen overflow-hidden
-        ${customGradientCSS ? '' : `bg-gradient-to-br ${colorSchemeStyles[colorScheme]}`}
-        transition-all duration-1000
-      `}
-      style={customGradientCSS ? { background: customGradientCSS } : {}}
-    >
+    <div className="relative w-screen h-screen overflow-hidden">
+      {/* Custom Background Layer (lowest) */}
+      {backgroundImageUrl && (
+        <div
+          className="absolute inset-0 -z-10"
+          style={{
+            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: backgroundOpacity || 1,
+            filter: `blur(${backgroundBlur || 0}px)`,
+          }}
+        />
+      )}
+
+      {/* Gradient Background (fallback - only visible when no custom background) */}
+      <div
+        className={`
+          absolute inset-0 -z-20
+          ${customGradientCSS ? '' : `bg-gradient-to-br ${colorSchemeStyles[colorScheme]}`}
+          transition-all duration-1000
+          ${backgroundImageUrl ? 'opacity-0' : 'opacity-100'}
+        `}
+        style={customGradientCSS ? { background: customGradientCSS } : {}}
+      />
       {/* Connection Status */}
       {!isConnected && (
         <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>

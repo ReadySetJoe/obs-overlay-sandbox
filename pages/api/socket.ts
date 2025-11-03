@@ -18,6 +18,14 @@ type NextApiResponseServerIO = NextApiResponse & {
   };
 };
 
+// Global variable to store the socket server instance
+let globalSocketServer: SocketIOServer | null = null;
+
+// Helper function to get the socket server instance
+export function getSocketServer(): SocketIOServer | null {
+  return globalSocketServer;
+}
+
 const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
   if (!res.socket.server.io) {
     const io = new SocketIOServer(res.socket.server, {
@@ -130,12 +138,20 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('background-change', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('background-change', data);
+        }
+      });
+
       socket.on('disconnect', () => {
         // Client disconnected
       });
     });
 
     res.socket.server.io = io;
+    globalSocketServer = io; // Store globally for API routes to access
   }
 
   res.end();

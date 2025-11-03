@@ -30,6 +30,8 @@
 - **Twitch** - Authentication + live chat monitoring via `tmi.js`
 - **Spotify** - Now Playing integration via `spotify-web-api-node`
 - **ColorThief** - Album art color extraction for dynamic theming
+- **Cloudinary** - Cloud storage for custom background images with auto-optimization
+- **Canvas API** - Server-side image processing for color extraction (via `canvas` npm package)
 
 ### Build Tools
 
@@ -69,6 +71,7 @@ obs-overlay-sandbox/
 ├── components/
 │   ├── dashboard/          # Dashboard UI components
 │   │   ├── expanded/       # Detailed settings panels for each overlay
+│   │   │   ├── BackgroundExpanded.tsx
 │   │   │   ├── ChatHighlightExpanded.tsx
 │   │   │   ├── ColorSchemeExpanded.tsx
 │   │   │   ├── CountdownExpanded.tsx
@@ -91,6 +94,10 @@ obs-overlay-sandbox/
 │   ├── api/                # Backend API routes
 │   │   ├── auth/
 │   │   │   └── [...nextauth].ts    # NextAuth configuration
+│   │   ├── backgrounds/
+│   │   │   ├── upload.ts           # Upload custom background
+│   │   │   ├── delete.ts           # Delete background
+│   │   │   └── apply-colors.ts     # Apply extracted colors to theme
 │   │   ├── layouts/
 │   │   │   ├── list.ts             # Get all user layouts
 │   │   │   ├── load.ts             # Load specific layout
@@ -113,6 +120,7 @@ obs-overlay-sandbox/
 │   ├── overlay/
 │   │   ├── [sessionId].tsx         # Combined overlay (all components)
 │   │   └── [sessionId]/            # Individual overlay pages
+│   │       ├── background.tsx
 │   │       ├── chat-highlight.tsx
 │   │       ├── countdown.tsx
 │   │       ├── emote-wall.tsx
@@ -122,6 +130,8 @@ obs-overlay-sandbox/
 │   ├── _document.tsx               # Custom document for viewport
 │   └── index.tsx                   # Landing page
 ├── lib/
+│   ├── cloudinary.ts               # Cloudinary SDK configuration and helpers
+│   ├── colorExtraction.ts          # K-means color extraction from images
 │   ├── colorSchemes.ts             # 18 preset color scheme definitions
 │   ├── colorUtils.ts               # Color validation and parsing utilities
 │   ├── env.ts                      # Environment variable validation
@@ -155,17 +165,28 @@ obs-overlay-sandbox/
 - `id`, `userId`, `sessionId` (unique)
 - `name` - Layout name
 - `colorScheme` - Color theme (default, sunset, ocean, etc.)
+- `customColors` - JSON string for custom color scheme
 - `weatherEffect` - Weather overlay type (rain, snow, none)
-- `*Visible` - Boolean flags for component visibility
+- `*Visible` - Boolean flags for component visibility (chatVisible, nowPlayingVisible, countdownVisible, chatHighlightVisible, paintByNumbersVisible, weatherVisible)
 - `componentLayouts` - JSON string storing position/size for each component
   ```json
   {
     "chat": { "position": "top-left", "x": 0, "y": 80, "maxWidth": 400 },
     "nowPlaying": { "position": "top-left", "x": 0, "y": 0, "width": 400 },
     "countdown": { "position": "top-left", "x": 0, "y": 0, "scale": 1 },
-    "weather": { "density": 1 }
+    "weather": { "density": 1 },
+    "chatHighlight": { "position": "bottom-left", "x": 20, "y": 20, "width": 500, "scale": 1 },
+    "paintByNumbers": { "position": "top-left", "x": 0, "y": 0, "scale": 1, "gridSize": 20 }
   }
   ```
+- **Custom Background Fields**:
+  - `backgroundImageUrl` - Cloudinary URL for uploaded background image
+  - `backgroundImagePublicId` - Cloudinary public_id for deletion
+  - `backgroundImageName` - Original filename for display
+  - `backgroundColors` - JSON string of extracted color palette
+  - `backgroundOpacity` - Float (0.0-1.0, default 1.0) for background transparency
+  - `backgroundBlur` - Integer (0-20, default 0) for blur effect in pixels
+  - `backgroundUploadedAt` - Timestamp of upload
 - Relations: `countdowns[]`
 
 **CountdownTimer**
@@ -370,6 +391,125 @@ When a user changes the color scheme in the dashboard:
 - `color-scheme-change` - Emitted when preset scheme selected (payload: ColorScheme string)
 - `custom-colors-change` - Emitted when custom colors modified (payload: CustomColors object)
 
+### 7. Custom Background System
+
+**Flow**: Image Upload → Cloudinary → Color Extraction → Database → Socket.io → Overlay
+
+**Files**:
+- `lib/cloudinary.ts` - Cloudinary SDK configuration and image upload/delete helpers
+- `lib/colorExtraction.ts` - K-means clustering algorithm for dominant color extraction
+- `pages/api/backgrounds/upload.ts` - Upload endpoint with validation and processing
+- `pages/api/backgrounds/delete.ts` - Delete endpoint with Cloudinary cleanup
+- `pages/api/backgrounds/apply-colors.ts` - Apply extracted colors to custom theme
+- `components/dashboard/expanded/BackgroundExpanded.tsx` - Upload UI with drag & drop
+- `pages/overlay/[sessionId]/background.tsx` - Dedicated background overlay page
+- `pages/overlay/[sessionId].tsx` - Main overlay with background layer support
+
+**Architecture**:
+
+Users can upload custom background images (PNG, JPG, WebP up to 10MB) that are stored in Cloudinary and automatically optimized for streaming. The system extracts dominant colors from the uploaded image using k-means clustering and can apply them to the custom theme for a cohesive visual experience.
+
+**Image Optimization** (`lib/cloudinary.ts`):
+- Auto-resize to 1920x1080 (standard streaming resolution)
+- Auto-conversion to WebP format for better compression
+- Quality optimization (auto quality)
+- Responsive transformations available
+```typescript
+await uploadToCloudinary(filePath, 'overlay-backgrounds');
+// Returns: { url, public_id, width, height, format }
+```
+
+**Color Extraction** (`lib/colorExtraction.ts`):
+
+Uses k-means clustering algorithm to find the 8 most dominant colors in an image, then intelligently selects:
+- **Primary**: Most dominant color (largest cluster)
+- **Secondary**: Contrasting color with sufficient color distance (>100 RGB units)
+- **Accent**: Highest luminance contrast to primary
+
+```typescript
+const colors = await extractColorsFromImage(imageUrl);
+// Returns:
+{
+  palette: ['#1a2b3c', '#4d5e6f', ...],  // 8 dominant colors
+  primary: '#1a2b3c',                     // Most dominant
+  secondary: '#4d5e6f',                   // Contrasting
+  accent: '#e8f4f8'                       // High luminance contrast
+}
+```
+
+**Upload Flow**:
+1. User drags/selects image in `BackgroundExpanded` component
+2. File validated (type, size) and uploaded via multipart form
+3. `upload.ts` API route:
+   - Saves temporary file with formidable
+   - Uploads to Cloudinary with optimization
+   - Extracts color palette using Canvas API
+   - Saves background data to database
+   - Broadcasts `background-change` socket event
+4. Overlay pages receive event and update background display
+5. Temporary file cleaned up
+
+**Background Display**:
+
+Two rendering modes:
+- **Main overlay** (`/overlay/[sessionId].tsx`): Background layer at z-index -10, gradient fallback at z-index -20
+- **Background-only** (`/overlay/[sessionId]/background.tsx`): Dedicated page showing only the background
+
+Both support:
+- Opacity control (0-100%)
+- Blur effect (0-20px)
+- Real-time updates via Socket.io
+
+**Layer Stacking** (z-index hierarchy):
+```
+-20: Gradient fallback (always present, hidden when custom background active)
+-10: Custom background (when uploaded)
+  0+: Overlay components (chat, timers, etc.)
+```
+
+**State Management** (`hooks/useOverlaySocket.ts`):
+```typescript
+const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
+const [backgroundBlur, setBackgroundBlur] = useState(0);
+
+// Load from database on mount
+useEffect(() => {
+  fetch(`/api/layouts/load?sessionId=${sessionId}`)
+    .then(res => res.json())
+    .then(({ layout }) => {
+      setBackgroundImageUrl(layout.backgroundImageUrl);
+      setBackgroundOpacity(layout.backgroundOpacity);
+      setBackgroundBlur(layout.backgroundBlur);
+    });
+}, [sessionId]);
+
+// Listen for real-time updates
+socket.on('background-change', (data) => {
+  setBackgroundImageUrl(data.backgroundImageUrl);
+  setBackgroundOpacity(data.backgroundOpacity);
+  setBackgroundBlur(data.backgroundBlur);
+});
+```
+
+**Features**:
+- Drag & drop or click-to-browse upload UI
+- Upload progress indicator
+- Image preview with thumbnail
+- Opacity slider (0-100%)
+- Blur slider (0-20px)
+- Visual color palette display with hex codes
+- One-click "Apply Colors to Theme" button
+- Delete background with confirmation
+- Real-time sync across all overlay pages
+- Automatic image optimization for streaming
+- 10MB file size limit
+- Cloudinary free tier: 25GB storage, 25GB bandwidth/month
+
+**Socket Events**:
+- `background-change` - Emitted when background uploaded, updated, or deleted
+  - Payload: `{ backgroundImageUrl: string | null, backgroundOpacity: number, backgroundBlur: number }`
+
 ## API Routes Reference
 
 ### Authentication
@@ -378,12 +518,26 @@ When a user changes the color scheme in the dashboard:
 - `POST /api/auth/signout` - Sign out
 - `GET/POST /api/auth/[...nextauth]` - NextAuth handler
 
+### Backgrounds
+
+- `POST /api/backgrounds/upload` - Upload custom background image
+  - Content-Type: `multipart/form-data`
+  - Fields: `file` (image file), `sessionId` (string)
+  - Validation: JPG/PNG/WebP, max 10MB
+  - Returns: `{ success: boolean, imageUrl: string, colors: ExtractedColors, width: number, height: number }`
+- `POST /api/backgrounds/delete` - Delete background image
+  - Body: `{ sessionId }`
+  - Deletes from Cloudinary and database
+- `POST /api/backgrounds/apply-colors` - Apply extracted colors to custom theme
+  - Body: `{ sessionId, primary: string, secondary: string, accent: string }`
+  - Sets colorScheme to 'custom' and updates customColors
+
 ### Layouts
 
 - `GET /api/layouts/list?userId={userId}` - Get all user layouts
 - `GET /api/layouts/load?sessionId={sessionId}` - Load specific layout
 - `POST /api/layouts/save` - Save layout (creates if doesn't exist)
-  - Body: `{ userId, sessionId, name?, colorScheme?, weatherEffect?, *Visible, componentLayouts }`
+  - Body: `{ userId, sessionId, name?, colorScheme?, customColors?, weatherEffect?, *Visible, componentLayouts, background* }`
 
 ### Timers
 
@@ -429,6 +583,7 @@ When a user changes the color scheme in the dashboard:
 - `component-layouts` - Update component positions (payload: `ComponentLayouts`)
 - `countdown-timers` - Update timers (payload: `CountdownTimer[]`)
 - `emote-wall` - Configure emote wall (payload: `EmoteWallConfig`)
+- `background-change` - Update background (payload: `{ backgroundImageUrl, backgroundOpacity, backgroundBlur }`)
 - `visualizer-config` - Audio visualizer config
 - `audio-data` - Audio visualization data
 
@@ -447,9 +602,13 @@ See `.env.example` for full reference.
 - `NEXTAUTH_URL` - Application URL (http://localhost:3000 or production URL)
 - `TWITCH_CLIENT_ID` - Twitch OAuth app ID
 - `TWITCH_CLIENT_SECRET` - Twitch OAuth app secret
+- `CLOUDINARY_CLOUD_NAME` - Cloudinary cloud name (required for custom backgrounds)
+- `CLOUDINARY_API_KEY` - Cloudinary API key
+- `CLOUDINARY_API_SECRET` - Cloudinary API secret
 
-### Optional (Spotify features)
+### Optional
 
+**Spotify features**:
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REDIRECT_URI`
@@ -690,8 +849,8 @@ useEffect(() => {
 
 ---
 
-**Last Updated**: 2025-10-31
-**Version**: 0.1.0
+**Last Updated**: 2025-11-02
+**Version**: 0.2.0
 **Maintainer**: Joe
 
 For questions or contributions, refer to this document as the source of truth for architectural decisions and patterns.

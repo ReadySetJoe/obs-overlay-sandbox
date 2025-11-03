@@ -65,6 +65,9 @@ export function useOverlaySocket(sessionId: string) {
   );
   const [paintByNumbersState, setPaintByNumbersState] =
     useState<PaintByNumbersState | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+  const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
+  const [backgroundBlur, setBackgroundBlur] = useState(0);
 
   // Load initial layout state from database
   useEffect(() => {
@@ -136,6 +139,17 @@ export function useOverlaySocket(sessionId: string) {
             console.error('Error loading countdown timers:', error);
           }
 
+          // Load background settings
+          if (layout.backgroundImageUrl) {
+            setBackgroundImageUrl(layout.backgroundImageUrl);
+          }
+          if (layout.backgroundOpacity !== null && layout.backgroundOpacity !== undefined) {
+            setBackgroundOpacity(layout.backgroundOpacity);
+          }
+          if (layout.backgroundBlur !== null && layout.backgroundBlur !== undefined) {
+            setBackgroundBlur(layout.backgroundBlur);
+          }
+
           // Note: Paint by numbers state is handled by the dashboard and sent via socket
           // We don't load it here because we need template data to reconstruct the full state
         }
@@ -203,6 +217,12 @@ export function useOverlaySocket(sessionId: string) {
       setPaintByNumbersState(state);
     });
 
+    socket.on('background-change', (data: { backgroundImageUrl: string | null; backgroundOpacity: number; backgroundBlur: number }) => {
+      setBackgroundImageUrl(data.backgroundImageUrl);
+      setBackgroundOpacity(data.backgroundOpacity);
+      setBackgroundBlur(data.backgroundBlur);
+    });
+
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
@@ -215,6 +235,7 @@ export function useOverlaySocket(sessionId: string) {
       socket.off('component-layouts');
       socket.off('chat-highlight');
       socket.off('paint-state');
+      socket.off('background-change');
     };
   }, [socket]);
 
@@ -294,6 +315,9 @@ export function useOverlaySocket(sessionId: string) {
     sceneLayers,
     chatHighlight,
     paintByNumbersState,
+    backgroundImageUrl,
+    backgroundOpacity,
+    backgroundBlur,
     removeMessage,
     getLayerVisible,
     colorSchemeStyles,

@@ -77,6 +77,17 @@ Visit `http://localhost:3000`, sign in with Twitch, and start customizing your o
   - **Themed Components**: Countdown timers, chat highlights, and paint by numbers adapt to your chosen theme
   - Real-time theme switching across all overlays
 
+- **Custom Background Uploads** - Use your own background images
+  - Upload PNG, JPG, or WebP images (up to 10MB)
+  - Automatic image optimization (resize to 1920x1080, WebP conversion)
+  - Cloud storage via Cloudinary (free tier: 25GB storage, 25GB bandwidth/month)
+  - **Smart Color Extraction**: K-means clustering algorithm extracts dominant colors from your image
+  - **One-Click Theme Matching**: Apply extracted colors to your custom theme
+  - Opacity control (0-100%) for layering with other overlays
+  - Blur effect (0-20px) for depth and focus control
+  - Dedicated background-only page for OBS layering
+  - Real-time updates across all overlays
+
 ### 🎛️ Dashboard Features
 
 - **Twitch Authentication** - Sign in to save and manage your overlays
@@ -120,6 +131,11 @@ NEXTAUTH_SECRET="your-secret-here"  # Generate with: openssl rand -base64 32
 TWITCH_CLIENT_ID="your-twitch-client-id"
 TWITCH_CLIENT_SECRET="your-twitch-client-secret"
 
+# Cloudinary (Required - for custom background uploads)
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+
 # Spotify OAuth (Optional - for Now Playing feature)
 SPOTIFY_CLIENT_ID="your-spotify-client-id"
 SPOTIFY_CLIENT_SECRET="your-spotify-client-secret"
@@ -140,6 +156,13 @@ Copy the output and use it as your `NEXTAUTH_SECRET`.
 2. Click "Register Your Application"
 3. Set OAuth Redirect URL to: `http://localhost:3000/api/auth/callback/twitch`
 4. Copy your Client ID and generate a Client Secret
+
+**☁️ Getting Cloudinary Credentials (Required):**
+
+1. Go to [Cloudinary](https://cloudinary.com/) and create a free account
+2. After signing in, you'll see your dashboard with credentials
+3. Copy your **Cloud Name**, **API Key**, and **API Secret**
+4. Free tier includes: 25GB storage, 25GB bandwidth/month (more than enough for most streamers)
 
 **🎵 Getting Spotify Credentials (Optional):**
 
@@ -179,6 +202,7 @@ obs-overlay-sandbox/
 │   ├── api/
 │   │   ├── socket.ts                # WebSocket server initialization
 │   │   ├── auth/[...nextauth].ts    # NextAuth configuration
+│   │   ├── backgrounds/             # Background upload/delete/apply-colors
 │   │   ├── layouts/                 # Layout CRUD endpoints
 │   │   ├── spotify/                 # Spotify OAuth and Now Playing API
 │   │   ├── timers/                  # Countdown timer CRUD
@@ -187,6 +211,7 @@ obs-overlay-sandbox/
 │   ├── overlay/
 │   │   ├── [sessionId].tsx          # Combined overlay (all components)
 │   │   └── [sessionId]/             # Individual overlay pages
+│   │       ├── background.tsx
 │   │       ├── chat-highlight.tsx
 │   │       ├── countdown.tsx
 │   │       ├── emote-wall.tsx
@@ -208,8 +233,12 @@ obs-overlay-sandbox/
 │       └── WeatherEffect.tsx
 ├── hooks/
 │   ├── useSocket.ts                 # Dashboard WebSocket hook
-│   └── useOverlaySocket.ts          # Overlay WebSocket hook
+│   ├── useOverlaySocket.ts          # Overlay WebSocket hook
+│   └── useThemeColors.ts            # Theme color generation with contrast detection
 ├── lib/
+│   ├── cloudinary.ts                # Cloudinary SDK configuration
+│   ├── colorExtraction.ts           # K-means color extraction from images
+│   ├── colorSchemes.ts              # 18 preset color scheme definitions
 │   ├── env.ts                       # Environment variable validation
 │   ├── prisma.ts                    # Prisma client singleton
 │   ├── spotify.ts                   # Spotify API configuration
@@ -273,6 +302,15 @@ Your dashboard at `/dashboard/[sessionId]` is the control center for all overlay
   - **Smart Theming**: Overlay components (countdown timers, chat highlights, paint by numbers) automatically adapt their colors to match your selected theme
   - **Contrast Detection**: Text colors intelligently adjust based on theme luminance to ensure readability
   - Example themes: Cyberpunk (neon pink/cyan), Ocean (deep blues), Synthwave (80s retro), Noir (film noir black/white)
+- **Custom Backgrounds**: Upload your own background images
+  1. Navigate to the **Custom Background** panel in your dashboard
+  2. Drag & drop or click to upload an image (PNG, JPG, WebP up to 10MB)
+  3. Watch as the system extracts dominant colors from your image
+  4. Adjust **Opacity** (0-100%) to layer with other overlays
+  5. Apply **Blur** (0-20px) for depth effects
+  6. Click **"Apply Colors to Theme"** to match your overlay colors to the background
+  7. Your background is automatically optimized and uploaded to Cloudinary
+  8. Use the dedicated background URL for OBS layering
 - **Weather Effects**: Add rain, snow, or fog with adjustable density
 - **Emote Wall**: Configure floating emotes with custom count, speed, and scale
 - **Component Positioning**: Drag and adjust x/y coordinates, width, and scale for each component
@@ -293,13 +331,14 @@ Shows all active components on a single page. Toggle visibility per component fr
 
 Add each component as a separate browser source for better control:
 
-| Component       | URL                                                        | Purpose                    |
-| --------------- | ---------------------------------------------------------- | -------------------------- |
-| Chat Highlight  | `http://localhost:3000/overlay/[sessionId]/chat-highlight` | Highlighted chat messages  |
-| Now Playing     | `http://localhost:3000/overlay/[sessionId]/now-playing`    | Spotify current track      |
-| Countdown Timer | `http://localhost:3000/overlay/[sessionId]/countdown`      | Active countdown timers    |
-| Emote Wall      | `http://localhost:3000/overlay/[sessionId]/emote-wall`     | Floating emote particles   |
-| Weather         | `http://localhost:3000/overlay/[sessionId]/weather`        | Rain, snow, or fog effects |
+| Component       | URL                                                        | Purpose                             |
+| --------------- | ---------------------------------------------------------- | ----------------------------------- |
+| Background      | `http://localhost:3000/overlay/[sessionId]/background`     | Custom background image layer       |
+| Chat Highlight  | `http://localhost:3000/overlay/[sessionId]/chat-highlight` | Highlighted chat messages           |
+| Now Playing     | `http://localhost:3000/overlay/[sessionId]/now-playing`    | Spotify current track               |
+| Countdown Timer | `http://localhost:3000/overlay/[sessionId]/countdown`      | Active countdown timers             |
+| Emote Wall      | `http://localhost:3000/overlay/[sessionId]/emote-wall`     | Floating emote particles            |
+| Weather         | `http://localhost:3000/overlay/[sessionId]/weather`        | Rain, snow, or fog effects          |
 
 **Benefits of individual pages:**
 
@@ -333,13 +372,16 @@ FPS: 60
 
 ### Recommended Settings Per Component
 
-| Component      | Width | Height | Notes                               |
-| -------------- | ----- | ------ | ----------------------------------- |
-| Chat Highlight | 1920  | 1080   | Position controlled from dashboard  |
-| Now Playing    | 1920  | 1080   | Usually bottom-left or bottom-right |
-| Countdown      | 1920  | 1080   | Center or top-center                |
-| Emote Wall     | 1920  | 1080   | Fullscreen overlay                  |
-| Weather        | 1920  | 1080   | Fullscreen overlay, use low density |
+| Component      | Width | Height | Notes                                |
+| -------------- | ----- | ------ | ------------------------------------ |
+| Background     | 1920  | 1080   | Bottom layer, add first in OBS       |
+| Chat Highlight | 1920  | 1080   | Position controlled from dashboard   |
+| Now Playing    | 1920  | 1080   | Usually bottom-left or bottom-right  |
+| Countdown      | 1920  | 1080   | Center or top-center                 |
+| Emote Wall     | 1920  | 1080   | Fullscreen overlay                   |
+| Weather        | 1920  | 1080   | Fullscreen overlay, use low density  |
+
+**Layering Tip**: If using a custom background, add it as the first (bottom) layer in OBS, then add other overlays on top. Adjust background opacity from the dashboard for perfect blending.
 
 ### Performance Tips
 
@@ -634,6 +676,8 @@ netstat -ano | findstr :3000  # Windows
 - **tmi.js** - Twitch chat monitoring
 - **spotify-web-api-node** - Spotify API integration
 - **ColorThief** - Album art color extraction
+- **Cloudinary** - Cloud storage for custom background images
+- **Canvas API** (server-side) - Image processing and color extraction
 
 ### Deployment-Ready
 
@@ -654,6 +698,10 @@ netstat -ano | findstr :3000  # Windows
 - ✅ Weather effects (rain, snow, fog)
 - ✅ 18 color schemes with custom color builder and intelligent contrast detection
 - ✅ Theme system with automatic color adaptation for all overlay components
+- ✅ Custom background uploads with Cloudinary cloud storage
+- ✅ Smart color extraction from images using k-means clustering
+- ✅ Background opacity and blur controls
+- ✅ One-click theme matching from extracted colors
 - ✅ Component positioning system (x/y, width, scale)
 - ✅ Individual overlay pages for granular OBS control
 - ✅ Auto-save functionality

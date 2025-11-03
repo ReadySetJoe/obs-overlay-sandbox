@@ -74,6 +74,7 @@ model Layout {
   chatVisible           Boolean @default(true)
   nowPlayingVisible     Boolean @default(true)
   countdownVisible      Boolean @default(true)
+  chatHighlightVisible  Boolean @default(true)
   paintByNumbersVisible Boolean @default(true)
 
   // Component layouts (JSON) - stores position, size, styling for each component
@@ -81,6 +82,15 @@ model Layout {
 
   // Paint by numbers state (JSON) - stores current painting progress
   paintByNumbersState String? // JSON string of PaintByNumbersState
+
+  // Custom background
+  backgroundImageUrl      String?   // Cloudinary URL
+  backgroundImagePublicId String?   // Cloudinary public_id for deletion
+  backgroundImageName     String?   // Original filename for display
+  backgroundColors        String?   // JSON: { palette: string[], primary: string, secondary: string, accent: string }
+  backgroundOpacity       Float?    @default(1.0) // 0.0 to 1.0
+  backgroundBlur          Int?      @default(0)   // 0 to 20px
+  backgroundUploadedAt    DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
