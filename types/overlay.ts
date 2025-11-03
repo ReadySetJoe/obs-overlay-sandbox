@@ -48,10 +48,24 @@ export interface CustomColors {
   secondary: string;
   accent: string;
   gradientType: 'linear' | 'radial';
-  gradientDirection: 'to-r' | 'to-l' | 'to-t' | 'to-b' | 'to-tr' | 'to-tl' | 'to-br' | 'to-bl';
+  gradientDirection:
+    | 'to-r'
+    | 'to-l'
+    | 'to-t'
+    | 'to-b'
+    | 'to-tr'
+    | 'to-tl'
+    | 'to-br'
+    | 'to-bl';
 }
 
-export type ColorSchemeCategory = 'all' | 'gaming' | 'chill' | 'vibrant' | 'minimal' | 'custom';
+export type ColorSchemeCategory =
+  | 'all'
+  | 'gaming'
+  | 'chill'
+  | 'vibrant'
+  | 'minimal'
+  | 'custom';
 
 export type WeatherEffect =
   | 'none'
@@ -193,7 +207,12 @@ export interface ComponentLayouts {
 // Alert types
 export type AlertEventType = 'follow' | 'sub' | 'bits' | 'raid' | 'giftsub';
 
-export type AlertAnimationType = 'slide-down' | 'slide-up' | 'bounce' | 'fade' | 'zoom';
+export type AlertAnimationType =
+  | 'slide-down'
+  | 'slide-up'
+  | 'bounce'
+  | 'fade'
+  | 'zoom';
 
 export type AlertPosition =
   | 'top-left'

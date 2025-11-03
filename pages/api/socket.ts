@@ -63,7 +63,11 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       socket.on('custom-colors-change', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {
-          console.log('[Socket Server] Relaying custom-colors-change to session:', sessionId, data);
+          console.log(
+            '[Socket Server] Relaying custom-colors-change to session:',
+            sessionId,
+            data
+          );
           io.to(sessionId).emit('custom-colors-change', data);
         }
       });

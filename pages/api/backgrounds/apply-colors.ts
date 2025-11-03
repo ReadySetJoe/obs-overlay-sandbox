@@ -24,7 +24,8 @@ export default async function handler(
 
     if (!sessionId || !primary || !secondary || !accent) {
       return res.status(400).json({
-        error: 'Session ID and color values (primary, secondary, accent) are required',
+        error:
+          'Session ID and color values (primary, secondary, accent) are required',
       });
     }
 

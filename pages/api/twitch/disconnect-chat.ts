@@ -38,8 +38,6 @@ export default async function handler(
     });
   } catch (error) {
     console.error('Error stopping Twitch monitoring:', error);
-    return res
-      .status(500)
-      .json({ error: 'Failed to disconnect from Twitch' });
+    return res.status(500).json({ error: 'Failed to disconnect from Twitch' });
   }
 }

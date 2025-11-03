@@ -10,7 +10,9 @@ interface UseSpotifyProps {
 
 export function useSpotify({ socket, isConnected }: UseSpotifyProps) {
   const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
-  const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(null);
+  const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(
+    null
+  );
   const [trackTitle, setTrackTitle] = useState('');
   const [trackArtist, setTrackArtist] = useState('');
   const [trackAlbumArt, setTrackAlbumArt] = useState('');
@@ -47,15 +49,22 @@ export function useSpotify({ socket, isConnected }: UseSpotifyProps) {
 
     const pollSpotify = async () => {
       try {
-        const response = await fetch(`/api/spotify/now-playing?access_token=${spotifyToken}`);
+        const response = await fetch(
+          `/api/spotify/now-playing?access_token=${spotifyToken}`
+        );
 
         if (response.status === 401 && spotifyRefreshToken) {
-          const refreshResponse = await fetch(`/api/spotify/refresh?refresh_token=${spotifyRefreshToken}`);
+          const refreshResponse = await fetch(
+            `/api/spotify/refresh?refresh_token=${spotifyRefreshToken}`
+          );
           const refreshData = await refreshResponse.json();
 
           if (refreshResponse.ok) {
             setSpotifyToken(refreshData.access_token);
-            localStorage.setItem('spotify_access_token', refreshData.access_token);
+            localStorage.setItem(
+              'spotify_access_token',
+              refreshData.access_token
+            );
             return;
           }
         }
@@ -94,7 +103,15 @@ export function useSpotify({ socket, isConnected }: UseSpotifyProps) {
     pollSpotify();
     const interval = setInterval(pollSpotify, 5000);
     return () => clearInterval(interval);
-  }, [spotifyToken, socket, isConnected, spotifyRefreshToken, trackTitle, trackArtist, trackAlbumArt]);
+  }, [
+    spotifyToken,
+    socket,
+    isConnected,
+    spotifyRefreshToken,
+    trackTitle,
+    trackArtist,
+    trackAlbumArt,
+  ]);
 
   const updateNowPlaying = () => {
     if (!socket) return;

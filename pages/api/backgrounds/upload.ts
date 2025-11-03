@@ -36,7 +36,7 @@ export default async function handler(
     // Parse form data
     const form = formidable({
       maxFileSize: MAX_FILE_SIZE,
-      filter: (part) => {
+      filter: part => {
         return part.mimetype?.startsWith('image/') || false;
       },
     });

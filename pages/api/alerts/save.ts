@@ -29,7 +29,9 @@ export default async function handler(
   } = req.body;
 
   if (!sessionId || !eventType) {
-    return res.status(400).json({ error: 'Session ID and event type are required' });
+    return res
+      .status(400)
+      .json({ error: 'Session ID and event type are required' });
   }
 
   try {

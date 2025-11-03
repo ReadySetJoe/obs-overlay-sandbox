@@ -122,7 +122,7 @@ export default function PaintByNumbersExpanded({
                             ? '🦅'
                             : template.id === 'mona-lisa'
                               ? '🖼️'
-                          : '🎨'}
+                              : '🎨'}
                 </span>
                 <span className='text-md'>{template.name}</span>
                 <span className='text-sm text-gray-300'>

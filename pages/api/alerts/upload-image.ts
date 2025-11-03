@@ -30,9 +30,19 @@ export default async function handler(
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
     if (!allowedTypes.includes(file.mimetype || '')) {
-      return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.' });
+      return res
+        .status(400)
+        .json({
+          error: 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.',
+        });
     }
 
     // Upload to Cloudinary
@@ -47,6 +57,8 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error('Error uploading alert image:', error);
-    return res.status(500).json({ error: error.message || 'Failed to upload image' });
+    return res
+      .status(500)
+      .json({ error: error.message || 'Failed to upload image' });
   }
 }

@@ -9,9 +9,15 @@ interface UseTwitchChatProps {
   socket: Socket | null;
 }
 
-export function useTwitchChat({ sessionId, session, socket }: UseTwitchChatProps) {
+export function useTwitchChat({
+  sessionId,
+  session,
+  socket,
+}: UseTwitchChatProps) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatHighlight, setChatHighlight] = useState<ChatHighlight | null>(null);
+  const [chatHighlight, setChatHighlight] = useState<ChatHighlight | null>(
+    null
+  );
 
   // Auto-connect to Twitch chat when authenticated
   useEffect(() => {

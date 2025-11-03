@@ -146,7 +146,8 @@ export const colorSchemePresets: ColorSchemePreset[] = [
     name: 'Rainbow',
     category: 'vibrant',
     description: 'Full spectrum rainbow',
-    gradient: 'from-red-500/20 via-yellow-500/20 via-green-500/20 via-blue-500/20 to-purple-500/20',
+    gradient:
+      'from-red-500/20 via-yellow-500/20 via-green-500/20 via-blue-500/20 to-purple-500/20',
     preview: { primary: '#ef4444', secondary: '#3b82f6', accent: '#a855f7' },
   },
   {
@@ -185,18 +186,25 @@ export const colorSchemePresets: ColorSchemePreset[] = [
   },
 ];
 
-export function getColorSchemesByCategory(category: ColorSchemeCategory): ColorSchemePreset[] {
+export function getColorSchemesByCategory(
+  category: ColorSchemeCategory
+): ColorSchemePreset[] {
   if (category === 'all') {
     return colorSchemePresets;
   }
   return colorSchemePresets.filter(preset => preset.category === category);
 }
 
-export function getColorSchemePreset(id: ColorScheme): ColorSchemePreset | undefined {
+export function getColorSchemePreset(
+  id: ColorScheme
+): ColorSchemePreset | undefined {
   return colorSchemePresets.find(preset => preset.id === id);
 }
 
-export const categoryInfo: Record<ColorSchemeCategory, { name: string; icon: string; description: string }> = {
+export const categoryInfo: Record<
+  ColorSchemeCategory,
+  { name: string; icon: string; description: string }
+> = {
   all: {
     name: 'All Themes',
     icon: '🎨',

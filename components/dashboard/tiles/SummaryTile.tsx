@@ -46,13 +46,14 @@ export default function SummaryTile({
 
   return (
     <div
+      onClick={disabled ? undefined : onClick}
       className={`relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl ${
         disabled
           ? 'opacity-50 cursor-not-allowed'
           : `${colorMap[color]} cursor-pointer`
       } transition-all group`}
     >
-      <div onClick={disabled ? undefined : onClick} className='mb-4'>
+      <div className='mb-4'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-3'>
             <div

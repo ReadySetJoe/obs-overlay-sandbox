@@ -8,8 +8,15 @@ interface GradientSelectorProps {
   onChange: (customColors: CustomColors) => void;
 }
 
-export default function GradientSelector({ customColors, onChange }: GradientSelectorProps) {
-  const gradientTypes: Array<{ value: CustomColors['gradientType']; label: string; icon: string }> = [
+export default function GradientSelector({
+  customColors,
+  onChange,
+}: GradientSelectorProps) {
+  const gradientTypes: Array<{
+    value: CustomColors['gradientType'];
+    label: string;
+    icon: string;
+  }> = [
     { value: 'linear', label: 'Linear', icon: '→' },
     { value: 'radial', label: 'Radial', icon: '◉' },
   ];
@@ -33,12 +40,16 @@ export default function GradientSelector({ customColors, onChange }: GradientSel
     <div className='space-y-4'>
       {/* Gradient Type */}
       <div>
-        <label className='block text-sm font-semibold text-gray-300 mb-2'>Gradient Type</label>
+        <label className='block text-sm font-semibold text-gray-300 mb-2'>
+          Gradient Type
+        </label>
         <div className='grid grid-cols-2 gap-2'>
-          {gradientTypes.map((type) => (
+          {gradientTypes.map(type => (
             <button
               key={type.value}
-              onClick={() => onChange({ ...customColors, gradientType: type.value })}
+              onClick={() =>
+                onChange({ ...customColors, gradientType: type.value })
+              }
               className={`px-4 py-3 rounded-lg font-medium transition-all ${
                 customColors.gradientType === type.value
                   ? 'bg-purple-600 text-white shadow-lg'
@@ -61,10 +72,15 @@ export default function GradientSelector({ customColors, onChange }: GradientSel
             Gradient Direction
           </label>
           <div className='grid grid-cols-4 gap-2'>
-            {gradientDirections.map((direction) => (
+            {gradientDirections.map(direction => (
               <button
                 key={direction.value}
-                onClick={() => onChange({ ...customColors, gradientDirection: direction.value })}
+                onClick={() =>
+                  onChange({
+                    ...customColors,
+                    gradientDirection: direction.value,
+                  })
+                }
                 className={`px-3 py-3 rounded-lg font-medium transition-all ${
                   customColors.gradientDirection === direction.value
                     ? 'bg-purple-600 text-white shadow-lg'
@@ -74,7 +90,9 @@ export default function GradientSelector({ customColors, onChange }: GradientSel
               >
                 <div className='flex flex-col items-center gap-1'>
                   <span className='text-2xl'>{direction.icon}</span>
-                  <span className='text-xs'>{direction.label.split(' ')[0]}</span>
+                  <span className='text-xs'>
+                    {direction.label.split(' ')[0]}
+                  </span>
                 </div>
               </button>
             ))}

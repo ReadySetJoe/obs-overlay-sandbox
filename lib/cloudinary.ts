@@ -84,9 +84,14 @@ export async function uploadAudioToCloudinary(
 /**
  * Delete image from Cloudinary
  */
-export async function deleteFromCloudinary(publicId: string, resourceType: 'image' | 'video' = 'image'): Promise<void> {
+export async function deleteFromCloudinary(
+  publicId: string,
+  resourceType: 'image' | 'video' = 'image'
+): Promise<void> {
   try {
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
   } catch (error) {
     console.error('Cloudinary delete error:', error);
     throw new Error(`Failed to delete ${resourceType} from Cloudinary`);

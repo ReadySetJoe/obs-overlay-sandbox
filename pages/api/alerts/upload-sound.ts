@@ -32,7 +32,11 @@ export default async function handler(
     // Validate file type
     const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
     if (!allowedTypes.includes(file.mimetype || '')) {
-      return res.status(400).json({ error: 'Invalid file type. Only MP3, WAV, and OGG are allowed.' });
+      return res
+        .status(400)
+        .json({
+          error: 'Invalid file type. Only MP3, WAV, and OGG are allowed.',
+        });
     }
 
     // Upload to Cloudinary as audio
@@ -45,6 +49,8 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error('Error uploading alert sound:', error);
-    return res.status(500).json({ error: error.message || 'Failed to upload sound' });
+    return res
+      .status(500)
+      .json({ error: error.message || 'Failed to upload sound' });
   }
 }

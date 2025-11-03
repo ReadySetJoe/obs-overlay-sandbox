@@ -67,7 +67,9 @@ export function useTimers({ sessionId, session }: UseTimersProps) {
 
         if (response.ok) {
           const { timer } = await response.json();
-          setTimers(prev => prev.map(t => (t.id === editingTimerId ? timer : t)));
+          setTimers(prev =>
+            prev.map(t => (t.id === editingTimerId ? timer : t))
+          );
           cancelTimerForm();
         }
       } else {
@@ -91,42 +93,56 @@ export function useTimers({ sessionId, session }: UseTimersProps) {
     } catch (error) {
       console.error('Error saving timer:', error);
     }
-  }, [session, sessionId, newTimerTitle, newTimerDescription, newTimerDate, editingTimerId, cancelTimerForm]);
+  }, [
+    session,
+    sessionId,
+    newTimerTitle,
+    newTimerDescription,
+    newTimerDate,
+    editingTimerId,
+    cancelTimerForm,
+  ]);
 
-  const deleteTimer = useCallback(async (timerId: string) => {
-    if (!session) return;
+  const deleteTimer = useCallback(
+    async (timerId: string) => {
+      if (!session) return;
 
-    try {
-      const response = await fetch(`/api/timers/${timerId}`, {
-        method: 'DELETE',
-      });
+      try {
+        const response = await fetch(`/api/timers/${timerId}`, {
+          method: 'DELETE',
+        });
 
-      if (response.ok) {
-        setTimers(prev => prev.filter(t => t.id !== timerId));
+        if (response.ok) {
+          setTimers(prev => prev.filter(t => t.id !== timerId));
+        }
+      } catch (error) {
+        console.error('Error deleting timer:', error);
       }
-    } catch (error) {
-      console.error('Error deleting timer:', error);
-    }
-  }, [session]);
+    },
+    [session]
+  );
 
-  const toggleTimer = useCallback(async (timerId: string, isActive: boolean) => {
-    if (!session) return;
+  const toggleTimer = useCallback(
+    async (timerId: string, isActive: boolean) => {
+      if (!session) return;
 
-    try {
-      const response = await fetch(`/api/timers/${timerId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive }),
-      });
+      try {
+        const response = await fetch(`/api/timers/${timerId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive }),
+        });
 
-      if (response.ok) {
-        const { timer } = await response.json();
-        setTimers(prev => prev.map(t => (t.id === timerId ? timer : t)));
+        if (response.ok) {
+          const { timer } = await response.json();
+          setTimers(prev => prev.map(t => (t.id === timerId ? timer : t)));
+        }
+      } catch (error) {
+        console.error('Error toggling timer:', error);
       }
-    } catch (error) {
-      console.error('Error toggling timer:', error);
-    }
-  }, [session]);
+    },
+    [session]
+  );
 
   return {
     timers,

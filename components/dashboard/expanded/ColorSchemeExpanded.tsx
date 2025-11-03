@@ -2,8 +2,16 @@
 'use client';
 
 import { useState } from 'react';
-import { ColorScheme, ColorSchemeCategory, CustomColors } from '@/types/overlay';
-import { colorSchemePresets, getColorSchemesByCategory, categoryInfo } from '@/lib/colorSchemes';
+import {
+  ColorScheme,
+  ColorSchemeCategory,
+  CustomColors,
+} from '@/types/overlay';
+import {
+  colorSchemePresets,
+  getColorSchemesByCategory,
+  categoryInfo,
+} from '@/lib/colorSchemes';
 import ColorPicker from '../ColorPicker';
 import GradientSelector from '../GradientSelector';
 
@@ -22,8 +30,11 @@ export default function ColorSchemeExpanded({
   onCustomColorsChange,
   onClose,
 }: ColorSchemeExpandedProps) {
-  const [selectedCategory, setSelectedCategory] = useState<ColorSchemeCategory>('all');
-  const [showCustomBuilder, setShowCustomBuilder] = useState(colorScheme === 'custom');
+  const [selectedCategory, setSelectedCategory] =
+    useState<ColorSchemeCategory>('all');
+  const [showCustomBuilder, setShowCustomBuilder] = useState(
+    colorScheme === 'custom'
+  );
 
   const filteredPresets = getColorSchemesByCategory(selectedCategory);
 
@@ -56,7 +67,8 @@ export default function ColorSchemeExpanded({
         'to-br': '135deg',
         'to-bl': '225deg',
       };
-      const direction = directionMap[currentCustomColors.gradientDirection] || '135deg';
+      const direction =
+        directionMap[currentCustomColors.gradientDirection] || '135deg';
       return `linear-gradient(${direction}, ${currentCustomColors.primary}, ${currentCustomColors.secondary})`;
     } else {
       return `radial-gradient(circle, ${currentCustomColors.primary}, ${currentCustomColors.secondary})`;
@@ -96,27 +108,29 @@ export default function ColorSchemeExpanded({
       <div className='mb-6'>
         <h3 className='text-sm font-semibold text-gray-400 mb-3'>CATEGORIES</h3>
         <div className='flex flex-wrap gap-2'>
-          {(Object.keys(categoryInfo) as ColorSchemeCategory[]).map((category) => (
-            <button
-              key={category}
-              onClick={() => {
-                setSelectedCategory(category);
-                if (category === 'custom') {
-                  setShowCustomBuilder(true);
-                } else {
-                  setShowCustomBuilder(false);
-                }
-              }}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                selectedCategory === category
-                  ? 'bg-purple-600 text-white shadow-lg'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              <span>{categoryInfo[category].icon}</span>
-              <span>{categoryInfo[category].name}</span>
-            </button>
-          ))}
+          {(Object.keys(categoryInfo) as ColorSchemeCategory[]).map(
+            category => (
+              <button
+                key={category}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  if (category === 'custom') {
+                    setShowCustomBuilder(true);
+                  } else {
+                    setShowCustomBuilder(false);
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                  selectedCategory === category
+                    ? 'bg-purple-600 text-white shadow-lg'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <span>{categoryInfo[category].icon}</span>
+                <span>{categoryInfo[category].name}</span>
+              </button>
+            )
+          )}
         </div>
         <p className='text-xs text-gray-500 mt-2'>
           {categoryInfo[selectedCategory].description}
@@ -127,15 +141,20 @@ export default function ColorSchemeExpanded({
       {showCustomBuilder ? (
         <div className='space-y-6'>
           <div className='bg-purple-900/20 border border-purple-500/30 rounded-xl p-4'>
-            <h3 className='text-lg font-bold text-purple-400 mb-2'>Custom Color Builder</h3>
+            <h3 className='text-lg font-bold text-purple-400 mb-2'>
+              Custom Color Builder
+            </h3>
             <p className='text-sm text-gray-400'>
-              Create your own color scheme by selecting colors and gradient settings
+              Create your own color scheme by selecting colors and gradient
+              settings
             </p>
           </div>
 
           {/* Live Preview */}
           <div>
-            <h4 className='text-sm font-semibold text-gray-300 mb-2'>Live Preview</h4>
+            <h4 className='text-sm font-semibold text-gray-300 mb-2'>
+              Live Preview
+            </h4>
             <div
               className='w-full h-32 rounded-xl border-2 border-gray-600 shadow-lg'
               style={{ background: customGradientPreview }}
@@ -147,8 +166,11 @@ export default function ColorSchemeExpanded({
             label='Primary Color'
             description='Main background color'
             color={currentCustomColors.primary}
-            onChange={(color) =>
-              handleCustomColorChange({ ...currentCustomColors, primary: color })
+            onChange={color =>
+              handleCustomColorChange({
+                ...currentCustomColors,
+                primary: color,
+              })
             }
           />
 
@@ -156,8 +178,11 @@ export default function ColorSchemeExpanded({
             label='Secondary Color'
             description='Gradient end color'
             color={currentCustomColors.secondary}
-            onChange={(color) =>
-              handleCustomColorChange({ ...currentCustomColors, secondary: color })
+            onChange={color =>
+              handleCustomColorChange({
+                ...currentCustomColors,
+                secondary: color,
+              })
             }
           />
 
@@ -165,7 +190,7 @@ export default function ColorSchemeExpanded({
             label='Accent Color'
             description='Highlight and accent color'
             color={currentCustomColors.accent}
-            onChange={(color) =>
+            onChange={color =>
               handleCustomColorChange({ ...currentCustomColors, accent: color })
             }
           />
@@ -194,7 +219,7 @@ export default function ColorSchemeExpanded({
             PRESETS ({filteredPresets.length})
           </h3>
           <div className='grid grid-cols-2 gap-3'>
-            {filteredPresets.map((preset) => (
+            {filteredPresets.map(preset => (
               <button
                 key={preset.id}
                 onClick={() => onColorSchemeChange(preset.id)}
@@ -215,7 +240,9 @@ export default function ColorSchemeExpanded({
                 {/* Info */}
                 <div className='p-3'>
                   <div className='font-bold text-white mb-1'>{preset.name}</div>
-                  <div className='text-xs text-gray-400'>{preset.description}</div>
+                  <div className='text-xs text-gray-400'>
+                    {preset.description}
+                  </div>
 
                   {/* Color Swatches */}
                   <div className='flex gap-1 mt-2'>

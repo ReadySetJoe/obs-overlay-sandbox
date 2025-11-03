@@ -37,7 +37,9 @@ export default function DashboardPage() {
   const { socket, isConnected } = useSocket(sessionId as string);
 
   // Save status
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
+    'saved'
+  );
   const [_lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Use extracted hooks
@@ -72,11 +74,17 @@ export default function DashboardPage() {
 
   // Emote wall
   const [emoteInput, setEmoteInput] = useState('🎉 🎊 ✨ 🌟 💫');
-  const [emoteIntensity, setEmoteIntensity] = useState<'light' | 'medium' | 'heavy'>('medium');
+  const [emoteIntensity, setEmoteIntensity] = useState<
+    'light' | 'medium' | 'heavy'
+  >('medium');
 
   // Background
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
-  const [backgroundImageName, setBackgroundImageName] = useState<string | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
+    null
+  );
+  const [backgroundImageName, setBackgroundImageName] = useState<string | null>(
+    null
+  );
   const [backgroundColors, setBackgroundColors] = useState<string | null>(null);
   const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
   const [backgroundBlur, setBackgroundBlur] = useState(0);
@@ -113,7 +121,9 @@ export default function DashboardPage() {
 
     const loadLayout = async () => {
       try {
-        const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        const response = await fetch(
+          `/api/layouts/load?sessionId=${sessionId}`
+        );
         if (response.ok) {
           const { layout } = await response.json();
 
@@ -227,7 +237,9 @@ export default function DashboardPage() {
 
     try {
       // Load existing saved states
-      const loadResponse = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+      const loadResponse = await fetch(
+        `/api/layouts/load?sessionId=${sessionId}`
+      );
       let existingStates: Record<string, any> = {};
 
       if (loadResponse.ok) {
@@ -479,7 +491,9 @@ export default function DashboardPage() {
             <SummaryTile
               title='Now Playing'
               subtitle={
-                spotify.spotifyToken ? spotify.trackTitle || 'Connected' : 'Not connected'
+                spotify.spotifyToken
+                  ? spotify.trackTitle || 'Connected'
+                  : 'Not connected'
               }
               icon={
                 <svg
@@ -764,7 +778,9 @@ export default function DashboardPage() {
                 newTimerDate={timersHook.newTimerDate}
                 componentLayouts={componentLayouts}
                 onToggleVisibility={() => toggleLayer('countdown')}
-                onShowTimerForm={() => timersHook.setShowTimerForm(!timersHook.showTimerForm)}
+                onShowTimerForm={() =>
+                  timersHook.setShowTimerForm(!timersHook.showTimerForm)
+                }
                 onCreateTimer={timersHook.createTimer}
                 onCancelTimerForm={timersHook.cancelTimerForm}
                 onStartEditingTimer={timersHook.startEditingTimer}
@@ -825,13 +841,26 @@ export default function DashboardPage() {
                 onTemplateSelect={paintHook.handleTemplateSelect}
                 onReset={paintHook.handleReset}
                 onPositionChange={(x, y) =>
-                  paintHook.handlePositionChange(x, y, componentLayouts, setComponentLayouts)
+                  paintHook.handlePositionChange(
+                    x,
+                    y,
+                    componentLayouts,
+                    setComponentLayouts
+                  )
                 }
                 onScaleChange={scale =>
-                  paintHook.handleScaleChange(scale, componentLayouts, setComponentLayouts)
+                  paintHook.handleScaleChange(
+                    scale,
+                    componentLayouts,
+                    setComponentLayouts
+                  )
                 }
                 onGridSizeChange={gridSize =>
-                  paintHook.handleGridSizeChange(gridSize, componentLayouts, setComponentLayouts)
+                  paintHook.handleGridSizeChange(
+                    gridSize,
+                    componentLayouts,
+                    setComponentLayouts
+                  )
                 }
                 onClose={handleCloseExpanded}
               />

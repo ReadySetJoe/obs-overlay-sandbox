@@ -90,7 +90,10 @@ export default function DashboardHeader({
 
       {/* Session Info */}
       {sessionId && (
-        <SessionInfo sessionId={sessionId as string} isAuthenticated={!!session} />
+        <SessionInfo
+          sessionId={sessionId as string}
+          isAuthenticated={!!session}
+        />
       )}
     </div>
   );

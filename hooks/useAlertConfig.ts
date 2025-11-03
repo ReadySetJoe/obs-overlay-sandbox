@@ -11,7 +11,9 @@ const DEFAULT_MESSAGES: Record<AlertEventType, string> = {
 };
 
 export function useAlertConfig(sessionId: string) {
-  const [alertConfigs, setAlertConfigs] = useState<Record<AlertEventType, Partial<AlertConfig>>>({
+  const [alertConfigs, setAlertConfigs] = useState<
+    Record<AlertEventType, Partial<AlertConfig>>
+  >({
     follow: {},
     sub: {},
     bits: {},
@@ -20,8 +22,12 @@ export function useAlertConfig(sessionId: string) {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState<AlertEventType | null>(null);
-  const [uploadingSound, setUploadingSound] = useState<AlertEventType | null>(null);
+  const [uploadingImage, setUploadingImage] = useState<AlertEventType | null>(
+    null
+  );
+  const [uploadingSound, setUploadingSound] = useState<AlertEventType | null>(
+    null
+  );
 
   // Load alert configurations
   useEffect(() => {
@@ -55,16 +61,22 @@ export function useAlertConfig(sessionId: string) {
     loadAlerts();
   }, [sessionId]);
 
-  const updateConfig = useCallback((eventType: AlertEventType, updates: Partial<AlertConfig>) => {
-    setAlertConfigs(prev => ({
-      ...prev,
-      [eventType]: { ...prev[eventType], ...updates },
-    }));
-  }, []);
+  const updateConfig = useCallback(
+    (eventType: AlertEventType, updates: Partial<AlertConfig>) => {
+      setAlertConfigs(prev => ({
+        ...prev,
+        [eventType]: { ...prev[eventType], ...updates },
+      }));
+    },
+    []
+  );
 
   // Helper to save a single alert config
   const saveAlertConfig = useCallback(
-    async (eventType: AlertEventType, additionalUpdates?: Partial<AlertConfig>) => {
+    async (
+      eventType: AlertEventType,
+      additionalUpdates?: Partial<AlertConfig>
+    ) => {
       try {
         const config = { ...alertConfigs[eventType], ...additionalUpdates };
 
@@ -80,7 +92,9 @@ export function useAlertConfig(sessionId: string) {
           soundUrl: config.soundUrl || null,
           soundPublicId: config.soundPublicId || null,
           volume: config.volume ?? 0.7,
-          messageTemplate: config.messageTemplate || DEFAULT_MESSAGES[eventType as AlertEventType],
+          messageTemplate:
+            config.messageTemplate ||
+            DEFAULT_MESSAGES[eventType as AlertEventType],
           fontSize: config.fontSize ?? 32,
           textColor: config.textColor || '#FFFFFF',
           textShadow: config.textShadow ?? true,
@@ -120,7 +134,10 @@ export function useAlertConfig(sessionId: string) {
           updateConfig(eventType, { imageUrl, imagePublicId: publicId });
 
           // Auto-save after upload
-          await saveAlertConfig(eventType, { imageUrl, imagePublicId: publicId });
+          await saveAlertConfig(eventType, {
+            imageUrl,
+            imagePublicId: publicId,
+          });
         } else {
           const { error } = await response.json();
           alert(`Error uploading image: ${error}`);
@@ -152,7 +169,10 @@ export function useAlertConfig(sessionId: string) {
           updateConfig(eventType, { soundUrl, soundPublicId: publicId });
 
           // Auto-save after upload
-          await saveAlertConfig(eventType, { soundUrl, soundPublicId: publicId });
+          await saveAlertConfig(eventType, {
+            soundUrl,
+            soundPublicId: publicId,
+          });
         } else {
           const { error } = await response.json();
           alert(`Error uploading sound: ${error}`);
@@ -170,11 +190,13 @@ export function useAlertConfig(sessionId: string) {
   const handleSaveAll = useCallback(async () => {
     setSaving(true);
     try {
-      const savePromises = Object.entries(alertConfigs).map(async ([eventType, config]) => {
-        // Only save if config has been modified (has at least one property)
-        if (Object.keys(config).length === 0) return;
-        await saveAlertConfig(eventType as AlertEventType);
-      });
+      const savePromises = Object.entries(alertConfigs).map(
+        async ([eventType, config]) => {
+          // Only save if config has been modified (has at least one property)
+          if (Object.keys(config).length === 0) return;
+          await saveAlertConfig(eventType as AlertEventType);
+        }
+      );
 
       await Promise.all(savePromises);
       alert('Alert configurations saved successfully!');
@@ -222,9 +244,10 @@ export function useAlertConfig(sessionId: string) {
 
   const handleDeleteMedia = useCallback(
     async (eventType: AlertEventType, mediaType: 'image' | 'sound') => {
-      const updates = mediaType === 'image'
-        ? { imageUrl: undefined, imagePublicId: undefined }
-        : { soundUrl: undefined, soundPublicId: undefined };
+      const updates =
+        mediaType === 'image'
+          ? { imageUrl: undefined, imagePublicId: undefined }
+          : { soundUrl: undefined, soundPublicId: undefined };
 
       updateConfig(eventType, updates);
       await saveAlertConfig(eventType, updates);

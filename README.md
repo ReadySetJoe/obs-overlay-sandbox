@@ -331,14 +331,14 @@ Shows all active components on a single page. Toggle visibility per component fr
 
 Add each component as a separate browser source for better control:
 
-| Component       | URL                                                        | Purpose                             |
-| --------------- | ---------------------------------------------------------- | ----------------------------------- |
-| Background      | `http://localhost:3000/overlay/[sessionId]/background`     | Custom background image layer       |
-| Chat Highlight  | `http://localhost:3000/overlay/[sessionId]/chat-highlight` | Highlighted chat messages           |
-| Now Playing     | `http://localhost:3000/overlay/[sessionId]/now-playing`    | Spotify current track               |
-| Countdown Timer | `http://localhost:3000/overlay/[sessionId]/countdown`      | Active countdown timers             |
-| Emote Wall      | `http://localhost:3000/overlay/[sessionId]/emote-wall`     | Floating emote particles            |
-| Weather         | `http://localhost:3000/overlay/[sessionId]/weather`        | Rain, snow, or fog effects          |
+| Component       | URL                                                        | Purpose                       |
+| --------------- | ---------------------------------------------------------- | ----------------------------- |
+| Background      | `http://localhost:3000/overlay/[sessionId]/background`     | Custom background image layer |
+| Chat Highlight  | `http://localhost:3000/overlay/[sessionId]/chat-highlight` | Highlighted chat messages     |
+| Now Playing     | `http://localhost:3000/overlay/[sessionId]/now-playing`    | Spotify current track         |
+| Countdown Timer | `http://localhost:3000/overlay/[sessionId]/countdown`      | Active countdown timers       |
+| Emote Wall      | `http://localhost:3000/overlay/[sessionId]/emote-wall`     | Floating emote particles      |
+| Weather         | `http://localhost:3000/overlay/[sessionId]/weather`        | Rain, snow, or fog effects    |
 
 **Benefits of individual pages:**
 
@@ -372,14 +372,14 @@ FPS: 60
 
 ### Recommended Settings Per Component
 
-| Component      | Width | Height | Notes                                |
-| -------------- | ----- | ------ | ------------------------------------ |
-| Background     | 1920  | 1080   | Bottom layer, add first in OBS       |
-| Chat Highlight | 1920  | 1080   | Position controlled from dashboard   |
-| Now Playing    | 1920  | 1080   | Usually bottom-left or bottom-right  |
-| Countdown      | 1920  | 1080   | Center or top-center                 |
-| Emote Wall     | 1920  | 1080   | Fullscreen overlay                   |
-| Weather        | 1920  | 1080   | Fullscreen overlay, use low density  |
+| Component      | Width | Height | Notes                               |
+| -------------- | ----- | ------ | ----------------------------------- |
+| Background     | 1920  | 1080   | Bottom layer, add first in OBS      |
+| Chat Highlight | 1920  | 1080   | Position controlled from dashboard  |
+| Now Playing    | 1920  | 1080   | Usually bottom-left or bottom-right |
+| Countdown      | 1920  | 1080   | Center or top-center                |
+| Emote Wall     | 1920  | 1080   | Fullscreen overlay                  |
+| Weather        | 1920  | 1080   | Fullscreen overlay, use low density |
 
 **Layering Tip**: If using a custom background, add it as the first (bottom) layer in OBS, then add other overlays on top. Adjust background opacity from the dashboard for perfect blending.
 
@@ -409,6 +409,7 @@ The application includes a **Custom Color Builder** accessible from the dashboar
 5. Watch your overlays update in real-time!
 
 **Behind the Scenes**: The `useThemeColors` hook automatically:
+
 - Generates lighter/darker color variants
 - Calculates optimal text colors using luminance detection
 - Ensures readability on dark backgrounds (critical for OBS)

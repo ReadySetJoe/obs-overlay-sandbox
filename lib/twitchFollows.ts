@@ -148,7 +148,9 @@ export async function startFollowMonitoring(
     broadcasterId,
   });
 
-  console.log(`Started follow monitoring for ${twitchUsername} (${broadcasterId})`);
+  console.log(
+    `Started follow monitoring for ${twitchUsername} (${broadcasterId})`
+  );
 }
 
 /**

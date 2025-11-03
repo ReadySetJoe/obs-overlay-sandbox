@@ -64,17 +64,18 @@ export default function HomePage() {
         {/* Hero Section */}
         <div className='text-center mb-12'>
           <div className='my-8'>
-          <img
-            src='/title.png'
-            alt='Joe-verlay'
-            className='mx-auto mb-4 max-w-md md:max-w-2xl w-full'
-          />
+            <img
+              src='/title.png'
+              alt='Joe-verlay'
+              className='mx-auto mb-4 max-w-md md:max-w-2xl w-full'
+            />
           </div>
           <p className='text-xl text-gray-300 mb-2'>
             Professional stream overlays for Twitch and OBS
           </p>
           <p className='text-sm text-gray-400'>
-            Real-time chat highlights, music integration, timers, and interactive effects
+            Real-time chat highlights, music integration, timers, and
+            interactive effects
           </p>
         </div>
 
@@ -185,9 +186,7 @@ export default function HomePage() {
 
         {/* Features */}
         <div className='bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30'>
-          <h3 className='text-lg font-bold mb-4 text-center'>
-            Features
-          </h3>
+          <h3 className='text-lg font-bold mb-4 text-center'>Features</h3>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm'>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🎨</div>
@@ -199,9 +198,7 @@ export default function HomePage() {
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>📐</div>
               <div>Layouts</div>
-              <div className='text-xs text-gray-500 mt-1'>
-                Drag & position
-              </div>
+              <div className='text-xs text-gray-500 mt-1'>Drag & position</div>
             </div>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>💬</div>
@@ -220,9 +217,7 @@ export default function HomePage() {
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>⏱️</div>
               <div>Countdown Timers</div>
-              <div className='text-xs text-gray-500 mt-1'>
-                Multiple timers
-              </div>
+              <div className='text-xs text-gray-500 mt-1'>Multiple timers</div>
             </div>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🎨</div>
@@ -234,16 +229,12 @@ export default function HomePage() {
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🌧️</div>
               <div>Weather Overlay</div>
-              <div className='text-xs text-gray-500 mt-1'>
-                Particle effects
-              </div>
+              <div className='text-xs text-gray-500 mt-1'>Particle effects</div>
             </div>
             <div className='text-gray-300'>
               <div className='text-2xl mb-1'>🎭</div>
               <div>Emote Wall</div>
-              <div className='text-xs text-gray-500 mt-1'>
-                Floating emojis
-              </div>
+              <div className='text-xs text-gray-500 mt-1'>Floating emojis</div>
             </div>
           </div>
         </div>

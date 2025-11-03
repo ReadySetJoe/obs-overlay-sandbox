@@ -10,7 +10,12 @@ interface ColorPickerProps {
   description?: string;
 }
 
-export default function ColorPicker({ label, color, onChange, description }: ColorPickerProps) {
+export default function ColorPicker({
+  label,
+  color,
+  onChange,
+  description,
+}: ColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(color);
 
@@ -31,31 +36,62 @@ export default function ColorPicker({ label, color, onChange, description }: Col
 
   const presetColors = [
     // Reds
-    '#EF4444', '#DC2626', '#B91C1C', '#991B1B',
+    '#EF4444',
+    '#DC2626',
+    '#B91C1C',
+    '#991B1B',
     // Oranges
-    '#F97316', '#EA580C', '#C2410C', '#9A3412',
+    '#F97316',
+    '#EA580C',
+    '#C2410C',
+    '#9A3412',
     // Yellows
-    '#EAB308', '#CA8A04', '#A16207', '#854D0E',
+    '#EAB308',
+    '#CA8A04',
+    '#A16207',
+    '#854D0E',
     // Greens
-    '#22C55E', '#16A34A', '#15803D', '#166534',
+    '#22C55E',
+    '#16A34A',
+    '#15803D',
+    '#166534',
     // Teals
-    '#14B8A6', '#0D9488', '#0F766E', '#115E59',
+    '#14B8A6',
+    '#0D9488',
+    '#0F766E',
+    '#115E59',
     // Blues
-    '#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF',
+    '#3B82F6',
+    '#2563EB',
+    '#1D4ED8',
+    '#1E40AF',
     // Purples
-    '#A855F7', '#9333EA', '#7E22CE', '#6B21A8',
+    '#A855F7',
+    '#9333EA',
+    '#7E22CE',
+    '#6B21A8',
     // Pinks
-    '#EC4899', '#DB2777', '#BE185D', '#9F1239',
+    '#EC4899',
+    '#DB2777',
+    '#BE185D',
+    '#9F1239',
     // Grays
-    '#6B7280', '#4B5563', '#374151', '#1F2937',
+    '#6B7280',
+    '#4B5563',
+    '#374151',
+    '#1F2937',
   ];
 
   return (
     <div className='space-y-2'>
       <div className='flex items-center justify-between'>
         <div>
-          <label className='block text-sm font-semibold text-gray-300'>{label}</label>
-          {description && <p className='text-xs text-gray-500 mt-0.5'>{description}</p>}
+          <label className='block text-sm font-semibold text-gray-300'>
+            {label}
+          </label>
+          {description && (
+            <p className='text-xs text-gray-500 mt-0.5'>{description}</p>
+          )}
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -87,7 +123,7 @@ export default function ColorPicker({ label, color, onChange, description }: Col
         <input
           type='color'
           value={color}
-          onChange={(e) => handleColorChange(e.target.value)}
+          onChange={e => handleColorChange(e.target.value)}
           className='w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-600 hover:border-gray-500 transition'
         />
       </div>
@@ -95,7 +131,7 @@ export default function ColorPicker({ label, color, onChange, description }: Col
       {/* Preset colors palette */}
       {isOpen && (
         <div className='grid grid-cols-9 gap-2 p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
-          {presetColors.map((presetColor) => (
+          {presetColors.map(presetColor => (
             <button
               key={presetColor}
               onClick={() => handleColorChange(presetColor)}

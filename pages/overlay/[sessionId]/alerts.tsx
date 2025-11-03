@@ -4,7 +4,12 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
-import { AlertConfig, AlertEvent, ColorScheme, CustomColors } from '@/types/overlay';
+import {
+  AlertConfig,
+  AlertEvent,
+  ColorScheme,
+  CustomColors,
+} from '@/types/overlay';
 import Alert from '@/components/overlay/Alert';
 
 export default function AlertsOverlay() {
@@ -14,7 +19,10 @@ export default function AlertsOverlay() {
 
   const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
   const [alertQueue, setAlertQueue] = useState<AlertEvent[]>([]);
-  const [currentAlert, setCurrentAlert] = useState<{config: AlertConfig; event: AlertEvent} | null>(null);
+  const [currentAlert, setCurrentAlert] = useState<{
+    config: AlertConfig;
+    event: AlertEvent;
+  } | null>(null);
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [customColors, setCustomColors] = useState<CustomColors | null>(null);
 
@@ -25,14 +33,18 @@ export default function AlertsOverlay() {
     const loadData = async () => {
       try {
         // Load alerts
-        const alertsResponse = await fetch(`/api/alerts/list?sessionId=${sessionId}`);
+        const alertsResponse = await fetch(
+          `/api/alerts/list?sessionId=${sessionId}`
+        );
         if (alertsResponse.ok) {
           const { alerts } = await alertsResponse.json();
           setAlertConfigs(alerts);
         }
 
         // Load color scheme
-        const layoutResponse = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        const layoutResponse = await fetch(
+          `/api/layouts/load?sessionId=${sessionId}`
+        );
         if (layoutResponse.ok) {
           const { layout } = await layoutResponse.json();
           if (layout.colorScheme) {
@@ -106,7 +118,9 @@ export default function AlertsOverlay() {
     if (currentAlert || alertQueue.length === 0) return;
 
     const nextEvent = alertQueue[0];
-    const config = alertConfigs.find(c => c.eventType === nextEvent.eventType && c.enabled);
+    const config = alertConfigs.find(
+      c => c.eventType === nextEvent.eventType && c.enabled
+    );
 
     if (config) {
       setCurrentAlert({ config, event: nextEvent });
@@ -121,10 +135,10 @@ export default function AlertsOverlay() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-transparent">
+    <div className='relative w-screen h-screen overflow-hidden bg-transparent'>
       {/* Connection Status */}
       {!isConnected && (
-        <div className="fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+        <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
           Disconnected
         </div>
       )}
@@ -142,8 +156,9 @@ export default function AlertsOverlay() {
 
       {/* Debug Info (only visible in dev) */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 bg-black/80 text-white px-4 py-2 rounded text-xs">
-          Queue: {alertQueue.length} | Configs: {alertConfigs.length} | Current: {currentAlert ? 'Yes' : 'No'}
+        <div className='fixed bottom-4 left-4 bg-black/80 text-white px-4 py-2 rounded text-xs'>
+          Queue: {alertQueue.length} | Configs: {alertConfigs.length} | Current:{' '}
+          {currentAlert ? 'Yes' : 'No'}
         </div>
       )}
     </div>

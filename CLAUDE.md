@@ -175,8 +175,20 @@ obs-overlay-sandbox/
     "nowPlaying": { "position": "top-left", "x": 0, "y": 0, "width": 400 },
     "countdown": { "position": "top-left", "x": 0, "y": 0, "scale": 1 },
     "weather": { "density": 1 },
-    "chatHighlight": { "position": "bottom-left", "x": 20, "y": 20, "width": 500, "scale": 1 },
-    "paintByNumbers": { "position": "top-left", "x": 0, "y": 0, "scale": 1, "gridSize": 20 }
+    "chatHighlight": {
+      "position": "bottom-left",
+      "x": 20,
+      "y": 20,
+      "width": 500,
+      "scale": 1
+    },
+    "paintByNumbers": {
+      "position": "top-left",
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "gridSize": 20
+    }
   }
   ```
 - **Custom Background Fields**:
@@ -280,6 +292,7 @@ Layout (1) ─── (many) CountdownTimer
 ### 6. Color Schemes & Theme System
 
 **Files**:
+
 - `lib/colorSchemes.ts` - 18 preset color scheme definitions
 - `hooks/useThemeColors.ts` - Theme color generation hook with contrast detection
 - `types/overlay.ts` - ColorScheme and CustomColors types
@@ -289,6 +302,7 @@ Layout (1) ─── (many) CountdownTimer
 The theme system provides centralized color management for all overlay components. Each overlay component (CountdownTimer, ChatHighlight, PaintByNumbers) receives the active `colorScheme` and `customColors` props and uses the `useThemeColors` hook to generate consistent, contrast-aware colors.
 
 **Available Presets** (18 total):
+
 - **All**: `default`
 - **Gaming**: `gaming`, `cyberpunk`, `retro-arcade`, `fps-modern`
 - **Chill**: `chill`, `sunset`, `ocean`, `forest`, `lavender`
@@ -297,6 +311,7 @@ The theme system provides centralized color management for all overlay component
 - **Custom**: User-created with custom primary/secondary/accent colors and gradient settings
 
 **Color Scheme Preset Structure** (`lib/colorSchemes.ts`):
+
 ```typescript
 {
   id: 'ocean',
@@ -348,6 +363,7 @@ const theme = useThemeColors(colorScheme, customColors);
 **Contrast Detection**:
 
 The hook includes intelligent luminance-based contrast detection:
+
 - Colors with luminance < 0.1 (very dark) → lightened by 80%
 - Colors with luminance 0.1-0.3 (dark) → lightened by 60%
 - Colors with luminance > 0.3 (bright) → lightened by 20%
@@ -375,6 +391,7 @@ function CountdownTimer({ colorScheme, customColors, ...props }) {
 ```
 
 **Themed Components**:
+
 - ✅ **CountdownTimer** - Title gradient, time cell colors, progress bar
 - ✅ **ChatHighlight** - Role-based backgrounds using theme variants, highlight badge
 - ✅ **PaintByNumbers** - Header gradient, instruction text, progress bar
@@ -382,12 +399,14 @@ function CountdownTimer({ colorScheme, customColors, ...props }) {
 **Real-time Updates**:
 
 When a user changes the color scheme in the dashboard:
+
 1. Dashboard emits `color-scheme-change` event (for presets) or `custom-colors-change` (for custom)
 2. `useOverlaySocket` receives the event and updates `colorScheme`/`customColors` state
 3. Components re-render with new theme colors via `useThemeColors` hook
 4. Colors transition smoothly to match the selected theme
 
 **Socket Events**:
+
 - `color-scheme-change` - Emitted when preset scheme selected (payload: ColorScheme string)
 - `custom-colors-change` - Emitted when custom colors modified (payload: CustomColors object)
 
@@ -396,6 +415,7 @@ When a user changes the color scheme in the dashboard:
 **Flow**: Image Upload → Cloudinary → Color Extraction → Database → Socket.io → Overlay
 
 **Files**:
+
 - `lib/cloudinary.ts` - Cloudinary SDK configuration and image upload/delete helpers
 - `lib/colorExtraction.ts` - K-means clustering algorithm for dominant color extraction
 - `pages/api/backgrounds/upload.ts` - Upload endpoint with validation and processing
@@ -410,10 +430,12 @@ When a user changes the color scheme in the dashboard:
 Users can upload custom background images (PNG, JPG, WebP up to 10MB) that are stored in Cloudinary and automatically optimized for streaming. The system extracts dominant colors from the uploaded image using k-means clustering and can apply them to the custom theme for a cohesive visual experience.
 
 **Image Optimization** (`lib/cloudinary.ts`):
+
 - Auto-resize to 1920x1080 (standard streaming resolution)
 - Auto-conversion to WebP format for better compression
 - Quality optimization (auto quality)
 - Responsive transformations available
+
 ```typescript
 await uploadToCloudinary(filePath, 'overlay-backgrounds');
 // Returns: { url, public_id, width, height, format }
@@ -422,6 +444,7 @@ await uploadToCloudinary(filePath, 'overlay-backgrounds');
 **Color Extraction** (`lib/colorExtraction.ts`):
 
 Uses k-means clustering algorithm to find the 8 most dominant colors in an image, then intelligently selects:
+
 - **Primary**: Most dominant color (largest cluster)
 - **Secondary**: Contrasting color with sufficient color distance (>100 RGB units)
 - **Accent**: Highest luminance contrast to primary
@@ -438,6 +461,7 @@ const colors = await extractColorsFromImage(imageUrl);
 ```
 
 **Upload Flow**:
+
 1. User drags/selects image in `BackgroundExpanded` component
 2. File validated (type, size) and uploaded via multipart form
 3. `upload.ts` API route:
@@ -452,15 +476,18 @@ const colors = await extractColorsFromImage(imageUrl);
 **Background Display**:
 
 Two rendering modes:
+
 - **Main overlay** (`/overlay/[sessionId].tsx`): Background layer at z-index -10, gradient fallback at z-index -20
 - **Background-only** (`/overlay/[sessionId]/background.tsx`): Dedicated page showing only the background
 
 Both support:
+
 - Opacity control (0-100%)
 - Blur effect (0-20px)
 - Real-time updates via Socket.io
 
 **Layer Stacking** (z-index hierarchy):
+
 ```
 -20: Gradient fallback (always present, hidden when custom background active)
 -10: Custom background (when uploaded)
@@ -468,8 +495,11 @@ Both support:
 ```
 
 **State Management** (`hooks/useOverlaySocket.ts`):
+
 ```typescript
-const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
+  null
+);
 const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
 const [backgroundBlur, setBackgroundBlur] = useState(0);
 
@@ -485,7 +515,7 @@ useEffect(() => {
 }, [sessionId]);
 
 // Listen for real-time updates
-socket.on('background-change', (data) => {
+socket.on('background-change', data => {
   setBackgroundImageUrl(data.backgroundImageUrl);
   setBackgroundOpacity(data.backgroundOpacity);
   setBackgroundBlur(data.backgroundBlur);
@@ -493,6 +523,7 @@ socket.on('background-change', (data) => {
 ```
 
 **Features**:
+
 - Drag & drop or click-to-browse upload UI
 - Upload progress indicator
 - Image preview with thumbnail
@@ -507,6 +538,7 @@ socket.on('background-change', (data) => {
 - Cloudinary free tier: 25GB storage, 25GB bandwidth/month
 
 **Socket Events**:
+
 - `background-change` - Emitted when background uploaded, updated, or deleted
   - Payload: `{ backgroundImageUrl: string | null, backgroundOpacity: number, backgroundBlur: number }`
 
@@ -609,6 +641,7 @@ See `.env.example` for full reference.
 ### Optional
 
 **Spotify features**:
+
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REDIRECT_URI`

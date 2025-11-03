@@ -65,7 +65,9 @@ export function useOverlaySocket(sessionId: string) {
   );
   const [paintByNumbersState, setPaintByNumbersState] =
     useState<PaintByNumbersState | null>(null);
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
+    null
+  );
   const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
   const [backgroundBlur, setBackgroundBlur] = useState(0);
 
@@ -75,7 +77,9 @@ export function useOverlaySocket(sessionId: string) {
 
     const loadInitialState = async () => {
       try {
-        const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        const response = await fetch(
+          `/api/layouts/load?sessionId=${sessionId}`
+        );
         if (response.ok) {
           const { layout } = await response.json();
 
@@ -113,24 +117,45 @@ export function useOverlaySocket(sessionId: string) {
           setSceneLayers(prev =>
             prev.map(layer => {
               if (layer.id === 'weather')
-                return { ...layer, visible: layout.weatherVisible === false ? false : true };
+                return {
+                  ...layer,
+                  visible: layout.weatherVisible === false ? false : true,
+                };
               if (layer.id === 'chat')
-                return { ...layer, visible: layout.chatVisible === false ? false : true };
+                return {
+                  ...layer,
+                  visible: layout.chatVisible === false ? false : true,
+                };
               if (layer.id === 'nowplaying')
-                return { ...layer, visible: layout.nowPlayingVisible === false ? false : true };
+                return {
+                  ...layer,
+                  visible: layout.nowPlayingVisible === false ? false : true,
+                };
               if (layer.id === 'countdown')
-                return { ...layer, visible: layout.countdownVisible === false ? false : true };
+                return {
+                  ...layer,
+                  visible: layout.countdownVisible === false ? false : true,
+                };
               if (layer.id === 'chathighlight')
-                return { ...layer, visible: layout.chatHighlightVisible === false ? false : true };
+                return {
+                  ...layer,
+                  visible: layout.chatHighlightVisible === false ? false : true,
+                };
               if (layer.id === 'paintbynumbers')
-                return { ...layer, visible: layout.paintByNumbersVisible === false ? false : true };
+                return {
+                  ...layer,
+                  visible:
+                    layout.paintByNumbersVisible === false ? false : true,
+                };
               return layer;
             })
           );
 
           // Load countdown timers
           try {
-            const timersResponse = await fetch(`/api/timers/list?sessionId=${sessionId}`);
+            const timersResponse = await fetch(
+              `/api/timers/list?sessionId=${sessionId}`
+            );
             if (timersResponse.ok) {
               const { timers } = await timersResponse.json();
               setCountdownTimers(timers);
@@ -143,10 +168,16 @@ export function useOverlaySocket(sessionId: string) {
           if (layout.backgroundImageUrl) {
             setBackgroundImageUrl(layout.backgroundImageUrl);
           }
-          if (layout.backgroundOpacity !== null && layout.backgroundOpacity !== undefined) {
+          if (
+            layout.backgroundOpacity !== null &&
+            layout.backgroundOpacity !== undefined
+          ) {
             setBackgroundOpacity(layout.backgroundOpacity);
           }
-          if (layout.backgroundBlur !== null && layout.backgroundBlur !== undefined) {
+          if (
+            layout.backgroundBlur !== null &&
+            layout.backgroundBlur !== undefined
+          ) {
             setBackgroundBlur(layout.backgroundBlur);
           }
 
@@ -217,11 +248,18 @@ export function useOverlaySocket(sessionId: string) {
       setPaintByNumbersState(state);
     });
 
-    socket.on('background-change', (data: { backgroundImageUrl: string | null; backgroundOpacity: number; backgroundBlur: number }) => {
-      setBackgroundImageUrl(data.backgroundImageUrl);
-      setBackgroundOpacity(data.backgroundOpacity);
-      setBackgroundBlur(data.backgroundBlur);
-    });
+    socket.on(
+      'background-change',
+      (data: {
+        backgroundImageUrl: string | null;
+        backgroundOpacity: number;
+        backgroundBlur: number;
+      }) => {
+        setBackgroundImageUrl(data.backgroundImageUrl);
+        setBackgroundOpacity(data.backgroundOpacity);
+        setBackgroundBlur(data.backgroundBlur);
+      }
+    );
 
     return () => {
       socket.off('chat-message');
@@ -248,13 +286,14 @@ export function useOverlaySocket(sessionId: string) {
   };
 
   // Generate color scheme styles from presets
-  const colorSchemeStyles: Record<ColorScheme, string> = colorSchemePresets.reduce(
-    (acc, preset) => {
-      acc[preset.id] = preset.gradient;
-      return acc;
-    },
-    {} as Record<ColorScheme, string>
-  );
+  const colorSchemeStyles: Record<ColorScheme, string> =
+    colorSchemePresets.reduce(
+      (acc, preset) => {
+        acc[preset.id] = preset.gradient;
+        return acc;
+      },
+      {} as Record<ColorScheme, string>
+    );
 
   // Add custom scheme fallback
   if (!colorSchemeStyles.custom) {
@@ -293,7 +332,8 @@ export function useOverlaySocket(sessionId: string) {
         'to-br': '135deg',
         'to-bl': '225deg',
       };
-      const direction = directionMap[customColors.gradientDirection] || '135deg';
+      const direction =
+        directionMap[customColors.gradientDirection] || '135deg';
       gradient = `linear-gradient(${direction}, ${primaryColor}, ${secondaryColor})`;
     } else {
       gradient = `radial-gradient(circle, ${primaryColor}, ${secondaryColor})`;

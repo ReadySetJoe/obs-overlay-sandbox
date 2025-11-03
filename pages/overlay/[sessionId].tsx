@@ -38,7 +38,10 @@ export default function OverlayPage() {
   // Alert state
   const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
   const [alertQueue, setAlertQueue] = useState<AlertEvent[]>([]);
-  const [currentAlert, setCurrentAlert] = useState<{config: AlertConfig; event: AlertEvent} | null>(null);
+  const [currentAlert, setCurrentAlert] = useState<{
+    config: AlertConfig;
+    event: AlertEvent;
+  } | null>(null);
 
   // Load alert configurations
   useEffect(() => {
@@ -93,7 +96,9 @@ export default function OverlayPage() {
     if (currentAlert || alertQueue.length === 0) return;
 
     const nextEvent = alertQueue[0];
-    const config = alertConfigs.find(c => c.eventType === nextEvent.eventType && c.enabled);
+    const config = alertConfigs.find(
+      c => c.eventType === nextEvent.eventType && c.enabled
+    );
 
     if (config) {
       setCurrentAlert({ config, event: nextEvent });
@@ -108,11 +113,11 @@ export default function OverlayPage() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <div className='relative w-screen h-screen overflow-hidden'>
       {/* Custom Background Layer (lowest) */}
       {backgroundImageUrl && (
         <div
-          className="absolute inset-0 -z-10"
+          className='absolute inset-0 -z-10'
           style={{
             backgroundImage: `url(${backgroundImageUrl})`,
             backgroundSize: 'cover',

@@ -34,7 +34,10 @@ export async function loadMostRecentTemplate(
     }
 
     // Reconstruct the template with saved state
-    return reconstructTemplateState(mostRecentTemplateId, savedStates[mostRecentTemplateId]);
+    return reconstructTemplateState(
+      mostRecentTemplateId,
+      savedStates[mostRecentTemplateId]
+    );
   } catch (error) {
     console.error('Error loading most recent template:', error);
     return null;
@@ -104,7 +107,9 @@ function reconstructTemplateState(
 /**
  * Create a fresh template state (no saved progress)
  */
-export function createFreshTemplate(templateId: string): PaintByNumbersState | null {
+export function createFreshTemplate(
+  templateId: string
+): PaintByNumbersState | null {
   const template = createPaintStateFromTemplate(templateId);
   if (!template) return null;
 
@@ -118,7 +123,9 @@ export function createFreshTemplate(templateId: string): PaintByNumbersState | n
 /**
  * Reset a template to its initial state
  */
-export function resetTemplate(currentState: PaintByNumbersState): PaintByNumbersState | null {
+export function resetTemplate(
+  currentState: PaintByNumbersState
+): PaintByNumbersState | null {
   const template = createPaintStateFromTemplate(currentState.templateId);
   if (!template) return null;
 
@@ -215,7 +222,10 @@ export function serializePaintState(
   paintState: PaintByNumbersState,
   existingStates: Record<string, any> = {}
 ): string {
-  const filledRegions: Record<number, { filledBy: string; filledAt: number; customColor?: string }> = {};
+  const filledRegions: Record<
+    number,
+    { filledBy: string; filledAt: number; customColor?: string }
+  > = {};
 
   paintState.regions.forEach(region => {
     if (region.filled) {

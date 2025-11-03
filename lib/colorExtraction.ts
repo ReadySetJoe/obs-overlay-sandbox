@@ -12,7 +12,7 @@ export interface ExtractedColors {
  * Calculate luminance of a color (0-1 scale)
  */
 function getLuminance(r: number, g: number, b: number): number {
-  const [rs, gs, bs] = [r, g, b].map((c) => {
+  const [rs, gs, bs] = [r, g, b].map(c => {
     const val = c / 255;
     return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
   });
@@ -26,7 +26,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   return (
     '#' +
     [r, g, b]
-      .map((x) => {
+      .map(x => {
         const hex = x.toString(16);
         return hex.length === 1 ? '0' + hex : hex;
       })
@@ -86,7 +86,7 @@ async function getDominantColors(
   // Sort clusters by size (most dominant first)
   clusters.sort((a, b) => b.count - a.count);
 
-  return clusters.map((c) => c.center);
+  return clusters.map(c => c.center);
 }
 
 /**
@@ -101,7 +101,7 @@ function kMeansClustering(
   let centroids = colors
     .sort(() => Math.random() - 0.5)
     .slice(0, k)
-    .map((c) => [...c]);
+    .map(c => [...c]);
 
   for (let iter = 0; iter < maxIterations; iter++) {
     // Assign each color to nearest centroid
@@ -109,7 +109,7 @@ function kMeansClustering(
       .fill(null)
       .map(() => []);
 
-    colors.forEach((color) => {
+    colors.forEach(color => {
       let minDist = Infinity;
       let closestCluster = 0;
 
@@ -132,10 +132,14 @@ function kMeansClustering(
     });
 
     // Update centroids
-    centroids = clusters.map((cluster) => {
+    centroids = clusters.map(cluster => {
       if (cluster.length === 0) return centroids[0]; // Fallback if empty
       const sum = cluster.reduce(
-        (acc, color) => [acc[0] + color[0], acc[1] + color[1], acc[2] + color[2]],
+        (acc, color) => [
+          acc[0] + color[0],
+          acc[1] + color[1],
+          acc[2] + color[2],
+        ],
         [0, 0, 0]
       );
       return [
@@ -150,7 +154,7 @@ function kMeansClustering(
   const clusters: number[][][] = Array(k)
     .fill(null)
     .map(() => []);
-  colors.forEach((color) => {
+  colors.forEach(color => {
     let minDist = Infinity;
     let closestCluster = 0;
 

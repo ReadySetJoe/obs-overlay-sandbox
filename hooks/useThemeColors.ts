@@ -72,9 +72,24 @@ export function useThemeColors(
     const secondaryLuminance = getLuminance(secondary);
     const accentLuminance = getLuminance(accent);
 
-    const primaryText = primaryLuminance < 0.1 ? lightenColor(primary, 80) : (isColorDark(primary) ? lightenColor(primary, 60) : primaryLight);
-    const secondaryText = secondaryLuminance < 0.1 ? lightenColor(secondary, 80) : (isColorDark(secondary) ? lightenColor(secondary, 60) : secondaryLight);
-    const accentText = accentLuminance < 0.1 ? lightenColor(accent, 80) : (isColorDark(accent) ? lightenColor(accent, 60) : accentLight);
+    const primaryText =
+      primaryLuminance < 0.1
+        ? lightenColor(primary, 80)
+        : isColorDark(primary)
+          ? lightenColor(primary, 60)
+          : primaryLight;
+    const secondaryText =
+      secondaryLuminance < 0.1
+        ? lightenColor(secondary, 80)
+        : isColorDark(secondary)
+          ? lightenColor(secondary, 60)
+          : secondaryLight;
+    const accentText =
+      accentLuminance < 0.1
+        ? lightenColor(accent, 80)
+        : isColorDark(accent)
+          ? lightenColor(accent, 60)
+          : accentLight;
 
     // Generate gradient strings
     let gradientBg: string;

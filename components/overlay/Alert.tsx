@@ -2,7 +2,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { AlertConfig, AlertEvent, ColorScheme, CustomColors } from '@/types/overlay';
+import {
+  AlertConfig,
+  AlertEvent,
+  ColorScheme,
+  CustomColors,
+} from '@/types/overlay';
 import { useThemeColors, hexToRgba } from '@/hooks/useThemeColors';
 
 interface AlertProps {
@@ -13,7 +18,13 @@ interface AlertProps {
   customColors?: CustomColors | null;
 }
 
-export default function Alert({ config, event, onComplete, colorScheme = 'default', customColors = null }: AlertProps) {
+export default function Alert({
+  config,
+  event,
+  onComplete,
+  colorScheme = 'default',
+  customColors = null,
+}: AlertProps) {
   const theme = useThemeColors(colorScheme, customColors);
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -30,7 +41,9 @@ export default function Alert({ config, event, onComplete, colorScheme = 'defaul
     // Play sound if configured (only once)
     if (config.soundUrl && audioRef.current && !hasPlayedRef.current) {
       audioRef.current.volume = config.volume;
-      audioRef.current.play().catch(err => console.error('Error playing alert sound:', err));
+      audioRef.current
+        .play()
+        .catch(err => console.error('Error playing alert sound:', err));
       hasPlayedRef.current = true;
     }
 
@@ -66,12 +79,18 @@ export default function Alert({ config, event, onComplete, colorScheme = 'defaul
 
   const getEventName = (type: string): string => {
     switch (type) {
-      case 'follow': return 'followed';
-      case 'sub': return 'subscribed';
-      case 'bits': return 'cheered';
-      case 'raid': return 'raided';
-      case 'giftsub': return 'gifted a sub';
-      default: return type;
+      case 'follow':
+        return 'followed';
+      case 'sub':
+        return 'subscribed';
+      case 'bits':
+        return 'cheered';
+      case 'raid':
+        return 'raided';
+      case 'giftsub':
+        return 'gifted a sub';
+      default:
+        return type;
     }
   };
 
@@ -80,7 +99,7 @@ export default function Alert({ config, event, onComplete, colorScheme = 'defaul
     'top-left': 'top-8 left-8',
     'top-center': 'top-8 left-1/2 -translate-x-1/2',
     'top-right': 'top-8 right-8',
-    'center': 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+    center: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
     'bottom-left': 'bottom-8 left-8',
     'bottom-center': 'bottom-8 left-1/2 -translate-x-1/2',
     'bottom-right': 'bottom-8 right-8',
@@ -136,14 +155,14 @@ export default function Alert({ config, event, onComplete, colorScheme = 'defaul
   return (
     <>
       {config.soundUrl && (
-        <audio ref={audioRef} src={config.soundUrl} preload="auto" />
+        <audio ref={audioRef} src={config.soundUrl} preload='auto' />
       )}
 
       <div
         className={`fixed ${positionClasses[config.position]} ${getAnimationClasses()} z-50`}
       >
         <div
-          className="flex flex-col items-center gap-4 p-6 backdrop-blur-md rounded-2xl border-2 shadow-2xl"
+          className='flex flex-col items-center gap-4 p-6 backdrop-blur-md rounded-2xl border-2 shadow-2xl'
           style={{
             background: `linear-gradient(to bottom right, ${hexToRgba(theme.primaryDark, 0.95)}, ${hexToRgba(theme.secondaryDark, 0.95)})`,
             borderColor: hexToRgba(theme.accent, 0.5),
@@ -154,18 +173,20 @@ export default function Alert({ config, event, onComplete, colorScheme = 'defaul
           {config.imageUrl && (
             <img
               src={config.imageUrl}
-              alt="Alert"
-              className="max-w-xs max-h-48 object-contain rounded-lg"
+              alt='Alert'
+              className='max-w-xs max-h-48 object-contain rounded-lg'
             />
           )}
 
           {/* Alert Message */}
           <div
-            className="font-bold text-center"
+            className='font-bold text-center'
             style={{
               fontSize: `${config.fontSize}px`,
               color: config.textColor,
-              textShadow: config.textShadow ? '0 4px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' : 'none',
+              textShadow: config.textShadow
+                ? '0 4px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)'
+                : 'none',
             }}
           >
             {formatMessage(config.messageTemplate)}
@@ -173,20 +194,29 @@ export default function Alert({ config, event, onComplete, colorScheme = 'defaul
 
           {/* Additional info for specific event types */}
           {event.eventType === 'bits' && event.amount && (
-            <div className="text-2xl font-bold flex items-center gap-2" style={{ color: theme.accentText }}>
-              <span className="text-3xl">💎</span>
+            <div
+              className='text-2xl font-bold flex items-center gap-2'
+              style={{ color: theme.accentText }}
+            >
+              <span className='text-3xl'>💎</span>
               {event.amount} Bits
             </div>
           )}
 
           {event.eventType === 'raid' && event.count && (
-            <div className="text-xl font-bold" style={{ color: theme.accentText }}>
+            <div
+              className='text-xl font-bold'
+              style={{ color: theme.accentText }}
+            >
               with {event.count} viewers!
             </div>
           )}
 
           {event.eventType === 'sub' && event.tier && (
-            <div className="text-xl font-bold" style={{ color: theme.accentText }}>
+            <div
+              className='text-xl font-bold'
+              style={{ color: theme.accentText }}
+            >
               Tier {event.tier} ⭐
             </div>
           )}

@@ -18,8 +18,15 @@ export default async function handler(
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { sessionId, colorScheme, customColors, weatherEffect, layers, componentLayouts, paintByNumbersState } =
-    req.body;
+  const {
+    sessionId,
+    colorScheme,
+    customColors,
+    weatherEffect,
+    layers,
+    componentLayouts,
+    paintByNumbersState,
+  } = req.body;
 
   try {
     const layout = await prisma.layout.upsert({
@@ -36,8 +43,9 @@ export default async function handler(
           ?.visible,
         chatHighlightVisible: layers.find((l: any) => l.id === 'chathighlight')
           ?.visible,
-        paintByNumbersVisible:
-          layers.find((l: any) => l.id === 'paintbynumbers')?.visible,
+        paintByNumbersVisible: layers.find(
+          (l: any) => l.id === 'paintbynumbers'
+        )?.visible,
         componentLayouts: componentLayouts || null,
         paintByNumbersState: paintByNumbersState || null,
       },
@@ -47,14 +55,15 @@ export default async function handler(
         colorScheme,
         customColors: customColors || null,
         weatherEffect,
-        weatherVisible: layers.find((l: any) => l.id === 'weather')?.visible ?? true,
+        weatherVisible:
+          layers.find((l: any) => l.id === 'weather')?.visible ?? true,
         chatVisible: layers.find((l: any) => l.id === 'chat')?.visible ?? true,
-        nowPlayingVisible: layers.find((l: any) => l.id === 'nowplaying')
-          ?.visible ?? true,
-        countdownVisible: layers.find((l: any) => l.id === 'countdown')
-          ?.visible ?? true,
-        chatHighlightVisible: layers.find((l: any) => l.id === 'chathighlight')
-          ?.visible ?? true,
+        nowPlayingVisible:
+          layers.find((l: any) => l.id === 'nowplaying')?.visible ?? true,
+        countdownVisible:
+          layers.find((l: any) => l.id === 'countdown')?.visible ?? true,
+        chatHighlightVisible:
+          layers.find((l: any) => l.id === 'chathighlight')?.visible ?? true,
         paintByNumbersVisible:
           layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
         componentLayouts: componentLayouts || null,

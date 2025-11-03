@@ -24,7 +24,8 @@ export function usePaintByNumbers({
   socket,
   isConnected,
 }: UsePaintByNumbersProps) {
-  const [paintByNumbersState, setPaintByNumbersState] = useState<PaintByNumbersState | null>(null);
+  const [paintByNumbersState, setPaintByNumbersState] =
+    useState<PaintByNumbersState | null>(null);
 
   // Initialize paint-by-numbers (load last template or default to heart)
   useEffect(() => {
@@ -105,10 +106,17 @@ export function usePaintByNumbers({
       }
     };
 
-    const handlePaintAllCommandEvent = (data: { username: string; timestamp: number }) => {
+    const handlePaintAllCommandEvent = (data: {
+      username: string;
+      timestamp: number;
+    }) => {
       if (!paintByNumbersState) return;
 
-      const updatedState = processPaintAllCommand(paintByNumbersState, data.username, data.timestamp);
+      const updatedState = processPaintAllCommand(
+        paintByNumbersState,
+        data.username,
+        data.timestamp
+      );
       setPaintByNumbersState(updatedState);
       socket.emit('paint-state', updatedState);
     };
@@ -124,7 +132,12 @@ export function usePaintByNumbers({
 
   // Handle layout changes
   const handlePositionChange = useCallback(
-    (x: number, y: number, componentLayouts: ComponentLayouts, setComponentLayouts: (layouts: ComponentLayouts) => void) => {
+    (
+      x: number,
+      y: number,
+      componentLayouts: ComponentLayouts,
+      setComponentLayouts: (layouts: ComponentLayouts) => void
+    ) => {
       setComponentLayouts({
         ...componentLayouts,
         paintByNumbers: {
@@ -142,7 +155,11 @@ export function usePaintByNumbers({
   );
 
   const handleScaleChange = useCallback(
-    (scale: number, componentLayouts: ComponentLayouts, setComponentLayouts: (layouts: ComponentLayouts) => void) => {
+    (
+      scale: number,
+      componentLayouts: ComponentLayouts,
+      setComponentLayouts: (layouts: ComponentLayouts) => void
+    ) => {
       setComponentLayouts({
         ...componentLayouts,
         paintByNumbers: {
@@ -160,7 +177,11 @@ export function usePaintByNumbers({
   );
 
   const handleGridSizeChange = useCallback(
-    (gridSize: number, componentLayouts: ComponentLayouts, setComponentLayouts: (layouts: ComponentLayouts) => void) => {
+    (
+      gridSize: number,
+      componentLayouts: ComponentLayouts,
+      setComponentLayouts: (layouts: ComponentLayouts) => void
+    ) => {
       setComponentLayouts({
         ...componentLayouts,
         paintByNumbers: {
