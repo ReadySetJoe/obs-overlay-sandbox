@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { stopTwitchChatMonitoring } from '@/lib/twitchChat';
+import { stopFollowMonitoring } from '@/lib/twitchFollows';
 
 export default async function handler(
   req: NextApiRequest,
@@ -25,15 +26,20 @@ export default async function handler(
   }
 
   try {
+    // Stop chat monitoring
     await stopTwitchChatMonitoring(sessionId);
+
+    // Stop follow monitoring
+    await stopFollowMonitoring(sessionId);
+
     return res.status(200).json({
       success: true,
-      message: 'Stopped monitoring Twitch chat',
+      message: 'Stopped monitoring Twitch events',
     });
   } catch (error) {
-    console.error('Error stopping Twitch chat monitoring:', error);
+    console.error('Error stopping Twitch monitoring:', error);
     return res
       .status(500)
-      .json({ error: 'Failed to disconnect from Twitch chat' });
+      .json({ error: 'Failed to disconnect from Twitch' });
   }
 }

@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { startTwitchChatMonitoring } from '@/lib/twitchChat';
+import { startFollowMonitoring } from '@/lib/twitchFollows';
 import { Server as SocketIOServer } from 'socket.io';
 
 type NextApiResponseServerIO = NextApiResponse & {
@@ -47,13 +48,27 @@ export default async function handler(
   }
 
   try {
+    // Start chat monitoring (for messages, subs, bits, raids, etc.)
     await startTwitchChatMonitoring(twitchUsername, sessionId, io);
+
+    // Start follow monitoring (if access token is available)
+    if (session.accessToken) {
+      await startFollowMonitoring(
+        twitchUsername,
+        session.accessToken,
+        sessionId,
+        io
+      );
+    } else {
+      console.warn('No access token available for follow monitoring');
+    }
+
     return res.status(200).json({
       success: true,
-      message: `Monitoring Twitch chat for ${twitchUsername}`,
+      message: `Monitoring Twitch events for ${twitchUsername}`,
     });
   } catch (error) {
-    console.error('Error starting Twitch chat monitoring:', error);
-    return res.status(500).json({ error: 'Failed to connect to Twitch chat' });
+    console.error('Error starting Twitch monitoring:', error);
+    return res.status(500).json({ error: 'Failed to connect to Twitch' });
   }
 }

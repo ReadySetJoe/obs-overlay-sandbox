@@ -89,6 +89,90 @@ export async function startTwitchChatMonitoring(
     }
   });
 
+  // Listen for subscriptions (new subs)
+  client.on('subscription', (channel, username, method, message, userstate) => {
+    const displayName = userstate['display-name'] || username;
+    const tier = method.plan ? method.plan.replace('Prime', '1').replace(/\D/g, '') : '1';
+
+    io.to(sessionId).emit('alert-trigger', {
+      eventType: 'sub',
+      username: displayName,
+      tier: tier,
+      timestamp: Date.now(),
+    });
+  });
+
+  // Listen for resubscriptions
+  client.on('resub', (channel, username, months, message, userstate, methods) => {
+    const displayName = userstate['display-name'] || username;
+    const tier = methods.plan ? methods.plan.replace('Prime', '1').replace(/\D/g, '') : '1';
+
+    io.to(sessionId).emit('alert-trigger', {
+      eventType: 'sub',
+      username: displayName,
+      tier: tier,
+      months: months,
+      timestamp: Date.now(),
+    });
+  });
+
+  // Listen for gift subscriptions
+  client.on('subgift', (channel, username, streakMonths, recipient, methods, userstate) => {
+    const displayName = userstate['display-name'] || username;
+    const recipientName = recipient; // Use the recipient parameter directly
+    const tier = methods.plan ? methods.plan.replace('Prime', '1').replace(/\D/g, '') : '1';
+
+    io.to(sessionId).emit('alert-trigger', {
+      eventType: 'giftsub',
+      username: displayName,
+      recipient: recipientName,
+      tier: tier,
+      timestamp: Date.now(),
+    });
+  });
+
+  // Listen for mystery gift subscriptions
+  client.on('submysterygift', (channel, username, numbOfSubs, methods, userstate) => {
+    const displayName = userstate['display-name'] || username;
+    const tier = methods.plan ? methods.plan.replace('Prime', '1').replace(/\D/g, '') : '1';
+
+    // Emit multiple gift sub alerts for mystery gifts
+    for (let i = 0; i < numbOfSubs; i++) {
+      io.to(sessionId).emit('alert-trigger', {
+        eventType: 'giftsub',
+        username: displayName,
+        recipient: 'Mystery Recipient',
+        tier: tier,
+        timestamp: Date.now() + i, // Slight offset to queue them
+      });
+    }
+  });
+
+  // Listen for bits/cheers
+  client.on('cheer', (channel, userstate, message) => {
+    const displayName = userstate['display-name'] || userstate.username || 'Anonymous';
+    const bits = parseInt(userstate.bits || '0', 10);
+
+    if (bits > 0) {
+      io.to(sessionId).emit('alert-trigger', {
+        eventType: 'bits',
+        username: displayName,
+        amount: bits,
+        timestamp: Date.now(),
+      });
+    }
+  });
+
+  // Listen for raids
+  client.on('raided', (channel, username, viewers) => {
+    io.to(sessionId).emit('alert-trigger', {
+      eventType: 'raid',
+      username: username,
+      count: viewers,
+      timestamp: Date.now(),
+    });
+  });
+
   client.on('connected', (address, port) => {
     // Connection successful
   });
