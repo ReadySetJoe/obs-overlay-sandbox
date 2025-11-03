@@ -27,54 +27,61 @@ export default async function handler(
     layers,
     componentLayouts,
     paintByNumbersState,
+    streamStatsConfig,
   } = req.body;
 
   try {
+    // Build update object dynamically to handle partial updates
+    const updateData: any = {};
+
+    if (colorScheme !== undefined) updateData.colorScheme = colorScheme;
+    if (customColors !== undefined) updateData.customColors = customColors || null;
+    if (fontFamily !== undefined) updateData.fontFamily = fontFamily || 'Inter';
+    if (weatherEffect !== undefined) updateData.weatherEffect = weatherEffect;
+    if (componentLayouts !== undefined) updateData.componentLayouts = componentLayouts || null;
+    if (paintByNumbersState !== undefined) updateData.paintByNumbersState = paintByNumbersState || null;
+    if (streamStatsConfig !== undefined) updateData.streamStatsConfig = streamStatsConfig || null;
+
+    // Only update visibility if layers array is provided
+    if (layers && Array.isArray(layers)) {
+      updateData.weatherVisible = layers.find((l: any) => l.id === 'weather')?.visible;
+      updateData.chatVisible = layers.find((l: any) => l.id === 'chat')?.visible;
+      updateData.nowPlayingVisible = layers.find((l: any) => l.id === 'nowplaying')?.visible;
+      updateData.countdownVisible = layers.find((l: any) => l.id === 'countdown')?.visible;
+      updateData.chatHighlightVisible = layers.find((l: any) => l.id === 'chathighlight')?.visible;
+      updateData.paintByNumbersVisible = layers.find((l: any) => l.id === 'paintbynumbers')?.visible;
+      updateData.eventLabelsVisible = layers.find((l: any) => l.id === 'eventlabels')?.visible;
+      updateData.streamStatsVisible = layers.find((l: any) => l.id === 'streamstats')?.visible;
+    }
+
     const layout = await prisma.layout.upsert({
       where: { sessionId },
-      update: {
-        colorScheme,
-        customColors: customColors || null,
-        fontFamily: fontFamily || 'Inter',
-        weatherEffect,
-        weatherVisible: layers.find((l: any) => l.id === 'weather')?.visible,
-        chatVisible: layers.find((l: any) => l.id === 'chat')?.visible,
-        nowPlayingVisible: layers.find((l: any) => l.id === 'nowplaying')
-          ?.visible,
-        countdownVisible: layers.find((l: any) => l.id === 'countdown')
-          ?.visible,
-        chatHighlightVisible: layers.find((l: any) => l.id === 'chathighlight')
-          ?.visible,
-        paintByNumbersVisible: layers.find(
-          (l: any) => l.id === 'paintbynumbers'
-        )?.visible,
-        eventLabelsVisible: layers.find((l: any) => l.id === 'eventlabels')
-          ?.visible,
-        componentLayouts: componentLayouts || null,
-        paintByNumbersState: paintByNumbersState || null,
-      },
+      update: updateData,
       create: {
         userId: session.user.id,
         sessionId,
-        colorScheme,
+        colorScheme: colorScheme || 'default',
         customColors: customColors || null,
         fontFamily: fontFamily || 'Inter',
-        weatherEffect,
+        weatherEffect: weatherEffect || 'none',
         weatherVisible:
-          layers.find((l: any) => l.id === 'weather')?.visible ?? true,
-        chatVisible: layers.find((l: any) => l.id === 'chat')?.visible ?? true,
+          layers?.find((l: any) => l.id === 'weather')?.visible ?? true,
+        chatVisible: layers?.find((l: any) => l.id === 'chat')?.visible ?? true,
         nowPlayingVisible:
-          layers.find((l: any) => l.id === 'nowplaying')?.visible ?? true,
+          layers?.find((l: any) => l.id === 'nowplaying')?.visible ?? true,
         countdownVisible:
-          layers.find((l: any) => l.id === 'countdown')?.visible ?? true,
+          layers?.find((l: any) => l.id === 'countdown')?.visible ?? true,
         chatHighlightVisible:
-          layers.find((l: any) => l.id === 'chathighlight')?.visible ?? true,
+          layers?.find((l: any) => l.id === 'chathighlight')?.visible ?? true,
         paintByNumbersVisible:
-          layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
+          layers?.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
         eventLabelsVisible:
-          layers.find((l: any) => l.id === 'eventlabels')?.visible ?? true,
+          layers?.find((l: any) => l.id === 'eventlabels')?.visible ?? true,
+        streamStatsVisible:
+          layers?.find((l: any) => l.id === 'streamstats')?.visible ?? true,
         componentLayouts: componentLayouts || null,
         paintByNumbersState: paintByNumbersState || null,
+        streamStatsConfig: streamStatsConfig || null,
       },
     });
 

@@ -17,6 +17,8 @@ import {
   EmoteWallConfig,
   ComponentLayouts,
   EventLabelsConfig,
+  StreamStatsConfig,
+  StreamStatsData,
 } from '@/types/overlay';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
@@ -30,6 +32,7 @@ import PaintByNumbersExpanded from '@/components/dashboard/expanded/PaintByNumbe
 import BackgroundExpanded from '@/components/dashboard/expanded/BackgroundExpanded';
 import AlertsExpanded from '@/components/dashboard/expanded/AlertsExpanded';
 import EventLabelsExpanded from '@/components/dashboard/expanded/EventLabelsExpanded';
+import StreamStatsExpanded from '@/components/dashboard/expanded/StreamStatsExpanded';
 import Footer from '@/components/Footer';
 
 export default function DashboardPage() {
@@ -53,6 +56,7 @@ export default function DashboardPage() {
     { id: 'chathighlight', name: 'Chat Highlight', visible: true },
     { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
     { id: 'eventlabels', name: 'Recent Events', visible: true },
+    { id: 'streamstats', name: 'Stream Stats', visible: true },
   ]);
 
   // Use extracted hooks
@@ -110,6 +114,36 @@ export default function DashboardPage() {
       giftSubLabel: 'Latest Gift Sub',
     }
   );
+
+  // Stream Stats
+  const [streamStatsConfig, setStreamStatsConfig] = useState<StreamStatsConfig>(
+    {
+      followerGoal: 100,
+      subGoal: 50,
+      bitsGoal: 1000,
+      showFollowerGoal: true,
+      showSubGoal: true,
+      showBitsGoal: true,
+      showTotalMessages: true,
+      showUniqueChatters: true,
+      showMessagesPerMinute: true,
+      showMostActiveChatter: true,
+      showPositivityScore: true,
+      showNicestChatter: true,
+      resetOnStream: false,
+    }
+  );
+  const [streamStatsData, setStreamStatsData] = useState<StreamStatsData>({
+    currentFollowers: 0,
+    currentSubs: 0,
+    currentBits: 0,
+    totalMessages: 0,
+    uniqueChatters: 0,
+    messagesPerMinute: 0,
+    mostActiveChatterCount: 0,
+    overallPositivityScore: 0,
+    nicestChatterScore: 0,
+  });
 
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
@@ -201,6 +235,11 @@ export default function DashboardPage() {
               name: 'Recent Events',
               visible: layout.eventLabelsVisible ?? true,
             },
+            {
+              id: 'streamstats',
+              name: 'Stream Stats',
+              visible: layout.streamStatsVisible ?? true,
+            },
           ]);
 
           if (layout.componentLayouts) {
@@ -242,6 +281,19 @@ export default function DashboardPage() {
                   scale: 1,
                   gridSize: 20,
                 },
+                eventLabels: parsedLayouts.eventLabels || {
+                  position: 'top-right',
+                  x: 20,
+                  y: 20,
+                  scale: 1,
+                },
+                streamStats: parsedLayouts.streamStats || {
+                  position: 'top-right',
+                  x: 20,
+                  y: 20,
+                  scale: 1,
+                  displayMode: 'full',
+                },
               });
             } catch (error) {
               console.error('Error parsing component layouts:', error);
@@ -255,6 +307,26 @@ export default function DashboardPage() {
             setBackgroundColors(layout.backgroundColors || null);
             setBackgroundOpacity(layout.backgroundOpacity ?? 1.0);
             setBackgroundBlur(layout.backgroundBlur ?? 0);
+          }
+
+          // Load stream stats config
+          if (layout.streamStatsConfig) {
+            try {
+              const parsedConfig = JSON.parse(layout.streamStatsConfig);
+              setStreamStatsConfig(parsedConfig);
+            } catch (error) {
+              console.error('Error parsing stream stats config:', error);
+            }
+          }
+
+          // Load stream stats data
+          if (layout.streamStatsData) {
+            try {
+              const parsedData = JSON.parse(layout.streamStatsData);
+              setStreamStatsData(parsedData);
+            } catch (error) {
+              console.error('Error parsing stream stats data:', error);
+            }
           }
 
           setLastSaved(new Date(layout.updatedAt));
@@ -391,6 +463,26 @@ export default function DashboardPage() {
     if (!socket) return;
     setEventLabelsConfig(config);
     socket.emit('event-labels-config', config);
+  };
+
+  const handleStreamStatsConfigChange = async (config: StreamStatsConfig) => {
+    if (!socket || !sessionId) return;
+    setStreamStatsConfig(config);
+    socket.emit('stream-stats-config', config);
+
+    // Save to database
+    try {
+      await fetch('/api/layouts/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          streamStatsConfig: JSON.stringify(config),
+        }),
+      });
+    } catch (error) {
+      console.error('Error saving stream stats config:', error);
+    }
   };
 
   const changeWeather = (effect: WeatherEffect) => {
@@ -733,6 +825,17 @@ export default function DashboardPage() {
               onToggleVisibility={() => toggleLayer('eventlabels')}
               onClick={() => handleExpandElement('eventlabels')}
             />
+
+            {/* Stream Stats Tile */}
+            <SummaryTile
+              title='Stream Stats & Goals'
+              subtitle='Track goals, metrics, & sentiment'
+              icon='📈'
+              color='blue'
+              isVisible={layers.find(l => l.id === 'streamstats')?.visible}
+              onToggleVisibility={() => toggleLayer('streamstats')}
+              onClick={() => handleExpandElement('streamstats')}
+            />
           </div>
         ) : (
           /* Expanded Element View */
@@ -1018,6 +1121,57 @@ export default function DashboardPage() {
                       x: componentLayouts.eventLabels?.x || 20,
                       y: componentLayouts.eventLabels?.y || 20,
                       scale,
+                    },
+                  })
+                }
+                onClose={handleCloseExpanded}
+              />
+            )}
+
+            {!isExpanding && expandedElement === 'streamstats' && (
+              <StreamStatsExpanded
+                sessionId={sessionId as string}
+                config={streamStatsConfig}
+                componentLayouts={componentLayouts}
+                onConfigChange={handleStreamStatsConfigChange}
+                onPositionChange={(x, y) =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    streamStats: {
+                      position:
+                        componentLayouts.streamStats?.position || 'top-right',
+                      x,
+                      y,
+                      scale: componentLayouts.streamStats?.scale || 1,
+                      displayMode:
+                        componentLayouts.streamStats?.displayMode || 'full',
+                    },
+                  })
+                }
+                onScaleChange={scale =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    streamStats: {
+                      position:
+                        componentLayouts.streamStats?.position || 'top-right',
+                      x: componentLayouts.streamStats?.x || 20,
+                      y: componentLayouts.streamStats?.y || 20,
+                      scale,
+                      displayMode:
+                        componentLayouts.streamStats?.displayMode || 'full',
+                    },
+                  })
+                }
+                onDisplayModeChange={mode =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    streamStats: {
+                      position:
+                        componentLayouts.streamStats?.position || 'top-right',
+                      x: componentLayouts.streamStats?.x || 20,
+                      y: componentLayouts.streamStats?.y || 20,
+                      scale: componentLayouts.streamStats?.scale || 1,
+                      displayMode: mode,
                     },
                   })
                 }

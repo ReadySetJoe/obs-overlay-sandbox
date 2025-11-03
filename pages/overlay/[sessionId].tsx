@@ -11,6 +11,7 @@ import EmoteWall from '@/components/overlay/EmoteWall';
 import ChatHighlight from '@/components/overlay/ChatHighlight';
 import PaintByNumbers from '@/components/overlay/PaintByNumbers';
 import EventLabels from '@/components/overlay/EventLabels';
+import StreamStats from '@/components/overlay/StreamStats';
 import Alert from '@/components/overlay/Alert';
 import { AlertConfig, AlertEvent } from '@/types/overlay';
 
@@ -36,6 +37,8 @@ export default function OverlayPage() {
     backgroundBlur,
     eventLabelsData,
     eventLabelsConfig,
+    streamStatsData,
+    streamStatsConfig,
     socket,
   } = useOverlaySocket(sessionId as string);
 
@@ -227,6 +230,38 @@ export default function OverlayPage() {
                 scale={layout.scale}
                 colorScheme={colorScheme}
                 customColors={customColors}
+              />
+            </div>
+          );
+        })()}
+
+      {/* Stream Stats */}
+      {getLayerVisible('streamstats') &&
+        (() => {
+          const layout = componentLayouts.streamStats || {
+            position: 'top-right',
+            x: 20,
+            y: 20,
+            scale: 1,
+            displayMode: 'full',
+          };
+
+          return (
+            <div
+              className='fixed transition-all duration-500'
+              style={{
+                zIndex: 16,
+                left: `${layout.x}px`,
+                top: `${layout.y}px`,
+              }}
+            >
+              <StreamStats
+                data={streamStatsData}
+                config={streamStatsConfig}
+                scale={layout.scale}
+                colorScheme={colorScheme}
+                customColors={customColors}
+                displayMode={layout.displayMode}
               />
             </div>
           );

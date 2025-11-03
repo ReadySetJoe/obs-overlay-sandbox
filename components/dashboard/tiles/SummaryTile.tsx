@@ -7,7 +7,7 @@ interface SummaryTileProps {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
-  color: 'green' | 'yellow' | 'cyan' | 'purple' | 'pink';
+  color: 'green' | 'yellow' | 'cyan' | 'purple' | 'pink' | 'blue';
   isVisible?: boolean;
   onToggleVisibility?: () => void;
   onClick: () => void;
@@ -34,6 +34,7 @@ export default function SummaryTile({
     cyan: 'hover:border-cyan-500/50 group-hover:text-cyan-400',
     purple: 'hover:border-purple-500/50 group-hover:text-purple-400',
     pink: 'hover:border-pink-500/50 group-hover:text-pink-400',
+    blue: 'hover:border-blue-500/50 group-hover:text-blue-400',
   };
 
   const gradientMap = {
@@ -42,6 +43,7 @@ export default function SummaryTile({
     cyan: 'from-cyan-500 to-blue-500',
     purple: 'from-blue-500 to-purple-500',
     pink: 'from-pink-500 to-purple-500',
+    blue: 'from-blue-500 to-indigo-500',
   };
 
   return (

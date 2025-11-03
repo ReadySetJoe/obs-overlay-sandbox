@@ -15,6 +15,8 @@ import {
   PaintByNumbersState,
   EventLabelsData,
   EventLabelsConfig,
+  StreamStatsData,
+  StreamStatsConfig,
 } from '@/types/overlay';
 import { colorSchemePresets } from '@/lib/colorSchemes';
 
@@ -62,6 +64,18 @@ export function useOverlaySocket(sessionId: string) {
       visible: true,
       zIndex: 12,
     },
+    {
+      id: 'eventlabels',
+      name: 'Event Labels',
+      visible: true,
+      zIndex: 14,
+    },
+    {
+      id: 'streamstats',
+      name: 'Stream Stats',
+      visible: true,
+      zIndex: 16,
+    },
   ]);
   const [chatHighlight, setChatHighlight] = useState<ChatHighlightType | null>(
     null
@@ -86,6 +100,34 @@ export function useOverlaySocket(sessionId: string) {
       bitsLabel: 'Latest Bits',
       raidLabel: 'Latest Raid',
       giftSubLabel: 'Latest Gift Sub',
+    }
+  );
+  const [streamStatsData, setStreamStatsData] = useState<StreamStatsData>({
+    currentFollowers: 0,
+    currentSubs: 0,
+    currentBits: 0,
+    totalMessages: 0,
+    uniqueChatters: 0,
+    messagesPerMinute: 0,
+    mostActiveChatterCount: 0,
+    overallPositivityScore: 0,
+    nicestChatterScore: 0,
+  });
+  const [streamStatsConfig, setStreamStatsConfig] = useState<StreamStatsConfig>(
+    {
+      followerGoal: 100,
+      subGoal: 50,
+      bitsGoal: 1000,
+      showFollowerGoal: true,
+      showSubGoal: true,
+      showBitsGoal: true,
+      showTotalMessages: true,
+      showUniqueChatters: true,
+      showMessagesPerMinute: true,
+      showMostActiveChatter: true,
+      showPositivityScore: true,
+      showNicestChatter: true,
+      resetOnStream: false,
     }
   );
 
@@ -170,6 +212,16 @@ export function useOverlaySocket(sessionId: string) {
                   visible:
                     layout.paintByNumbersVisible === false ? false : true,
                 };
+              if (layer.id === 'eventlabels')
+                return {
+                  ...layer,
+                  visible: layout.eventLabelsVisible === false ? false : true,
+                };
+              if (layer.id === 'streamstats')
+                return {
+                  ...layer,
+                  visible: layout.streamStatsVisible === false ? false : true,
+                };
               return layer;
             })
           );
@@ -211,6 +263,28 @@ export function useOverlaySocket(sessionId: string) {
               setEventLabelsData(parsedEventLabelsData);
             } catch (error) {
               console.error('Error parsing event labels data:', error);
+            }
+          }
+
+          // Load stream stats data
+          if (layout.streamStatsData) {
+            try {
+              const parsedStreamStatsData = JSON.parse(layout.streamStatsData);
+              setStreamStatsData(parsedStreamStatsData);
+            } catch (error) {
+              console.error('Error parsing stream stats data:', error);
+            }
+          }
+
+          // Load stream stats config
+          if (layout.streamStatsConfig) {
+            try {
+              const parsedStreamStatsConfig = JSON.parse(
+                layout.streamStatsConfig
+              );
+              setStreamStatsConfig(parsedStreamStatsConfig);
+            } catch (error) {
+              console.error('Error parsing stream stats config:', error);
             }
           }
 
@@ -306,6 +380,14 @@ export function useOverlaySocket(sessionId: string) {
       setEventLabelsConfig(config);
     });
 
+    socket.on('stream-stats-update', (data: StreamStatsData) => {
+      setStreamStatsData(data);
+    });
+
+    socket.on('stream-stats-config', (config: StreamStatsConfig) => {
+      setStreamStatsConfig(config);
+    });
+
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
@@ -322,6 +404,8 @@ export function useOverlaySocket(sessionId: string) {
       socket.off('background-change');
       socket.off('event-labels-update');
       socket.off('event-labels-config');
+      socket.off('stream-stats-update');
+      socket.off('stream-stats-config');
     };
   }, [socket]);
 
@@ -409,6 +493,8 @@ export function useOverlaySocket(sessionId: string) {
     backgroundBlur,
     eventLabelsData,
     eventLabelsConfig,
+    streamStatsData,
+    streamStatsConfig,
     removeMessage,
     getLayerVisible,
     colorSchemeStyles,

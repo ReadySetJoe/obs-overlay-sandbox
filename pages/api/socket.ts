@@ -100,6 +100,13 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('stream-stats-config', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('stream-stats-config', data);
+        }
+      });
+
       socket.on('weather-change', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {

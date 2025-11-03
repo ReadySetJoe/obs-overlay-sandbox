@@ -1,8 +1,9 @@
 // lib/twitchChat.ts
 import tmi from 'tmi.js';
-import { ChatMessage, UserRole } from '@/types/overlay';
+import { ChatMessage, UserRole, StreamStatsData } from '@/types/overlay';
 import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '@/lib/prisma';
+import Sentiment from 'sentiment';
 
 interface TwitchChatConnection {
   client: tmi.Client;
@@ -12,6 +13,166 @@ interface TwitchChatConnection {
 
 // Store active Twitch chat connections
 const activeConnections = new Map<string, TwitchChatConnection>();
+
+// Initialize sentiment analyzer
+const sentiment = new Sentiment();
+
+// Helper to update stream stats and chatter sentiment
+async function updateStreamStats(
+  sessionId: string,
+  username: string,
+  displayName: string | undefined,
+  message: string,
+  io: SocketIOServer
+) {
+  try {
+    // Analyze sentiment
+    const result = sentiment.analyze(message);
+    const sentimentScore = result.score;
+
+    // Determine sentiment category
+    let positiveMessages = 0;
+    let negativeMessages = 0;
+    let neutralMessages = 0;
+
+    if (sentimentScore > 0) {
+      positiveMessages = 1;
+    } else if (sentimentScore < 0) {
+      negativeMessages = 1;
+    } else {
+      neutralMessages = 1;
+    }
+
+    // Update or create chatter record
+    const chatter = await prisma.chatter.upsert({
+      where: {
+        sessionId_username: {
+          sessionId,
+          username: username.toLowerCase(),
+        },
+      },
+      update: {
+        displayName: displayName || username,
+        messageCount: { increment: 1 },
+        totalSentiment: { increment: sentimentScore },
+        positiveMessages: { increment: positiveMessages },
+        negativeMessages: { increment: negativeMessages },
+        neutralMessages: { increment: neutralMessages },
+        lastMessageAt: new Date(),
+        updatedAt: new Date(),
+      },
+      create: {
+        sessionId,
+        username: username.toLowerCase(),
+        displayName: displayName || username,
+        messageCount: 1,
+        totalSentiment: sentimentScore,
+        averageSentiment: sentimentScore,
+        positiveMessages,
+        negativeMessages,
+        neutralMessages,
+        firstMessageAt: new Date(),
+        lastMessageAt: new Date(),
+      },
+    });
+
+    // Calculate average sentiment
+    const averageSentiment = chatter.totalSentiment / chatter.messageCount;
+    await prisma.chatter.update({
+      where: { id: chatter.id },
+      data: { averageSentiment },
+    });
+
+    // Get stats for this session
+    const chatters = await prisma.chatter.findMany({
+      where: { sessionId },
+      orderBy: { averageSentiment: 'desc' },
+    });
+
+    // Find most active chatter
+    const mostActive = chatters.reduce((prev, current) =>
+      current.messageCount > prev.messageCount ? current : prev
+    );
+
+    // Find nicest chatter (highest average sentiment)
+    const nicest = chatters[0]; // Already sorted by averageSentiment desc
+
+    // Calculate overall positivity score
+    const totalMessages = chatters.reduce((sum, c) => sum + c.messageCount, 0);
+    const totalSentiment = chatters.reduce(
+      (sum, c) => sum + c.totalSentiment,
+      0
+    );
+    const overallPositivity =
+      totalMessages > 0 ? totalSentiment / totalMessages : 0;
+
+    // Calculate unique chatters
+    const uniqueChatters = chatters.length;
+
+    // Load layout to get existing streamStatsData
+    const layout = await prisma.layout.findUnique({
+      where: { sessionId },
+    });
+
+    if (!layout) return;
+
+    let statsData: StreamStatsData = {
+      currentFollowers: 0,
+      currentSubs: 0,
+      currentBits: 0,
+      totalMessages: 0,
+      uniqueChatters: 0,
+      messagesPerMinute: 0,
+      mostActiveChatterCount: 0,
+      overallPositivityScore: 0,
+      nicestChatterScore: 0,
+    };
+
+    // Parse existing data
+    if (layout.streamStatsData) {
+      try {
+        statsData = JSON.parse(layout.streamStatsData);
+      } catch (error) {
+        console.error('Error parsing stream stats data:', error);
+      }
+    }
+
+    // Update stats
+    statsData.totalMessages = totalMessages;
+    statsData.uniqueChatters = uniqueChatters;
+    statsData.mostActiveChatter = mostActive.displayName || mostActive.username;
+    statsData.mostActiveChatterCount = mostActive.messageCount;
+    statsData.overallPositivityScore = overallPositivity;
+    statsData.nicestChatter = nicest.displayName || nicest.username;
+    statsData.nicestChatterScore = nicest.averageSentiment;
+
+    // Calculate messages per minute
+    if (statsData.streamStartTime) {
+      const startTime = new Date(statsData.streamStartTime);
+      const now = new Date();
+      const minutesElapsed =
+        (now.getTime() - startTime.getTime()) / 1000 / 60;
+      statsData.messagesPerMinute =
+        minutesElapsed > 0 ? totalMessages / minutesElapsed : 0;
+    } else {
+      // If no start time set, set it now
+      statsData.streamStartTime = new Date().toISOString();
+    }
+
+    statsData.lastMessageTime = new Date().toISOString();
+
+    // Save to database
+    await prisma.layout.update({
+      where: { sessionId },
+      data: { streamStatsData: JSON.stringify(statsData) },
+    });
+
+    // Emit to overlay
+    io.to(sessionId).emit('stream-stats-update', statsData);
+  } catch (error) {
+    console.error('Error updating stream stats:', error);
+  }
+}
 
 export function getTwitchUserRole(tags: tmi.ChatUserstate): UserRole {
   if (tags.badges?.broadcaster === '1') return 'moderator';
@@ -60,6 +221,56 @@ async function updateEventLabels(
   }
 }
 
+// Helper to increment stream stats counts (followers, subs, bits)
+async function incrementStreamStatCount(
+  sessionId: string,
+  field: 'currentFollowers' | 'currentSubs' | 'currentBits',
+  amount: number,
+  io: SocketIOServer
+) {
+  try {
+    const layout = await prisma.layout.findUnique({
+      where: { sessionId },
+    });
+
+    if (!layout) return;
+
+    let statsData: StreamStatsData = {
+      currentFollowers: 0,
+      currentSubs: 0,
+      currentBits: 0,
+      totalMessages: 0,
+      uniqueChatters: 0,
+      messagesPerMinute: 0,
+      mostActiveChatterCount: 0,
+      overallPositivityScore: 0,
+      nicestChatterScore: 0,
+    };
+
+    if (layout.streamStatsData) {
+      try {
+        statsData = JSON.parse(layout.streamStatsData);
+      } catch (error) {
+        console.error('Error parsing stream stats data:', error);
+      }
+    }
+
+    // Increment the field
+    statsData[field] = (statsData[field] || 0) + amount;
+
+    // Save to database
+    await prisma.layout.update({
+      where: { sessionId },
+      data: { streamStatsData: JSON.stringify(statsData) },
+    });
+
+    // Emit to overlay
+    io.to(sessionId).emit('stream-stats-update', statsData);
+  } catch (error) {
+    console.error('Error incrementing stream stat count:', error);
+  }
+}
+
 export async function startTwitchChatMonitoring(
   twitchUsername: string,
   sessionId: string,
@@ -98,6 +309,11 @@ export async function startTwitchChatMonitoring(
 
     // Emit to the session room
     io.to(sessionId).emit('chat-message', chatMessage);
+
+    // Update stream stats and sentiment analysis
+    const username = tags.username || 'anonymous';
+    const displayName = tags['display-name'];
+    updateStreamStats(sessionId, username, displayName, message, io);
 
     // Check for paint-by-numbers commands
     // Debug command: !paint all (development only)
@@ -160,6 +376,9 @@ export async function startTwitchChatMonitoring(
 
     // Update event labels
     updateEventLabels(sessionId, { latestSub: displayName }, io);
+
+    // Increment sub count in stream stats
+    incrementStreamStatCount(sessionId, 'currentSubs', 1, io);
   });
 
   // Listen for resubscriptions
@@ -181,6 +400,9 @@ export async function startTwitchChatMonitoring(
 
       // Update event labels
       updateEventLabels(sessionId, { latestSub: displayName }, io);
+
+      // Increment sub count in stream stats
+      incrementStreamStatCount(sessionId, 'currentSubs', 1, io);
     }
   );
 
@@ -208,6 +430,9 @@ export async function startTwitchChatMonitoring(
         { latestGiftSub: { gifter: displayName, recipient: recipientName } },
         io
       );
+
+      // Increment sub count in stream stats (gift subs count as subs)
+      incrementStreamStatCount(sessionId, 'currentSubs', 1, io);
     }
   );
 
@@ -237,6 +462,9 @@ export async function startTwitchChatMonitoring(
         { latestGiftSub: { gifter: displayName } },
         io
       );
+
+      // Increment sub count for all mystery gift subs
+      incrementStreamStatCount(sessionId, 'currentSubs', numbOfSubs, io);
     }
   );
 
@@ -260,6 +488,9 @@ export async function startTwitchChatMonitoring(
         { latestBits: { username: displayName, amount: bits } },
         io
       );
+
+      // Increment bits count in stream stats
+      incrementStreamStatCount(sessionId, 'currentBits', bits, io);
     }
   });
 

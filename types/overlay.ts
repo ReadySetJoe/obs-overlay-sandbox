@@ -212,6 +212,7 @@ export interface ComponentLayouts {
   chatHighlight: ChatHighlightLayout;
   paintByNumbers?: PaintByNumbersLayout;
   eventLabels?: EventLabelsLayout;
+  streamStats?: StreamStatsLayout;
 }
 
 // Alert types
@@ -306,4 +307,68 @@ export interface EventLabelsConfig {
   bitsLabel: string;
   raidLabel: string;
   giftSubLabel: string;
+}
+
+// Stream Stats & Goals
+export interface StreamStatsConfig {
+  // Goals
+  followerGoal: number;
+  subGoal: number;
+  bitsGoal: number;
+
+  // Visible metrics
+  showFollowerGoal: boolean;
+  showSubGoal: boolean;
+  showBitsGoal: boolean;
+  showTotalMessages: boolean;
+  showUniqueChatters: boolean;
+  showMessagesPerMinute: boolean;
+  showMostActiveChatter: boolean;
+  showPositivityScore: boolean;
+  showNicestChatter: boolean;
+
+  // Auto-reset on stream start
+  resetOnStream: boolean;
+}
+
+export interface StreamStatsData {
+  // Goal progress (current counts)
+  currentFollowers: number;
+  currentSubs: number;
+  currentBits: number;
+
+  // Chat metrics
+  totalMessages: number;
+  uniqueChatters: number;
+  messagesPerMinute: number;
+  mostActiveChatter?: string;
+  mostActiveChatterCount: number;
+
+  // Sentiment metrics
+  overallPositivityScore: number; // Average sentiment score
+  nicestChatter?: string;
+  nicestChatterScore: number;
+
+  // Tracking
+  streamStartTime?: string; // ISO timestamp
+  lastMessageTime?: string; // ISO timestamp for MPM calculation
+}
+
+export interface ChatterSentiment {
+  username: string;
+  displayName?: string;
+  messageCount: number;
+  averageSentiment: number;
+  positiveMessages: number;
+  negativeMessages: number;
+  neutralMessages: number;
+  lastMessageAt: string; // ISO timestamp
+}
+
+export interface StreamStatsLayout {
+  position: Position;
+  x: number;
+  y: number;
+  scale: number; // 0.5 to 2.0
+  displayMode: 'compact' | 'full' | 'goals-only' | 'metrics-only';
 }

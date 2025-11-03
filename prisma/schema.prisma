@@ -89,6 +89,11 @@ model Layout {
   // Event labels (JSON) - stores latest follower, sub, bits, etc.
   eventLabelsData String? // JSON: { latestFollower: string, latestSub: string, latestBits: { username: string, amount: number }, etc. }
 
+  // Stream stats & goals
+  streamStatsConfig String? // JSON: { followerGoal: number, subGoal: number, bitsGoal: number, showMetrics: string[], resetOnStream: boolean }
+  streamStatsData   String? // JSON: { currentFollowers: number, currentSubs: number, currentBits: number, totalMessages: number, startTime: string, messagesPerMinute: number }
+  streamStatsVisible Boolean @default(true)
+
   // Custom background
   backgroundImageUrl      String?   // Cloudinary URL
   backgroundImagePublicId String?   // Cloudinary public_id for deletion
@@ -176,4 +181,32 @@ model PaintTemplateCustom {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Chatter {
+  id               String   @id @default(cuid())
+  sessionId        String
+  username         String
+  displayName      String?  // Twitch display name (may differ from username)
+
+  // Message stats
+  messageCount     Int      @default(0)
+
+  // Sentiment tracking
+  totalSentiment   Float    @default(0)    // Sum of all sentiment scores
+  averageSentiment Float    @default(0)    // totalSentiment / messageCount
+  positiveMessages Int      @default(0)    // Count of positive messages
+  negativeMessages Int      @default(0)    // Count of negative messages
+  neutralMessages  Int      @default(0)    // Count of neutral messages
+
+  // Timestamps
+  firstMessageAt   DateTime @default(now())
+  lastMessageAt    DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sessionId, username])
+  @@index([sessionId, averageSentiment])
+  @@index([sessionId, messageCount])
 }

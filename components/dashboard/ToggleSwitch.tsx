@@ -4,7 +4,7 @@
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: () => void;
-  color?: 'green' | 'yellow' | 'cyan' | 'purple' | 'pink';
+  color?: 'green' | 'yellow' | 'cyan' | 'purple' | 'pink' | 'blue';
   label?: string;
 }
 
@@ -20,6 +20,7 @@ export default function ToggleSwitch({
     cyan: 'bg-cyan-500',
     purple: 'bg-purple-500',
     pink: 'bg-pink-500',
+    blue: 'bg-blue-500',
   };
 
   return (
