@@ -5,20 +5,19 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
 import { useSocket } from '@/hooks/useSocket';
+import { useSpotify } from '@/hooks/useSpotify';
+import { useTimers } from '@/hooks/useTimers';
+import { usePaintByNumbers } from '@/hooks/usePaintByNumbers';
+import { useTwitchChat } from '@/hooks/useTwitchChat';
+import { serializePaintState } from '@/lib/paintStateManager';
 import {
   ColorScheme,
   CustomColors,
   WeatherEffect,
-  NowPlaying,
-  CountdownTimer,
   EmoteWallConfig,
   ComponentLayouts,
-  ChatMessage,
-  ChatHighlight,
-  PaintByNumbersState,
 } from '@/types/overlay';
-import { createPaintStateFromTemplate } from '@/lib/paintTemplates';
-import SessionInfo from '@/components/dashboard/SessionInfo';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
 import ColorSchemeExpanded from '@/components/dashboard/expanded/ColorSchemeExpanded';
 import WeatherExpanded from '@/components/dashboard/expanded/WeatherExpanded';
@@ -30,7 +29,6 @@ import PaintByNumbersExpanded from '@/components/dashboard/expanded/PaintByNumbe
 import BackgroundExpanded from '@/components/dashboard/expanded/BackgroundExpanded';
 import AlertsExpanded from '@/components/dashboard/expanded/AlertsExpanded';
 import Footer from '@/components/Footer';
-import Link from 'next/link';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -39,22 +37,23 @@ export default function DashboardPage() {
   const { socket, isConnected } = useSocket(sessionId as string);
 
   // Save status
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
-    'saved'
-  );
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [_lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // Spotify Authentication
-  const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
-  const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(
-    null
-  );
-
-  // Now Playing
-  const [trackTitle, setTrackTitle] = useState('');
-  const [trackArtist, setTrackArtist] = useState('');
-  const [trackAlbumArt, setTrackAlbumArt] = useState('');
-  const [isPlaying, setIsPlaying] = useState(false);
+  // Use extracted hooks
+  const spotify = useSpotify({ socket, isConnected });
+  const timersHook = useTimers({ sessionId: sessionId as string, session });
+  const paintHook = usePaintByNumbers({
+    sessionId: sessionId as string,
+    session,
+    socket,
+    isConnected,
+  });
+  const chatHook = useTwitchChat({
+    sessionId: sessionId as string,
+    session,
+    socket,
+  });
 
   // Scene Layers
   const [layers, setLayers] = useState([
@@ -66,42 +65,18 @@ export default function DashboardPage() {
     { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
   ]);
 
-  // Chat messages and highlight
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatHighlight, setChatHighlight] = useState<ChatHighlight | null>(
-    null
-  );
-
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [customColors, setCustomColors] = useState<CustomColors | null>(null);
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
 
-  // Countdown timers
-  const [timers, setTimers] = useState<CountdownTimer[]>([]);
-  const [showTimerForm, setShowTimerForm] = useState(false);
-  const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
-  const [newTimerTitle, setNewTimerTitle] = useState('');
-  const [newTimerDescription, setNewTimerDescription] = useState('');
-  const [newTimerDate, setNewTimerDate] = useState('');
-
   // Emote wall
   const [emoteInput, setEmoteInput] = useState('🎉 🎊 ✨ 🌟 💫');
-  const [emoteIntensity, setEmoteIntensity] = useState<
-    'light' | 'medium' | 'heavy'
-  >('medium');
-
-  // Paint by numbers
-  const [paintByNumbersState, setPaintByNumbersState] =
-    useState<PaintByNumbersState | null>(null);
+  const [emoteIntensity, setEmoteIntensity] = useState<'light' | 'medium' | 'heavy'>('medium');
 
   // Background
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
-    null
-  );
-  const [backgroundImageName, setBackgroundImageName] = useState<string | null>(
-    null
-  );
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+  const [backgroundImageName, setBackgroundImageName] = useState<string | null>(null);
   const [backgroundColors, setBackgroundColors] = useState<string | null>(null);
   const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
   const [backgroundBlur, setBackgroundBlur] = useState(0);
@@ -109,86 +84,6 @@ export default function DashboardPage() {
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
-
-  // Initialize paint-by-numbers (load last template or default to heart)
-  useEffect(() => {
-    if (!paintByNumbersState && socket && isConnected && session) {
-      const initializeTemplate = async () => {
-        try {
-          const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
-          if (response.ok) {
-            const { layout } = await response.json();
-
-            // Check if we have any saved states
-            if (layout.paintByNumbersState) {
-              const savedStates = JSON.parse(layout.paintByNumbersState);
-              const templateIds = Object.keys(savedStates);
-
-              if (templateIds.length > 0) {
-                // Find the most recently worked on template
-                let mostRecentTemplateId = templateIds[0];
-                let mostRecentTime = savedStates[mostRecentTemplateId].startedAt || 0;
-
-                for (const templateId of templateIds) {
-                  const state = savedStates[templateId];
-                  const lastTime = state.completedAt || state.startedAt || 0;
-                  if (lastTime > mostRecentTime) {
-                    mostRecentTime = lastTime;
-                    mostRecentTemplateId = templateId;
-                  }
-                }
-
-                // Load the most recent template with its saved state
-                const template = createPaintStateFromTemplate(mostRecentTemplateId);
-                if (template) {
-                  const savedTemplateState = savedStates[mostRecentTemplateId];
-                  const reconstructedState: PaintByNumbersState = {
-                    templateId: mostRecentTemplateId,
-                    startedAt: savedTemplateState.startedAt,
-                    completedAt: savedTemplateState.completedAt,
-                    lastFilledBy: savedTemplateState.lastFilledBy,
-                    regions: template.regions.map(region => {
-                      const filledData = savedTemplateState.filledRegions[region.id];
-                      if (filledData) {
-                        return {
-                          ...region,
-                          filled: true,
-                          filledBy: filledData.filledBy,
-                          filledAt: filledData.filledAt,
-                          customColor: filledData.customColor,
-                        };
-                      }
-                      return region;
-                    }),
-                  };
-
-                  setPaintByNumbersState(reconstructedState);
-                  socket.emit('paint-state', reconstructedState);
-                }
-                return;
-              }
-            }
-
-            // No saved state found, initialize with heart template
-            const newTemplate = createPaintStateFromTemplate('heart');
-            if (newTemplate) {
-              const newState: PaintByNumbersState = {
-                templateId: 'heart',
-                regions: newTemplate.regions,
-                startedAt: Date.now(),
-              };
-              setPaintByNumbersState(newState);
-              socket.emit('paint-state', newState);
-            }
-          }
-        } catch (error) {
-          console.error('Error initializing paint state:', error);
-        }
-      };
-
-      initializeTemplate();
-    }
-  }, [socket, isConnected, paintByNumbersState, session, sessionId]);
 
   // Component layouts
   const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
@@ -212,40 +107,13 @@ export default function DashboardPage() {
     },
   });
 
-  // Handle Spotify callback tokens from URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-
-    if (accessToken && refreshToken) {
-      setSpotifyToken(accessToken);
-      setSpotifyRefreshToken(refreshToken);
-      localStorage.setItem('spotify_access_token', accessToken);
-      localStorage.setItem('spotify_refresh_token', refreshToken);
-      const cleanUrl = sessionId
-        ? `/dashboard/${sessionId}`
-        : window.location.pathname;
-      window.history.replaceState({}, '', cleanUrl);
-    } else {
-      const storedToken = localStorage.getItem('spotify_access_token');
-      const storedRefresh = localStorage.getItem('spotify_refresh_token');
-      if (storedToken && storedRefresh) {
-        setSpotifyToken(storedToken);
-        setSpotifyRefreshToken(storedRefresh);
-      }
-    }
-  }, [sessionId]);
-
   // Load saved layout when user is authenticated
   useEffect(() => {
     if (!session || !sessionId) return;
 
     const loadLayout = async () => {
       try {
-        const response = await fetch(
-          `/api/layouts/load?sessionId=${sessionId}`
-        );
+        const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
         if (response.ok) {
           const { layout } = await response.json();
 
@@ -290,7 +158,6 @@ export default function DashboardPage() {
           if (layout.componentLayouts) {
             try {
               const parsedLayouts = JSON.parse(layout.componentLayouts);
-              // Merge with defaults to ensure new properties exist
               setComponentLayouts({
                 chat: parsedLayouts.chat || {
                   position: 'top-left',
@@ -333,10 +200,6 @@ export default function DashboardPage() {
             }
           }
 
-          // Load paint by numbers state - check if we have a saved state for the current template
-          // (We'll load the actual state when a template is selected, this is just for initial load)
-          // The saved state is now a map of templateId -> state
-
           // Load background data
           if (layout.backgroundImageUrl) {
             setBackgroundImageUrl(layout.backgroundImageUrl);
@@ -354,146 +217,7 @@ export default function DashboardPage() {
     };
 
     loadLayout();
-  }, [session, sessionId, socket, isConnected]);
-
-  // Load timers when session is ready
-  useEffect(() => {
-    if (!session || !sessionId) return;
-
-    const loadTimers = async () => {
-      try {
-        const response = await fetch(`/api/timers/list?sessionId=${sessionId}`);
-        if (response.ok) {
-          const { timers } = await response.json();
-          setTimers(timers);
-        }
-      } catch (error) {
-        console.error('Error loading timers:', error);
-      }
-    };
-
-    loadTimers();
   }, [session, sessionId]);
-
-  // Paint by numbers handlers
-  const handlePaintTemplateSelect = async (templateId: string) => {
-    const newTemplate = createPaintStateFromTemplate(templateId);
-    if (!newTemplate) return;
-
-    // Check if we have saved state for this template
-    try {
-      const response = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
-      if (response.ok) {
-        const { layout } = await response.json();
-        if (layout.paintByNumbersState) {
-          const savedStates = JSON.parse(layout.paintByNumbersState);
-          const savedTemplateState = savedStates[templateId];
-
-          if (savedTemplateState) {
-            // Reconstruct state from saved data
-            const reconstructedState: PaintByNumbersState = {
-              templateId,
-              startedAt: savedTemplateState.startedAt,
-              completedAt: savedTemplateState.completedAt,
-              lastFilledBy: savedTemplateState.lastFilledBy,
-              regions: newTemplate.regions.map(region => {
-                const filledData = savedTemplateState.filledRegions[region.id];
-                if (filledData) {
-                  return {
-                    ...region,
-                    filled: true,
-                    filledBy: filledData.filledBy,
-                    filledAt: filledData.filledAt,
-                    customColor: filledData.customColor,
-                  };
-                }
-                return region;
-              }),
-            };
-
-            setPaintByNumbersState(reconstructedState);
-            socket?.emit('paint-state', reconstructedState);
-            return;
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading saved template state:', error);
-    }
-
-    // No saved state found, create fresh state
-    const newState: PaintByNumbersState = {
-      templateId,
-      regions: newTemplate.regions,
-      startedAt: Date.now(),
-    };
-
-    setPaintByNumbersState(newState);
-    socket?.emit('paint-state', newState);
-  };
-
-  const handlePaintReset = () => {
-    if (!paintByNumbersState) return;
-
-    const newTemplate = createPaintStateFromTemplate(
-      paintByNumbersState.templateId
-    );
-    if (!newTemplate) return;
-
-    const resetState: PaintByNumbersState = {
-      templateId: paintByNumbersState.templateId,
-      regions: newTemplate.regions,
-      startedAt: Date.now(),
-    };
-
-    setPaintByNumbersState(resetState);
-    socket?.emit('paint-state', resetState);
-  };
-
-  const handlePaintPositionChange = (x: number, y: number) => {
-    setComponentLayouts(prev => ({
-      ...prev,
-      paintByNumbers: {
-        ...(prev.paintByNumbers || {
-          position: 'top-left',
-          scale: 1,
-          gridSize: 20,
-        }),
-        x,
-        y,
-      },
-    }));
-  };
-
-  const handlePaintScaleChange = (scale: number) => {
-    setComponentLayouts(prev => ({
-      ...prev,
-      paintByNumbers: {
-        ...(prev.paintByNumbers || {
-          position: 'top-left',
-          x: 0,
-          y: 0,
-          gridSize: 20,
-        }),
-        scale,
-      },
-    }));
-  };
-
-  const handlePaintGridSizeChange = (gridSize: number) => {
-    setComponentLayouts(prev => ({
-      ...prev,
-      paintByNumbers: {
-        ...(prev.paintByNumbers || {
-          position: 'top-left',
-          x: 0,
-          y: 0,
-          scale: 1,
-        }),
-        gridSize,
-      },
-    }));
-  };
 
   // Auto-save layout when settings change
   const saveLayout = useCallback(async () => {
@@ -517,26 +241,13 @@ export default function DashboardPage() {
         }
       }
 
-      // Create compact paint state for current template (only save filled region metadata, not pixel data)
-      if (paintByNumbersState) {
-        const filledRegions: Record<number, { filledBy: string; filledAt: number; customColor?: string }> = {};
-        paintByNumbersState.regions.forEach(region => {
-          if (region.filled) {
-            filledRegions[region.id] = {
-              filledBy: region.filledBy!,
-              filledAt: region.filledAt!,
-              customColor: region.customColor,
-            };
-          }
-        });
-
-        // Update state for current template
-        existingStates[paintByNumbersState.templateId] = {
-          startedAt: paintByNumbersState.startedAt,
-          completedAt: paintByNumbersState.completedAt,
-          lastFilledBy: paintByNumbersState.lastFilledBy,
-          filledRegions,
-        };
+      // Serialize paint state if it exists
+      let serializedPaintState = JSON.stringify(existingStates);
+      if (paintHook.paintByNumbersState) {
+        serializedPaintState = serializePaintState(
+          paintHook.paintByNumbersState,
+          existingStates
+        );
       }
 
       const response = await fetch('/api/layouts/save', {
@@ -549,7 +260,7 @@ export default function DashboardPage() {
           weatherEffect,
           layers,
           componentLayouts: JSON.stringify(componentLayouts),
-          paintByNumbersState: JSON.stringify(existingStates),
+          paintByNumbersState: serializedPaintState,
         }),
       });
 
@@ -571,7 +282,7 @@ export default function DashboardPage() {
     weatherEffect,
     layers,
     componentLayouts,
-    paintByNumbersState,
+    paintHook.paintByNumbersState,
   ]);
 
   // Debounced auto-save
@@ -591,71 +302,9 @@ export default function DashboardPage() {
     weatherEffect,
     layers,
     componentLayouts,
-    paintByNumbersState,
+    paintHook.paintByNumbersState,
     saveLayout,
   ]);
-
-  // Poll Spotify API for now playing
-  useEffect(() => {
-    if (!spotifyToken || !socket || !isConnected) return;
-
-    const pollSpotify = async () => {
-      try {
-        const response = await fetch(
-          `/api/spotify/now-playing?access_token=${spotifyToken}`
-        );
-
-        if (response.status === 401 && spotifyRefreshToken) {
-          const refreshResponse = await fetch(
-            `/api/spotify/refresh?refresh_token=${spotifyRefreshToken}`
-          );
-          const refreshData = await refreshResponse.json();
-
-          if (refreshResponse.ok) {
-            setSpotifyToken(refreshData.access_token);
-            localStorage.setItem(
-              'spotify_access_token',
-              refreshData.access_token
-            );
-            return;
-          }
-        }
-
-        const data = await response.json();
-
-        if (data.isPlaying) {
-          const track: NowPlaying = {
-            title: data.title,
-            artist: data.artist,
-            albumArt: data.albumArt,
-            isPlaying: data.isPlaying,
-            progress: data.progress,
-            duration: data.duration,
-            timestamp: Date.now(),
-          };
-          socket.emit('now-playing', track);
-          setTrackTitle(data.title);
-          setTrackArtist(data.artist);
-          setTrackAlbumArt(data.albumArt);
-          setIsPlaying(data.isPlaying);
-        } else {
-          socket.emit('now-playing', {
-            title: trackTitle,
-            artist: trackArtist,
-            albumArt: trackAlbumArt,
-            isPlaying: false,
-          });
-          setIsPlaying(false);
-        }
-      } catch (error) {
-        console.error('Error fetching Spotify data:', error);
-      }
-    };
-
-    pollSpotify();
-    const interval = setInterval(pollSpotify, 5000);
-    return () => clearInterval(interval);
-  }, [spotifyToken, socket, isConnected, spotifyRefreshToken]);
 
   const changeColorScheme = (scheme: ColorScheme) => {
     if (!socket) return;
@@ -686,19 +335,6 @@ export default function DashboardPage() {
     socket.emit('weather-change', effect);
   };
 
-  const updateNowPlaying = () => {
-    if (!socket) return;
-
-    const track: NowPlaying = {
-      title: trackTitle,
-      artist: trackArtist,
-      albumArt: trackAlbumArt,
-      isPlaying,
-    };
-
-    socket.emit('now-playing', track);
-  };
-
   const toggleLayer = (layerId: string) => {
     if (!socket) return;
 
@@ -727,110 +363,14 @@ export default function DashboardPage() {
   // Emit timers to overlay when they change
   useEffect(() => {
     if (!socket || !isConnected) return;
-    socket.emit('countdown-timers', timers);
-  }, [socket, isConnected, timers]);
+    socket.emit('countdown-timers', timersHook.timers);
+  }, [socket, isConnected, timersHook.timers]);
 
   // Emit component layouts to overlay when they change
   useEffect(() => {
     if (!socket || !isConnected) return;
     socket.emit('component-layouts', componentLayouts);
   }, [socket, isConnected, componentLayouts]);
-
-  const startEditingTimer = (timer: CountdownTimer) => {
-    setEditingTimerId(timer.id);
-    setNewTimerTitle(timer.title);
-    setNewTimerDescription(timer.description || '');
-    setNewTimerDate(new Date(timer.targetDate).toISOString().slice(0, 16));
-    setShowTimerForm(true);
-  };
-
-  const cancelTimerForm = () => {
-    setShowTimerForm(false);
-    setEditingTimerId(null);
-    setNewTimerTitle('');
-    setNewTimerDescription('');
-    setNewTimerDate('');
-  };
-
-  const createTimer = async () => {
-    if (!session || !sessionId || !newTimerTitle || !newTimerDate) return;
-
-    try {
-      if (editingTimerId) {
-        const response = await fetch(`/api/timers/${editingTimerId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: newTimerTitle,
-            description: newTimerDescription,
-            targetDate: new Date(newTimerDate).toISOString(),
-          }),
-        });
-
-        if (response.ok) {
-          const { timer } = await response.json();
-          setTimers(prev =>
-            prev.map(t => (t.id === editingTimerId ? timer : t))
-          );
-          cancelTimerForm();
-        }
-      } else {
-        const response = await fetch('/api/timers/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            title: newTimerTitle,
-            description: newTimerDescription,
-            targetDate: new Date(newTimerDate).toISOString(),
-          }),
-        });
-
-        if (response.ok) {
-          const { timer } = await response.json();
-          setTimers(prev => [...prev, timer]);
-          cancelTimerForm();
-        }
-      }
-    } catch (error) {
-      console.error('Error saving timer:', error);
-    }
-  };
-
-  const deleteTimer = async (timerId: string) => {
-    if (!session) return;
-
-    try {
-      const response = await fetch(`/api/timers/${timerId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setTimers(prev => prev.filter(t => t.id !== timerId));
-      }
-    } catch (error) {
-      console.error('Error deleting timer:', error);
-    }
-  };
-
-  const toggleTimer = async (timerId: string, isActive: boolean) => {
-    if (!session) return;
-
-    try {
-      const response = await fetch(`/api/timers/${timerId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive }),
-      });
-
-      if (response.ok) {
-        const { timer } = await response.json();
-        setTimers(prev => prev.map(t => (t.id === timerId ? timer : t)));
-      }
-    } catch (error) {
-      console.error('Error toggling timer:', error);
-    }
-  };
 
   const triggerEmoteWall = () => {
     if (!socket || !isConnected) return;
@@ -859,30 +399,6 @@ export default function DashboardPage() {
     setIsExpanding(false);
   };
 
-  // Listen for chat messages
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleChatMessage = (message: ChatMessage) => {
-      setChatMessages(prev => {
-        // Check if message already exists (deduplicate)
-        const exists = prev.some(msg => msg.id === message.id);
-        if (exists) {
-          return prev;
-        }
-        // Add new message and keep only the last 100 messages
-        const updated = [...prev, message];
-        return updated.slice(-100);
-      });
-    };
-
-    socket.on('chat-message', handleChatMessage);
-
-    return () => {
-      socket.off('chat-message', handleChatMessage);
-    };
-  }, [socket]);
-
   // Listen for background changes from upload/delete API
   useEffect(() => {
     if (!socket) return;
@@ -908,258 +424,16 @@ export default function DashboardPage() {
     };
   }, [socket]);
 
-  // Handle paint commands from chat
-  useEffect(() => {
-    if (!socket) return;
-
-    const handlePaintCommand = (data: {
-      regionId: number;
-      username: string;
-      timestamp: number;
-      customColor?: string;
-    }) => {
-      if (!paintByNumbersState) return;
-
-      const region = paintByNumbersState.regions.find(
-        r => r.id === data.regionId
-      );
-      if (!region) return; // Region doesn't exist
-
-      // Check if region is already filled
-      if (region.filled) {
-        const COOLDOWN_MS = 60000; // 1 minute
-        const timeSinceFilled = data.timestamp - (region.filledAt || 0);
-        const isSameUser = region.filledBy === data.username;
-
-        // Only allow repainting if it's the same user AND cooldown has passed
-        if (!isSameUser || timeSinceFilled < COOLDOWN_MS) {
-          return; // Can't repaint yet
-        }
-      }
-
-      // Parse and validate custom color if provided
-      let validatedColor: string | undefined;
-      if (data.customColor) {
-        const { parseColor } = require('@/lib/colorUtils');
-        validatedColor = parseColor(data.customColor) || undefined;
-      }
-
-      // Update region as filled
-      const updatedRegions = paintByNumbersState.regions.map(r =>
-        r.id === data.regionId
-          ? {
-              ...r,
-              filled: true,
-              filledBy: data.username,
-              filledAt: data.timestamp,
-              customColor: validatedColor,
-            }
-          : r
-      );
-
-      const allFilled = updatedRegions.every(r => r.filled);
-      const updatedState: PaintByNumbersState = {
-        ...paintByNumbersState,
-        regions: updatedRegions,
-        completedAt: allFilled
-          ? data.timestamp
-          : paintByNumbersState.completedAt,
-        lastFilledBy: data.username,
-      };
-
-      setPaintByNumbersState(updatedState);
-      socket.emit('paint-state', updatedState);
-    };
-
-    const handlePaintAllCommand = (data: {
-      username: string;
-      timestamp: number;
-    }) => {
-      if (!paintByNumbersState) return;
-
-      // Fill all regions with their default colors
-      const updatedRegions = paintByNumbersState.regions.map(r => ({
-        ...r,
-        filled: true,
-        filledBy: data.username,
-        filledAt: data.timestamp,
-        customColor: undefined, // Use default template color
-      }));
-
-      const updatedState: PaintByNumbersState = {
-        ...paintByNumbersState,
-        regions: updatedRegions,
-        completedAt: data.timestamp,
-        lastFilledBy: data.username,
-      };
-
-      setPaintByNumbersState(updatedState);
-      socket.emit('paint-state', updatedState);
-    };
-
-    socket.on('paint-command', handlePaintCommand);
-    socket.on('paint-all-command', handlePaintAllCommand);
-
-    return () => {
-      socket.off('paint-command', handlePaintCommand);
-      socket.off('paint-all-command', handlePaintAllCommand);
-    };
-  }, [socket, paintByNumbersState]);
-
-  // Auto-connect to Twitch chat when authenticated
-  useEffect(() => {
-    if (!session || !sessionId) return;
-
-    let isActive = true; // Track if this effect is still active
-
-    const connectTwitchChat = async () => {
-      try {
-        const response = await fetch('/api/twitch/connect-chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId }),
-        });
-
-        if (!response.ok && isActive) {
-          console.error('Failed to connect to Twitch chat');
-        }
-      } catch (error) {
-        if (isActive) {
-          console.error('Error connecting to Twitch chat:', error);
-        }
-      }
-    };
-
-    connectTwitchChat();
-
-    // Cleanup: disconnect when component unmounts
-    return () => {
-      isActive = false;
-      fetch('/api/twitch/disconnect-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
-      }).catch(console.error);
-    };
-  }, [session, sessionId]);
-
-  // Handle chat highlight
-  const highlightChatMessage = (message: ChatMessage) => {
-    if (!socket) return;
-
-    const highlight: ChatHighlight = {
-      message,
-      timestamp: Date.now(),
-    };
-
-    setChatHighlight(highlight);
-
-    // Ensure layouts are synced BEFORE sending the highlight
-    socket.emit('component-layouts', componentLayouts);
-
-    // Small delay to ensure layout is received first
-    setTimeout(() => {
-      socket.emit('chat-highlight', highlight);
-    }, 50);
-  };
-
-  const clearChatHighlight = () => {
-    if (!socket) return;
-
-    setChatHighlight(null);
-
-    // Ensure layouts are synced before clearing
-    socket.emit('component-layouts', componentLayouts);
-
-    setTimeout(() => {
-      socket.emit('chat-highlight', null);
-    }, 50);
-  };
-
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8'>
       <div className='max-w-7xl mx-auto'>
         {/* Header */}
-        <div className='mb-8 md:mb-12'>
-          <Link href='/' className='block'>
-          <img
-            src='/title-white.png'
-            alt='Joe-verlay'
-            className='mx-auto mb-6 max-w-sm md:max-w-md w-full'
-          />
-          </Link>
-          <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
-            <div>
-              <h1 className='text-3xl md:text-4xl font-bold'>Overlay Dashboard</h1>
-              <p className='text-gray-400 text-sm md:text-base'>
-                Configure your stream overlay in real-time
-              </p>
-            </div>
-            <div className='flex items-center gap-3'>
-              {/* Save Status */}
-              {session && (
-                <div className='bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-gray-700'>
-                  <div className='flex items-center gap-2'>
-                    {saveStatus === 'saved' && (
-                      <>
-                        <svg
-                          className='w-4 h-4 text-green-400'
-                          fill='none'
-                          stroke='currentColor'
-                          viewBox='0 0 24 24'
-                        >
-                          <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth={2}
-                            d='M5 13l4 4L19 7'
-                          />
-                        </svg>
-                        <span className='text-sm text-green-400'>Saved</span>
-                      </>
-                    )}
-                    {saveStatus === 'saving' && (
-                      <>
-                        <div className='w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin' />
-                        <span className='text-sm text-blue-400'>Saving...</span>
-                      </>
-                    )}
-                    {saveStatus === 'unsaved' && (
-                      <>
-                        <div className='w-2 h-2 bg-yellow-400 rounded-full' />
-                        <span className='text-sm text-yellow-400'>Unsaved</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Connection Status */}
-              <div className='bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-gray-700'>
-                <div className='flex items-center gap-2'>
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      isConnected
-                        ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/50'
-                        : 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50'
-                    }`}
-                  />
-                  <span className='text-sm font-semibold'>
-                    {isConnected ? 'Live' : 'Offline'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Session Info */}
-          {sessionId && (
-            <SessionInfo
-              sessionId={sessionId as string}
-              isAuthenticated={!!session}
-            />
-          )}
-        </div>
+        <DashboardHeader
+          sessionId={sessionId as string}
+          session={session}
+          isConnected={isConnected}
+          saveStatus={saveStatus}
+        />
 
         {/* Main Content */}
         {!expandedElement ? (
@@ -1174,9 +448,9 @@ export default function DashboardPage() {
               subtitle={
                 !session
                   ? 'Connect Twitch to use'
-                  : chatHighlight
-                    ? chatHighlight.message.username
-                    : `${chatMessages.length} messages`
+                  : chatHook.chatHighlight
+                    ? chatHook.chatHighlight.message.username
+                    : `${chatHook.chatMessages.length} messages`
               }
               icon={
                 <svg
@@ -1205,7 +479,7 @@ export default function DashboardPage() {
             <SummaryTile
               title='Now Playing'
               subtitle={
-                spotifyToken ? trackTitle || 'Connected' : 'Not connected'
+                spotify.spotifyToken ? spotify.trackTitle || 'Connected' : 'Not connected'
               }
               icon={
                 <svg
@@ -1225,7 +499,7 @@ export default function DashboardPage() {
             {/* Countdown Timers Tile */}
             <SummaryTile
               title='Countdown Timers'
-              subtitle={`${timers.length} timer${timers.length !== 1 ? 's' : ''}`}
+              subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
               icon={
                 <svg
                   className='w-7 h-7'
@@ -1349,8 +623,8 @@ export default function DashboardPage() {
             <SummaryTile
               title='Paint by Numbers'
               subtitle={
-                paintByNumbersState
-                  ? `${paintByNumbersState.regions.filter(r => r.filled).length}/${paintByNumbersState.regions.length} filled`
+                paintHook.paintByNumbersState
+                  ? `${paintHook.paintByNumbersState.regions.filter(r => r.filled).length}/${paintHook.paintByNumbersState.regions.length} filled`
                   : 'Select template'
               }
               icon={<span className='text-3xl'>🎨</span>}
@@ -1431,22 +705,17 @@ export default function DashboardPage() {
 
             {!isExpanding && expandedElement === 'nowplaying' && (
               <NowPlayingExpanded
-                spotifyToken={spotifyToken}
+                spotifyToken={spotify.spotifyToken}
                 sessionId={sessionId as string}
-                trackTitle={trackTitle}
-                trackArtist={trackArtist}
-                trackAlbumArt={trackAlbumArt}
-                isPlaying={isPlaying}
+                trackTitle={spotify.trackTitle}
+                trackArtist={spotify.trackArtist}
+                trackAlbumArt={spotify.trackAlbumArt}
+                isPlaying={spotify.isPlaying}
                 isVisible={
                   layers.find(l => l.id === 'nowplaying')?.visible || false
                 }
                 componentLayouts={componentLayouts}
-                onDisconnect={() => {
-                  setSpotifyToken(null);
-                  setSpotifyRefreshToken(null);
-                  localStorage.removeItem('spotify_access_token');
-                  localStorage.removeItem('spotify_refresh_token');
-                }}
+                onDisconnect={spotify.disconnect}
                 onToggleVisibility={() => toggleLayer('nowplaying')}
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
@@ -1471,11 +740,11 @@ export default function DashboardPage() {
                     nowPlaying: { ...componentLayouts.nowPlaying, scale },
                   })
                 }
-                onTrackTitleChange={setTrackTitle}
-                onTrackArtistChange={setTrackArtist}
-                onTrackAlbumArtChange={setTrackAlbumArt}
-                onIsPlayingChange={setIsPlaying}
-                onManualUpdate={updateNowPlaying}
+                onTrackTitleChange={spotify.setTrackTitle}
+                onTrackArtistChange={spotify.setTrackArtist}
+                onTrackAlbumArtChange={spotify.setTrackAlbumArt}
+                onIsPlayingChange={spotify.setIsPlaying}
+                onManualUpdate={spotify.updateNowPlaying}
                 onClose={handleCloseExpanded}
               />
             )}
@@ -1483,27 +752,27 @@ export default function DashboardPage() {
             {!isExpanding && expandedElement === 'countdown' && (
               <CountdownExpanded
                 sessionId={sessionId as string}
-                timers={timers}
+                timers={timersHook.timers}
                 isVisible={
                   layers.find(l => l.id === 'countdown')?.visible || false
                 }
                 isAuthenticated={!!session}
-                showTimerForm={showTimerForm}
-                editingTimerId={editingTimerId}
-                newTimerTitle={newTimerTitle}
-                newTimerDescription={newTimerDescription}
-                newTimerDate={newTimerDate}
+                showTimerForm={timersHook.showTimerForm}
+                editingTimerId={timersHook.editingTimerId}
+                newTimerTitle={timersHook.newTimerTitle}
+                newTimerDescription={timersHook.newTimerDescription}
+                newTimerDate={timersHook.newTimerDate}
                 componentLayouts={componentLayouts}
                 onToggleVisibility={() => toggleLayer('countdown')}
-                onShowTimerForm={() => setShowTimerForm(!showTimerForm)}
-                onCreateTimer={createTimer}
-                onCancelTimerForm={cancelTimerForm}
-                onStartEditingTimer={startEditingTimer}
-                onDeleteTimer={deleteTimer}
-                onToggleTimer={toggleTimer}
-                onNewTimerTitleChange={setNewTimerTitle}
-                onNewTimerDescriptionChange={setNewTimerDescription}
-                onNewTimerDateChange={setNewTimerDate}
+                onShowTimerForm={() => timersHook.setShowTimerForm(!timersHook.showTimerForm)}
+                onCreateTimer={timersHook.createTimer}
+                onCancelTimerForm={timersHook.cancelTimerForm}
+                onStartEditingTimer={timersHook.startEditingTimer}
+                onDeleteTimer={timersHook.deleteTimer}
+                onToggleTimer={timersHook.toggleTimer}
+                onNewTimerTitleChange={timersHook.setNewTimerTitle}
+                onNewTimerDescriptionChange={timersHook.setNewTimerDescription}
+                onNewTimerDateChange={timersHook.setNewTimerDate}
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
                     ...componentLayouts,
@@ -1547,17 +816,23 @@ export default function DashboardPage() {
             {!isExpanding && expandedElement === 'paint' && (
               <PaintByNumbersExpanded
                 sessionId={sessionId as string}
-                paintState={paintByNumbersState}
+                paintState={paintHook.paintByNumbersState}
                 isVisible={
                   layers.find(l => l.id === 'paintbynumbers')?.visible || false
                 }
                 componentLayouts={componentLayouts}
                 onToggleVisibility={() => toggleLayer('paintbynumbers')}
-                onTemplateSelect={handlePaintTemplateSelect}
-                onReset={handlePaintReset}
-                onPositionChange={handlePaintPositionChange}
-                onScaleChange={handlePaintScaleChange}
-                onGridSizeChange={handlePaintGridSizeChange}
+                onTemplateSelect={paintHook.handleTemplateSelect}
+                onReset={paintHook.handleReset}
+                onPositionChange={(x, y) =>
+                  paintHook.handlePositionChange(x, y, componentLayouts, setComponentLayouts)
+                }
+                onScaleChange={scale =>
+                  paintHook.handleScaleChange(scale, componentLayouts, setComponentLayouts)
+                }
+                onGridSizeChange={gridSize =>
+                  paintHook.handleGridSizeChange(gridSize, componentLayouts, setComponentLayouts)
+                }
                 onClose={handleCloseExpanded}
               />
             )}
@@ -1565,16 +840,20 @@ export default function DashboardPage() {
             {!isExpanding && expandedElement === 'chathighlight' && (
               <ChatHighlightExpanded
                 sessionId={sessionId as string}
-                messages={chatMessages}
-                currentHighlight={chatHighlight}
+                messages={chatHook.chatMessages}
+                currentHighlight={chatHook.chatHighlight}
                 isVisible={
                   layers.find(l => l.id === 'chathighlight')?.visible || false
                 }
                 isAuthenticated={!!session}
                 twitchUsername={session?.user?.name || null}
                 componentLayouts={componentLayouts}
-                onHighlightMessage={highlightChatMessage}
-                onClearHighlight={clearChatHighlight}
+                onHighlightMessage={message =>
+                  chatHook.highlightChatMessage(message, componentLayouts)
+                }
+                onClearHighlight={() =>
+                  chatHook.clearChatHighlight(componentLayouts)
+                }
                 onToggleVisibility={() => toggleLayer('chathighlight')}
                 onPositionChange={(x, y) =>
                   setComponentLayouts({

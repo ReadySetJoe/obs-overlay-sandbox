@@ -1,0 +1,132 @@
+// hooks/useSpotify.ts
+import { useState, useEffect } from 'react';
+import { NowPlaying } from '@/types/overlay';
+import { Socket } from 'socket.io-client';
+
+interface UseSpotifyProps {
+  socket: Socket | null;
+  isConnected: boolean;
+}
+
+export function useSpotify({ socket, isConnected }: UseSpotifyProps) {
+  const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
+  const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(null);
+  const [trackTitle, setTrackTitle] = useState('');
+  const [trackArtist, setTrackArtist] = useState('');
+  const [trackAlbumArt, setTrackAlbumArt] = useState('');
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Handle Spotify callback tokens from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+
+    if (accessToken && refreshToken) {
+      setSpotifyToken(accessToken);
+      setSpotifyRefreshToken(refreshToken);
+      localStorage.setItem('spotify_access_token', accessToken);
+      localStorage.setItem('spotify_refresh_token', refreshToken);
+
+      // Clean URL
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    } else {
+      const storedToken = localStorage.getItem('spotify_access_token');
+      const storedRefresh = localStorage.getItem('spotify_refresh_token');
+      if (storedToken && storedRefresh) {
+        setSpotifyToken(storedToken);
+        setSpotifyRefreshToken(storedRefresh);
+      }
+    }
+  }, []);
+
+  // Poll Spotify API for now playing
+  useEffect(() => {
+    if (!spotifyToken || !socket || !isConnected) return;
+
+    const pollSpotify = async () => {
+      try {
+        const response = await fetch(`/api/spotify/now-playing?access_token=${spotifyToken}`);
+
+        if (response.status === 401 && spotifyRefreshToken) {
+          const refreshResponse = await fetch(`/api/spotify/refresh?refresh_token=${spotifyRefreshToken}`);
+          const refreshData = await refreshResponse.json();
+
+          if (refreshResponse.ok) {
+            setSpotifyToken(refreshData.access_token);
+            localStorage.setItem('spotify_access_token', refreshData.access_token);
+            return;
+          }
+        }
+
+        const data = await response.json();
+
+        if (data.isPlaying) {
+          const track: NowPlaying = {
+            title: data.title,
+            artist: data.artist,
+            albumArt: data.albumArt,
+            isPlaying: data.isPlaying,
+            progress: data.progress,
+            duration: data.duration,
+            timestamp: Date.now(),
+          };
+          socket.emit('now-playing', track);
+          setTrackTitle(data.title);
+          setTrackArtist(data.artist);
+          setTrackAlbumArt(data.albumArt);
+          setIsPlaying(data.isPlaying);
+        } else {
+          socket.emit('now-playing', {
+            title: trackTitle,
+            artist: trackArtist,
+            albumArt: trackAlbumArt,
+            isPlaying: false,
+          });
+          setIsPlaying(false);
+        }
+      } catch (error) {
+        console.error('Error fetching Spotify data:', error);
+      }
+    };
+
+    pollSpotify();
+    const interval = setInterval(pollSpotify, 5000);
+    return () => clearInterval(interval);
+  }, [spotifyToken, socket, isConnected, spotifyRefreshToken, trackTitle, trackArtist, trackAlbumArt]);
+
+  const updateNowPlaying = () => {
+    if (!socket) return;
+
+    const track: NowPlaying = {
+      title: trackTitle,
+      artist: trackArtist,
+      albumArt: trackAlbumArt,
+      isPlaying,
+    };
+
+    socket.emit('now-playing', track);
+  };
+
+  const disconnect = () => {
+    setSpotifyToken(null);
+    setSpotifyRefreshToken(null);
+    localStorage.removeItem('spotify_access_token');
+    localStorage.removeItem('spotify_refresh_token');
+  };
+
+  return {
+    spotifyToken,
+    trackTitle,
+    trackArtist,
+    trackAlbumArt,
+    isPlaying,
+    setTrackTitle,
+    setTrackArtist,
+    setTrackAlbumArt,
+    setIsPlaying,
+    updateNowPlaying,
+    disconnect,
+  };
+}
