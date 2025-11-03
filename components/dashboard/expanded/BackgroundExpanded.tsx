@@ -250,9 +250,6 @@ export default function BackgroundExpanded({
             </p>
           </div>
         </div>
-        <CopyURLButton
-          url={`${window.location.origin}/overlay/${sessionId}/background`}
-        />
       </div>
 
       {/* Upload Area */}
@@ -486,6 +483,10 @@ export default function BackgroundExpanded({
           {error}
         </div>
       )}
+
+      <CopyURLButton
+        url={`${window.location.origin}/overlay/${sessionId}/background`}
+      />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   EventLabelsConfig,
   StreamStatsConfig,
   StreamStatsData,
+  WheelConfig,
 } from '@/types/overlay';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
@@ -33,6 +34,7 @@ import BackgroundExpanded from '@/components/dashboard/expanded/BackgroundExpand
 import AlertsExpanded from '@/components/dashboard/expanded/AlertsExpanded';
 import EventLabelsExpanded from '@/components/dashboard/expanded/EventLabelsExpanded';
 import StreamStatsExpanded from '@/components/dashboard/expanded/StreamStatsExpanded';
+import WheelExpanded from '@/components/dashboard/expanded/WheelExpanded';
 import Footer from '@/components/Footer';
 
 export default function DashboardPage() {
@@ -57,6 +59,7 @@ export default function DashboardPage() {
     { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
     { id: 'eventlabels', name: 'Recent Events', visible: true },
     { id: 'streamstats', name: 'Stream Stats', visible: true },
+    { id: 'wheel', name: 'Wheel Spinner', visible: true },
   ]);
 
   // Use extracted hooks
@@ -145,6 +148,9 @@ export default function DashboardPage() {
     nicestChatterScore: 0,
   });
 
+  // Wheel Spinner
+  const [wheels, setWheels] = useState<WheelConfig[]>([]);
+
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
@@ -174,6 +180,10 @@ export default function DashboardPage() {
       x: 20,
       y: 20,
       scale: 1,
+    },
+    wheel: {
+      position: 'center',
+      scale: 1.0,
     },
   });
 
@@ -240,6 +250,11 @@ export default function DashboardPage() {
               name: 'Stream Stats',
               visible: layout.streamStatsVisible ?? true,
             },
+            {
+              id: 'wheel',
+              name: 'Wheel Spinner',
+              visible: layout.wheelVisible ?? true,
+            },
           ]);
 
           if (layout.componentLayouts) {
@@ -294,6 +309,10 @@ export default function DashboardPage() {
                   scale: 1,
                   displayMode: 'full',
                 },
+                wheel: parsedLayouts.wheel || {
+                  position: 'center',
+                  scale: 1.0,
+                },
               });
             } catch (error) {
               console.error('Error parsing component layouts:', error);
@@ -338,6 +357,25 @@ export default function DashboardPage() {
 
     loadLayout();
   }, [session, sessionId]);
+
+  // Load wheels
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadWheels = async () => {
+      try {
+        const response = await fetch(`/api/wheels/list?sessionId=${sessionId}`);
+        if (response.ok) {
+          const { wheels: loadedWheels } = await response.json();
+          setWheels(loadedWheels);
+        }
+      } catch (error) {
+        console.error('Error loading wheels:', error);
+      }
+    };
+
+    loadWheels();
+  }, [sessionId]);
 
   // Auto-save layout when settings change
   const saveLayout = useCallback(async () => {
@@ -402,6 +440,7 @@ export default function DashboardPage() {
     sessionId,
     colorScheme,
     customColors,
+    fontFamily,
     weatherEffect,
     layers,
     componentLayouts,
@@ -553,6 +592,141 @@ export default function DashboardPage() {
   const handleCloseExpanded = () => {
     setExpandedElement(null);
     setIsExpanding(false);
+  };
+
+  // Wheel handlers
+  const handleCreateWheel = async (wheel: Omit<WheelConfig, 'id' | 'layoutId'>) => {
+    try {
+      const response = await fetch('/api/wheels/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, ...wheel }),
+      });
+
+      if (response.ok) {
+        const { wheel: newWheel } = await response.json();
+        setWheels([...wheels, newWheel]);
+
+        // Broadcast update to overlay
+        if (socket) {
+          socket.emit('wheel-list-update', { wheels: [...wheels, newWheel] });
+        }
+      }
+    } catch (error) {
+      console.error('Error creating wheel:', error);
+    }
+  };
+
+  const handleUpdateWheel = async (wheelId: string, updates: Partial<WheelConfig>) => {
+    try {
+      const response = await fetch(`/api/wheels/${wheelId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+
+      if (response.ok) {
+        const { wheel: updatedWheel } = await response.json();
+
+        // If activating a wheel, reload all wheels to get the updated states
+        // (other wheels will have been deactivated in the database)
+        if (updates.isActive === true) {
+          const refreshResponse = await fetch(`/api/wheels/list?sessionId=${sessionId}`);
+          if (refreshResponse.ok) {
+            const { wheels: refreshedWheels } = await refreshResponse.json();
+            setWheels(refreshedWheels);
+
+            // Broadcast full list update to overlay
+            if (socket) {
+              socket.emit('wheel-list-update', { wheels: refreshedWheels });
+            }
+            return;
+          }
+        }
+
+        // For deactivation or other updates, just update the single wheel
+        const newWheels = wheels.map((w) => (w.id === wheelId ? updatedWheel : w));
+        setWheels(newWheels);
+
+        // Broadcast update to overlay
+        if (socket) {
+          socket.emit('wheel-config-update', { wheel: updatedWheel });
+          socket.emit('wheel-list-update', { wheels: newWheels });
+        }
+      }
+    } catch (error) {
+      console.error('Error updating wheel:', error);
+    }
+  };
+
+  const handleDeleteWheel = async (wheelId: string) => {
+    try {
+      const response = await fetch(`/api/wheels/${wheelId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const newWheels = wheels.filter((w) => w.id !== wheelId);
+        setWheels(newWheels);
+
+        // Broadcast update to overlay
+        if (socket) {
+          socket.emit('wheel-list-update', { wheels: newWheels });
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting wheel:', error);
+    }
+  };
+
+  const handleSpinWheel = async (wheelId: string) => {
+    try {
+      const response = await fetch('/api/wheels/spin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wheelId, sessionId }),
+      });
+
+      if (response.ok) {
+        const { winningLabel } = await response.json();
+        console.log('Wheel spin result:', winningLabel);
+        // The spin event is broadcasted via Socket.io from the API
+      }
+    } catch (error) {
+      console.error('Error spinning wheel:', error);
+    }
+  };
+
+  const handleWheelPositionChange = (position: 'center' | 'top-center' | 'bottom-center') => {
+    setComponentLayouts({
+      ...componentLayouts,
+      wheel: {
+        ...componentLayouts.wheel!,
+        position,
+      },
+    });
+
+    // Update active wheel's position
+    const activeWheel = wheels.find((w) => w.isActive);
+    if (activeWheel) {
+      handleUpdateWheel(activeWheel.id, { position });
+    }
+  };
+
+  const handleWheelScaleChange = (scale: number) => {
+    setComponentLayouts({
+      ...componentLayouts,
+      wheel: {
+        ...componentLayouts.wheel!,
+        scale,
+      },
+    });
+
+    // Update active wheel's scale
+    const activeWheel = wheels.find((w) => w.isActive);
+    if (activeWheel) {
+      handleUpdateWheel(activeWheel.id, { scale });
+    }
   };
 
   // Listen for background changes from upload/delete API
@@ -835,6 +1009,23 @@ export default function DashboardPage() {
               isVisible={layers.find(l => l.id === 'streamstats')?.visible}
               onToggleVisibility={() => toggleLayer('streamstats')}
               onClick={() => handleExpandElement('streamstats')}
+            />
+
+            {/* Wheel Spinner Tile */}
+            <SummaryTile
+              title='Wheel Spinner'
+              subtitle={
+                wheels.find((w) => w.isActive)
+                  ? wheels.find((w) => w.isActive)!.name
+                  : wheels.length > 0
+                  ? `${wheels.length} wheel${wheels.length > 1 ? 's' : ''}`
+                  : 'No wheels yet'
+              }
+              icon='🎡'
+              color='purple'
+              isVisible={layers.find(l => l.id === 'wheel')?.visible}
+              onToggleVisibility={() => toggleLayer('wheel')}
+              onClick={() => handleExpandElement('wheel')}
             />
           </div>
         ) : (
@@ -1175,6 +1366,23 @@ export default function DashboardPage() {
                     },
                   })
                 }
+                onClose={handleCloseExpanded}
+              />
+            )}
+
+            {!isExpanding && expandedElement === 'wheel' && (
+              <WheelExpanded
+                sessionId={sessionId as string}
+                wheels={wheels}
+                isVisible={layers.find(l => l.id === 'wheel')?.visible || false}
+                componentLayouts={componentLayouts}
+                onToggleVisibility={() => toggleLayer('wheel')}
+                onPositionChange={handleWheelPositionChange}
+                onScaleChange={handleWheelScaleChange}
+                onCreateWheel={handleCreateWheel}
+                onUpdateWheel={handleUpdateWheel}
+                onDeleteWheel={handleDeleteWheel}
+                onSpinWheel={handleSpinWheel}
                 onClose={handleCloseExpanded}
               />
             )}

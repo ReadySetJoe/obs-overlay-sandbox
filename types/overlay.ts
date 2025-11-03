@@ -213,6 +213,7 @@ export interface ComponentLayouts {
   paintByNumbers?: PaintByNumbersLayout;
   eventLabels?: EventLabelsLayout;
   streamStats?: StreamStatsLayout;
+  wheel?: WheelLayout;
 }
 
 // Alert types
@@ -371,4 +372,42 @@ export interface StreamStatsLayout {
   y: number;
   scale: number; // 0.5 to 2.0
   displayMode: 'compact' | 'full' | 'goals-only' | 'metrics-only';
+}
+
+// Wheel Spinner
+export type WheelPosition = 'center' | 'top-center' | 'bottom-center';
+
+export interface WheelSegment {
+  label: string;
+  color: string;
+  weight?: number; // Optional: for weighted probability (default 1)
+}
+
+export interface WheelConfig {
+  id: string;
+  layoutId: string;
+  name: string;
+  segments: WheelSegment[];
+  isActive: boolean;
+
+  // Visual settings
+  position: WheelPosition;
+  scale: number; // 0.5 to 2.0
+  spinDuration: number; // seconds (3-10)
+
+  // Audio settings
+  soundEnabled: boolean;
+  soundVolume: number; // 0.0 to 1.0
+}
+
+export interface WheelLayout {
+  position: WheelPosition;
+  scale: number; // 0.5 to 2.0
+}
+
+export interface WheelSpinEvent {
+  wheelId: string;
+  winningIndex: number;
+  winningLabel: string;
+  timestamp: number;
 }

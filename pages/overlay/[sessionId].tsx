@@ -13,7 +13,8 @@ import PaintByNumbers from '@/components/overlay/PaintByNumbers';
 import EventLabels from '@/components/overlay/EventLabels';
 import StreamStats from '@/components/overlay/StreamStats';
 import Alert from '@/components/overlay/Alert';
-import { AlertConfig, AlertEvent, CountdownTimer, EventLabelsData, EventLabelsConfig, StreamStatsData, StreamStatsConfig } from '@/types/overlay';
+import Wheel from '@/components/overlay/Wheel';
+import { AlertConfig, AlertEvent, CountdownTimer, EventLabelsData, EventLabelsConfig, StreamStatsData, StreamStatsConfig, WheelConfig, WheelSpinEvent } from '@/types/overlay';
 
 export default function OverlayPage() {
   const router = useRouter();
@@ -75,6 +76,10 @@ export default function OverlayPage() {
     config: AlertConfig;
     event: AlertEvent;
   } | null>(null);
+
+  // Wheel state
+  const [wheels, setWheels] = useState<WheelConfig[]>([]);
+  const [wheelSpinEvent, setWheelSpinEvent] = useState<WheelSpinEvent | null>(null);
 
   // Load initial data from database (critical for OBS where page loads fresh each time)
   useEffect(() => {
@@ -162,6 +167,14 @@ export default function OverlayPage() {
           }));
         }
 
+        // Load wheels
+        const wheelsResponse = await fetch(`/api/wheels/list?sessionId=${sessionId}`);
+        if (wheelsResponse.ok) {
+          const { wheels: loadedWheels } = await wheelsResponse.json();
+          setWheels(loadedWheels);
+          console.log('[Overlay] Wheels loaded:', loadedWheels);
+        }
+
         // Mark initial data as loaded
         setInitialDataLoaded(true);
         console.log('[Overlay] ✅ All initial data loaded successfully');
@@ -231,6 +244,9 @@ export default function OverlayPage() {
     socket.on('alert-trigger', () => trackEvent('alert-trigger'));
     socket.on('chat-highlight', () => trackEvent('chat-highlight'));
     socket.on('background-change', () => trackEvent('background-change'));
+    socket.on('wheel-config-update', () => trackEvent('wheel-config-update'));
+    socket.on('wheel-list-update', () => trackEvent('wheel-list-update'));
+    socket.on('wheel-spin', () => trackEvent('wheel-spin'));
 
     return () => {
       socket.off('color-scheme-change');
@@ -241,6 +257,9 @@ export default function OverlayPage() {
       socket.off('alert-trigger');
       socket.off('chat-highlight');
       socket.off('background-change');
+      socket.off('wheel-config-update');
+      socket.off('wheel-list-update');
+      socket.off('wheel-spin');
     };
   }, [socket]);
 
@@ -272,6 +291,33 @@ export default function OverlayPage() {
       socket.off('alert-trigger', handleAlertTrigger);
     };
   }, [socket, sessionId]);
+
+  // Listen for wheel updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleWheelConfigUpdate = (data: { wheel: WheelConfig }) => {
+      setWheels(prev => prev.map(w => w.id === data.wheel.id ? data.wheel : w));
+    };
+
+    const handleWheelListUpdate = (data: { wheels: WheelConfig[] }) => {
+      setWheels(data.wheels);
+    };
+
+    const handleWheelSpin = (data: WheelSpinEvent) => {
+      setWheelSpinEvent(data);
+    };
+
+    socket.on('wheel-config-update', handleWheelConfigUpdate);
+    socket.on('wheel-list-update', handleWheelListUpdate);
+    socket.on('wheel-spin', handleWheelSpin);
+
+    return () => {
+      socket.off('wheel-config-update', handleWheelConfigUpdate);
+      socket.off('wheel-list-update', handleWheelListUpdate);
+      socket.off('wheel-spin', handleWheelSpin);
+    };
+  }, [socket]);
 
   // Process alert queue
   useEffect(() => {
@@ -541,6 +587,21 @@ export default function OverlayPage() {
             </div>
           );
         })()}
+
+      {/* Wheel Spinner */}
+      {getLayerVisible('wheel') && (() => {
+        const activeWheel = wheels.find(w => w.isActive);
+        if (!activeWheel) return null;
+
+        return (
+          <Wheel
+            config={activeWheel}
+            spinEvent={wheelSpinEvent}
+            colorScheme={colorScheme}
+            customColors={customColors}
+          />
+        );
+      })()}
 
       {/* Alerts */}
       {currentAlert && (

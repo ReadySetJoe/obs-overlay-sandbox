@@ -72,13 +72,14 @@ model Layout {
   weatherEffect  String   @default("rain")
 
   // Scene layers visibility
-  weatherVisible        Boolean @default(true)
-  chatVisible           Boolean @default(true)
-  nowPlayingVisible     Boolean @default(true)
-  countdownVisible      Boolean @default(true)
-  chatHighlightVisible  Boolean @default(true)
-  paintByNumbersVisible Boolean @default(true)
-  eventLabelsVisible    Boolean @default(true)
+  weatherVisible        Boolean @default(false)
+  chatVisible           Boolean @default(false)
+  nowPlayingVisible     Boolean @default(false)
+  countdownVisible      Boolean @default(false)
+  chatHighlightVisible  Boolean @default(false)
+  paintByNumbersVisible Boolean @default(false)
+  eventLabelsVisible    Boolean @default(false)
+  wheelVisible          Boolean @default(false)
 
   // Component layouts (JSON) - stores position, size, styling for each component
   componentLayouts String? @default("{\"chat\":{\"position\":\"top-left\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1},\"paintByNumbers\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1,\"gridSize\":20}}")
@@ -92,7 +93,7 @@ model Layout {
   // Stream stats & goals
   streamStatsConfig String? // JSON: { followerGoal: number, subGoal: number, bitsGoal: number, showMetrics: string[], resetOnStream: boolean }
   streamStatsData   String? // JSON: { currentFollowers: number, currentSubs: number, currentBits: number, totalMessages: number, startTime: string, messagesPerMinute: number }
-  streamStatsVisible Boolean @default(true)
+  streamStatsVisible Boolean @default(false)
 
   // Custom background
   backgroundImageUrl      String?   // Cloudinary URL
@@ -109,6 +110,7 @@ model Layout {
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   countdowns CountdownTimer[]
   alerts     AlertConfig[]
+  wheels     WheelConfig[]
 }
 
 model CountdownTimer {
@@ -209,4 +211,28 @@ model Chatter {
   @@unique([sessionId, username])
   @@index([sessionId, averageSentiment])
   @@index([sessionId, messageCount])
+}
+
+model WheelConfig {
+  id       String @id @default(cuid())
+  layoutId String
+
+  // Wheel settings
+  name         String  // e.g., "Giveaway Wheel", "Game Selector"
+  segments     String  @db.Text // JSON: [{ label: string, color: string, weight?: number }]
+  isActive     Boolean @default(false) // Only one wheel can be active at a time per layout
+
+  // Visual settings
+  position     String  @default("center") // 'center', 'top-center', 'bottom-center'
+  scale        Float   @default(1.0) // Size multiplier (0.5 to 2.0)
+  spinDuration Int     @default(5) // Spin animation duration in seconds (3-10)
+
+  // Audio settings
+  soundEnabled Boolean @default(true)
+  soundVolume  Float   @default(0.7) // 0.0 to 1.0
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  layout Layout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
 }

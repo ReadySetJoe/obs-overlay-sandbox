@@ -51,6 +51,10 @@ export function useOverlaySocket(sessionId: string) {
       scale: 1,
       gridSize: 20,
     },
+    wheel: {
+      position: 'center',
+      scale: 1.0,
+    },
   });
   const [sceneLayers, setSceneLayers] = useState<SceneLayer[]>([
     { id: 'weather', name: 'Weather', visible: true, zIndex: 2 },
@@ -75,6 +79,12 @@ export function useOverlaySocket(sessionId: string) {
       name: 'Stream Stats',
       visible: true,
       zIndex: 16,
+    },
+    {
+      id: 'wheel',
+      name: 'Wheel Spinner',
+      visible: true,
+      zIndex: 100,
     },
   ]);
   const [chatHighlight, setChatHighlight] = useState<ChatHighlightType | null>(
@@ -221,6 +231,11 @@ export function useOverlaySocket(sessionId: string) {
                 return {
                   ...layer,
                   visible: layout.streamStatsVisible === false ? false : true,
+                };
+              if (layer.id === 'wheel')
+                return {
+                  ...layer,
+                  visible: layout.wheelVisible === false ? false : true,
                 };
               return layer;
             })

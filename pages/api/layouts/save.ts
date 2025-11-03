@@ -52,6 +52,7 @@ export default async function handler(
       updateData.paintByNumbersVisible = layers.find((l: any) => l.id === 'paintbynumbers')?.visible;
       updateData.eventLabelsVisible = layers.find((l: any) => l.id === 'eventlabels')?.visible;
       updateData.streamStatsVisible = layers.find((l: any) => l.id === 'streamstats')?.visible;
+      updateData.wheelVisible = layers.find((l: any) => l.id === 'wheel')?.visible;
     }
 
     const layout = await prisma.layout.upsert({
@@ -79,6 +80,8 @@ export default async function handler(
           layers?.find((l: any) => l.id === 'eventlabels')?.visible ?? true,
         streamStatsVisible:
           layers?.find((l: any) => l.id === 'streamstats')?.visible ?? true,
+        wheelVisible:
+          layers?.find((l: any) => l.id === 'wheel')?.visible ?? true,
         componentLayouts: componentLayouts || null,
         paintByNumbersState: paintByNumbersState || null,
         streamStatsConfig: streamStatsConfig || null,

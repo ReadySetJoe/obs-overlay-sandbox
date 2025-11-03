@@ -207,6 +207,30 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('wheel-config-update', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          console.log('[Socket Server] Relaying wheel-config-update to session:', sessionId);
+          io.to(sessionId).emit('wheel-config-update', data);
+        }
+      });
+
+      socket.on('wheel-list-update', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          console.log('[Socket Server] Relaying wheel-list-update to session:', sessionId);
+          io.to(sessionId).emit('wheel-list-update', data);
+        }
+      });
+
+      socket.on('wheel-spin', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          console.log('[Socket Server] Relaying wheel-spin to session:', sessionId);
+          io.to(sessionId).emit('wheel-spin', data);
+        }
+      });
+
       socket.on('disconnect', (reason) => {
         console.log(`[Socket Server] Client ${socket.id} disconnected. Reason: ${reason}`);
       });
