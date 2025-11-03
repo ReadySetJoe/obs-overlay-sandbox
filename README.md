@@ -33,6 +33,24 @@ Visit `http://localhost:3000`, sign in with Twitch, and start customizing your o
 
 ### 🎨 Overlay Components
 
+- **Recent Events (Event Labels)** - Display latest stream events
+  - Shows latest follower, subscriber, bits, raid, and gift sub
+  - Real-time updates when events occur on stream
+  - Configurable labels for each event type
+  - Toggle visibility for individual event types
+  - Test functionality to preview events
+  - One-click reset to clear test data
+  - Smooth position and scale controls
+  - Themed to match your color scheme
+
+- **Stream Alerts** - Professional animated alerts for stream events
+  - Supports follows, subs, bits, raids, and gift subs
+  - 11 animation styles: slide-down, slide-up, bounce, fade, zoom, spin, wiggle, flip, rubber-band, swing, tada
+  - Customizable text, duration, sound effects
+  - Optional background removal for floating alerts
+  - Position and scale controls
+  - Test functionality for all alert types
+
 - **Chat Highlight System** - Display and highlight Twitch chat messages in real-time
   - Live Twitch chat monitoring via tmi.js
   - Role-based styling (viewer, subscriber, moderator, VIP, first-timer)
@@ -51,7 +69,7 @@ Visit `http://localhost:3000`, sign in with Twitch, and start customizing your o
 - **Countdown Timers** - Multiple configurable timers
   - Create unlimited timers per session
   - Set title, description, and target date/time
-    - Real-time countdown display (days, hours, minutes, seconds)
+  - Real-time countdown display (days, hours, minutes, seconds)
   - Confetti animation when timer reaches zero
   - Toggle active/inactive state
   - Database persistence
@@ -74,7 +92,8 @@ Visit `http://localhost:3000`, sign in with Twitch, and start customizing your o
   - **Minimal**: Dark, Monochrome, Pastel, Noir
   - **Custom Builder**: Create your own with custom primary/secondary/accent colors
   - **Intelligent Contrast**: Automatic text color adjustment for readability on all themes
-  - **Themed Components**: Countdown timers, chat highlights, and paint by numbers adapt to your chosen theme
+  - **Themed Components**: Countdown timers, chat highlights, paint by numbers, and event labels adapt to your chosen theme
+  - **Font Family Picker**: Choose from 15 Google Fonts (Inter, Poppins, Roboto, Montserrat, Bebas Neue, Orbitron, Press Start 2P, and more)
   - Real-time theme switching across all overlays
 
 - **Custom Background Uploads** - Use your own background images
@@ -202,7 +221,9 @@ obs-overlay-sandbox/
 │   ├── api/
 │   │   ├── socket.ts                # WebSocket server initialization
 │   │   ├── auth/[...nextauth].ts    # NextAuth configuration
+│   │   ├── alerts/                  # Alert CRUD and test endpoints
 │   │   ├── backgrounds/             # Background upload/delete/apply-colors
+│   │   ├── event-labels/            # Event labels test/reset endpoints
 │   │   ├── layouts/                 # Layout CRUD endpoints
 │   │   ├── spotify/                 # Spotify OAuth and Now Playing API
 │   │   ├── timers/                  # Countdown timer CRUD
@@ -211,11 +232,14 @@ obs-overlay-sandbox/
 │   ├── overlay/
 │   │   ├── [sessionId].tsx          # Combined overlay (all components)
 │   │   └── [sessionId]/             # Individual overlay pages
+│   │       ├── alerts.tsx
 │   │       ├── background.tsx
 │   │       ├── chat-highlight.tsx
 │   │       ├── countdown.tsx
 │   │       ├── emote-wall.tsx
+│   │       ├── event-labels.tsx
 │   │       ├── now-playing.tsx
+│   │       ├── paint-by-numbers.tsx
 │   │       └── weather.tsx
 │   └── index.tsx                    # Landing page
 ├── components/
@@ -225,11 +249,14 @@ obs-overlay-sandbox/
 │   │   ├── PositionControls.tsx
 │   │   └── SessionInfo.tsx
 │   └── overlay/                     # OBS overlay components
+│       ├── Alert.tsx
 │       ├── ChatHighlight.tsx
 │       ├── ChatMessage.tsx
 │       ├── CountdownTimer.tsx
 │       ├── EmoteWall.tsx
+│       ├── EventLabels.tsx
 │       ├── NowPlaying.tsx
+│       ├── PaintByNumbers.tsx
 │       └── WeatherEffect.tsx
 ├── hooks/
 │   ├── useSocket.ts                 # Dashboard WebSocket hook
@@ -331,14 +358,17 @@ Shows all active components on a single page. Toggle visibility per component fr
 
 Add each component as a separate browser source for better control:
 
-| Component       | URL                                                        | Purpose                       |
-| --------------- | ---------------------------------------------------------- | ----------------------------- |
-| Background      | `http://localhost:3000/overlay/[sessionId]/background`     | Custom background image layer |
-| Chat Highlight  | `http://localhost:3000/overlay/[sessionId]/chat-highlight` | Highlighted chat messages     |
-| Now Playing     | `http://localhost:3000/overlay/[sessionId]/now-playing`    | Spotify current track         |
-| Countdown Timer | `http://localhost:3000/overlay/[sessionId]/countdown`      | Active countdown timers       |
-| Emote Wall      | `http://localhost:3000/overlay/[sessionId]/emote-wall`     | Floating emote particles      |
-| Weather         | `http://localhost:3000/overlay/[sessionId]/weather`        | Rain, snow, or fog effects    |
+| Component        | URL                                                          | Purpose                            |
+| ---------------- | ------------------------------------------------------------ | ---------------------------------- |
+| Alerts           | `http://localhost:3000/overlay/[sessionId]/alerts`           | Stream alerts (follows, subs, etc) |
+| Background       | `http://localhost:3000/overlay/[sessionId]/background`       | Custom background image layer      |
+| Chat Highlight   | `http://localhost:3000/overlay/[sessionId]/chat-highlight`   | Highlighted chat messages          |
+| Countdown Timer  | `http://localhost:3000/overlay/[sessionId]/countdown`        | Active countdown timers            |
+| Emote Wall       | `http://localhost:3000/overlay/[sessionId]/emote-wall`       | Floating emote particles           |
+| Event Labels     | `http://localhost:3000/overlay/[sessionId]/event-labels`     | Recent events (follower, sub, etc) |
+| Now Playing      | `http://localhost:3000/overlay/[sessionId]/now-playing`      | Spotify current track              |
+| Paint by Numbers | `http://localhost:3000/overlay/[sessionId]/paint-by-numbers` | Interactive paint overlay          |
+| Weather          | `http://localhost:3000/overlay/[sessionId]/weather`          | Rain, snow, or fog effects         |
 
 **Benefits of individual pages:**
 
@@ -692,19 +722,24 @@ netstat -ano | findstr :3000  # Windows
 - ✅ Real-time WebSocket communication with session isolation
 - ✅ Twitch authentication with OAuth 2.0
 - ✅ Live Twitch chat monitoring and highlighting
+- ✅ **Recent Events Display** - Latest follower, sub, bits, raid, and gift sub tracking
+- ✅ **Stream Alerts System** - Animated alerts with 11 animation styles and test functionality
 - ✅ Spotify "Now Playing" with OAuth and auto-refresh
 - ✅ Dynamic album art color extraction
 - ✅ Multiple countdown timers with database persistence
+- ✅ Paint by Numbers interactive overlay with custom templates
 - ✅ Emote wall particle system
 - ✅ Weather effects (rain, snow, fog)
+- ✅ **Font Family Picker** - 15 Google Fonts available globally
 - ✅ 18 color schemes with custom color builder and intelligent contrast detection
 - ✅ Theme system with automatic color adaptation for all overlay components
 - ✅ Custom background uploads with Cloudinary cloud storage
 - ✅ Smart color extraction from images using k-means clustering
 - ✅ Background opacity and blur controls
 - ✅ One-click theme matching from extracted colors
-- ✅ Component positioning system (x/y, width, scale)
-- ✅ Individual overlay pages for granular OBS control
+- ✅ Component positioning system (x/y, width, scale) with smooth transitions
+- ✅ Individual overlay pages for granular OBS control (9 separate pages)
+- ✅ Test and reset functionality for event labels and alerts
 - ✅ Auto-save functionality
 - ✅ Copy-to-clipboard OBS URLs
 - ✅ Mobile-responsive dashboard

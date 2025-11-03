@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**OBS Overlay Sandbox** is a real-time streaming overlay management system for Twitch streamers. It provides a dashboard interface where streamers can configure and customize various overlay components (chat highlights, now playing music, countdown timers, weather effects, emote walls) that appear in their OBS stream. The system uses WebSockets for real-time synchronization between the dashboard and overlay views.
+**OBS Overlay Sandbox** is a real-time streaming overlay management system for Twitch streamers. It provides a dashboard interface where streamers can configure and customize various overlay components (recent events, stream alerts, chat highlights, now playing music, countdown timers, weather effects, emote walls, paint by numbers) that appear in their OBS stream. The system uses WebSockets for real-time synchronization between the dashboard and overlay views.
 
 **Key Use Case**: A Twitch streamer opens the dashboard to configure overlays, then adds individual overlay URLs as browser sources in OBS Studio. Changes made in the dashboard instantly appear in the OBS overlays via Socket.io.
 
@@ -71,12 +71,15 @@ obs-overlay-sandbox/
 ├── components/
 │   ├── dashboard/          # Dashboard UI components
 │   │   ├── expanded/       # Detailed settings panels for each overlay
+│   │   │   ├── AlertsExpanded.tsx
 │   │   │   ├── BackgroundExpanded.tsx
 │   │   │   ├── ChatHighlightExpanded.tsx
 │   │   │   ├── ColorSchemeExpanded.tsx
 │   │   │   ├── CountdownExpanded.tsx
 │   │   │   ├── EmoteWallExpanded.tsx
+│   │   │   ├── EventLabelsExpanded.tsx
 │   │   │   ├── NowPlayingExpanded.tsx
+│   │   │   ├── PaintByNumbersExpanded.tsx
 │   │   │   └── WeatherExpanded.tsx
 │   │   ├── tiles/          # Dashboard summary tiles
 │   │   ├── CopyURLButton.tsx
@@ -84,20 +87,31 @@ obs-overlay-sandbox/
 │   │   ├── SessionInfo.tsx
 │   │   └── ToggleSwitch.tsx
 │   └── overlay/            # Actual overlay components rendered in OBS
+│       ├── Alert.tsx
 │       ├── ChatHighlight.tsx
 │       ├── ChatMessage.tsx
 │       ├── CountdownTimer.tsx
 │       ├── EmoteWall.tsx
+│       ├── EventLabels.tsx
 │       ├── NowPlaying.tsx
+│       ├── PaintByNumbers.tsx
 │       └── WeatherEffect.tsx
 ├── pages/
 │   ├── api/                # Backend API routes
 │   │   ├── auth/
 │   │   │   └── [...nextauth].ts    # NextAuth configuration
+│   │   ├── alerts/
+│   │   │   ├── list.ts             # Get all alert configs
+│   │   │   ├── create.ts           # Create alert config
+│   │   │   ├── test.ts             # Trigger test alert
+│   │   │   └── [alertId].ts        # Update/delete alert
 │   │   ├── backgrounds/
 │   │   │   ├── upload.ts           # Upload custom background
 │   │   │   ├── delete.ts           # Delete background
 │   │   │   └── apply-colors.ts     # Apply extracted colors to theme
+│   │   ├── event-labels/
+│   │   │   ├── test.ts             # Trigger test event
+│   │   │   └── reset.ts            # Clear all event data
 │   │   ├── layouts/
 │   │   │   ├── list.ts             # Get all user layouts
 │   │   │   ├── load.ts             # Load specific layout
@@ -120,11 +134,14 @@ obs-overlay-sandbox/
 │   ├── overlay/
 │   │   ├── [sessionId].tsx         # Combined overlay (all components)
 │   │   └── [sessionId]/            # Individual overlay pages
+│   │       ├── alerts.tsx
 │   │       ├── background.tsx
 │   │       ├── chat-highlight.tsx
 │   │       ├── countdown.tsx
 │   │       ├── emote-wall.tsx
+│   │       ├── event-labels.tsx
 │   │       ├── now-playing.tsx
+│   │       ├── paint-by-numbers.tsx
 │   │       └── weather.tsx
 │   ├── _app.tsx                    # NextAuth SessionProvider wrapper
 │   ├── _document.tsx               # Custom document for viewport
@@ -217,7 +234,118 @@ Layout (1) ─── (many) CountdownTimer
 
 ## Key Components & Features
 
-### 1. Chat Highlight System
+### 1. Event Labels (Recent Events)
+
+**Flow**: Twitch Events → `lib/twitchChat.ts` / `lib/twitchFollows.ts` → Database → Socket.io → Dashboard + Overlay
+
+**Files**:
+
+- `components/overlay/EventLabels.tsx` - Display component for recent events
+- `components/dashboard/expanded/EventLabelsExpanded.tsx` - Configuration UI
+- `pages/api/event-labels/test.ts` - Test event trigger
+- `pages/api/event-labels/reset.ts` - Clear all event data
+- `pages/overlay/[sessionId]/event-labels.tsx` - Individual overlay page
+
+**Tracked Events**:
+
+- Latest Follower (❤️)
+- Latest Subscriber (⭐)
+- Latest Bits (💎) - includes username and amount
+- Latest Raid (🎉) - includes username and viewer count
+- Latest Gift Sub (🎁) - includes gifter name
+
+**Data Flow**:
+
+1. Twitch events occur (follow, sub, bits, raid, gift sub)
+2. Event handlers in `twitchChat.ts` or `twitchFollows.ts` detect events
+3. `updateEventLabels()` helper updates database with latest event
+4. Socket.io emits `event-labels-update` to session room
+5. Overlay receives update and displays latest events
+6. Dashboard shows configuration and test buttons
+
+**Features**:
+
+- Configurable labels for each event type
+- Toggle visibility per event type
+- Test functionality with random names and amounts
+- One-click reset to clear all test data
+- Position and scale controls with smooth transitions
+- Themed to match active color scheme
+- Database persistence in `Layout.eventLabelsData` (JSON field)
+
+**Configuration** (`EventLabelsConfig` type):
+
+```typescript
+{
+  showFollower: boolean,
+  showSub: boolean,
+  showBits: boolean,
+  showRaid: boolean,
+  showGiftSub: boolean,
+  followerLabel: string,   // e.g., "Latest Follower"
+  subLabel: string,         // e.g., "Latest Subscriber"
+  bitsLabel: string,        // e.g., "Latest Bits"
+  raidLabel: string,        // e.g., "Latest Raid"
+  giftSubLabel: string      // e.g., "Latest Gift Sub"
+}
+```
+
+### 2. Stream Alerts System
+
+**Flow**: Twitch Events → Database → Socket.io → Alert Queue → Overlay
+
+**Files**:
+
+- `components/overlay/Alert.tsx` - Main alert display with animations
+- `components/dashboard/expanded/AlertsExpanded.tsx` - Alert configuration UI
+- `pages/api/alerts/list.ts` - Get all alert configs
+- `pages/api/alerts/create.ts` - Create new alert config
+- `pages/api/alerts/test.ts` - Trigger test alert
+- `pages/api/alerts/[alertId].ts` - Update/delete alert
+- `pages/overlay/[sessionId]/alerts.tsx` - Individual overlay page
+
+**Alert Types** (`AlertEventType`):
+
+- `follow` - New follower
+- `sub` - New subscriber
+- `bits` - Bits/cheers
+- `raid` - Incoming raid
+- `giftsub` - Gift subscription
+
+**Animation Types** (11 total):
+
+- Basic: `slide-down`, `slide-up`, `bounce`, `fade`, `zoom`
+- Playful: `spin` (360° rotation), `wiggle` (shake), `flip` (3D rotation), `rubber-band` (elastic), `swing` (pendulum), `tada` (celebration)
+
+**Features**:
+
+- Queue system for multiple alerts
+- Configurable duration (3-30 seconds)
+- Optional background removal for floating alerts
+- Custom text per event type
+- Sound effect support (URL-based)
+- Position controls
+- Test functionality for each alert type
+- Real-time preview in dashboard
+
+**Alert Configuration** (`AlertConfig` interface):
+
+```typescript
+{
+  id: string,
+  sessionId: string,
+  eventType: AlertEventType,
+  enabled: boolean,
+  text: string,              // e.g., "Thanks for the follow, {username}!"
+  duration: number,          // milliseconds (3000-30000)
+  animation: AlertAnimationType,
+  soundUrl: string | null,
+  soundVolume: number,       // 0-100
+  showBackground: boolean    // True = themed box, False = floating
+}
+```
+
+### 3. Chat Highlight System
 
 **Flow**: Twitch Chat → `tmi.js` → Socket.io → Dashboard + Overlay
 
@@ -240,7 +368,7 @@ Layout (1) ─── (many) CountdownTimer
 
 **User Roles**: `viewer`, `subscriber`, `moderator`, `vip`, `first-timer`
 
-### 2. Now Playing (Spotify)
+### 4. Now Playing (Spotify)
 
 **Flow**: Spotify OAuth → Polling → Socket.io → Overlay
 
@@ -258,7 +386,7 @@ Layout (1) ─── (many) CountdownTimer
 - Dynamic gradient background based on album colors
 - Emits `now-playing` event with track data to overlay
 
-### 3. Countdown Timers
+### 5. Countdown Timers
 
 **Files**:
 
@@ -272,7 +400,7 @@ Layout (1) ─── (many) CountdownTimer
 - Confetti animation when timer reaches zero
 - Toggle active/inactive state
 
-### 4. Emote Wall
+### 6. Emote Wall
 
 **Files**: `components/overlay/EmoteWall.tsx`
 
@@ -282,14 +410,14 @@ Layout (1) ─── (many) CountdownTimer
 - Configurable emote (emoji), count, speed, scale
 - Physics simulation for floating emotes
 
-### 5. Weather Effects
+### 7. Weather Effects
 
 **Files**: `components/overlay/WeatherEffect.tsx`
 
 **Types**: Rain, snow, fog, none
 **Features**: Canvas-based particle systems with configurable density
 
-### 6. Color Schemes & Theme System
+### 8. Color Schemes & Theme System
 
 **Files**:
 
@@ -299,7 +427,17 @@ Layout (1) ─── (many) CountdownTimer
 
 **Architecture**:
 
-The theme system provides centralized color management for all overlay components. Each overlay component (CountdownTimer, ChatHighlight, PaintByNumbers) receives the active `colorScheme` and `customColors` props and uses the `useThemeColors` hook to generate consistent, contrast-aware colors.
+The theme system provides centralized color and typography management for all overlay components. Each overlay component (CountdownTimer, ChatHighlight, PaintByNumbers, EventLabels) receives the active `colorScheme` and `customColors` props and uses the `useThemeColors` hook to generate consistent, contrast-aware colors. The font family is set globally via CSS and applied to all overlays via the `fontFamily` state.
+
+**Font Family Picker** (15 Google Fonts):
+
+- **Modern**: Inter, Poppins, Roboto, Montserrat, Open Sans
+- **Gaming**: Bebas Neue, Orbitron, Press Start 2P, Pixelify Sans
+- **Display**: Righteous, Bungee
+- **Playful**: Bangers, Fredoka
+- **Elegant**: Playfair Display, Cinzel
+
+Font selection is available in the Color Scheme/Theming panel and applies globally to all overlay components. Fonts are loaded via `_document.tsx` from Google Fonts CDN.
 
 **Available Presets** (18 total):
 
@@ -395,6 +533,8 @@ function CountdownTimer({ colorScheme, customColors, ...props }) {
 - ✅ **CountdownTimer** - Title gradient, time cell colors, progress bar
 - ✅ **ChatHighlight** - Role-based backgrounds using theme variants, highlight badge
 - ✅ **PaintByNumbers** - Header gradient, instruction text, progress bar
+- ✅ **EventLabels** - Background gradient, border colors, icon backgrounds
+- ✅ **Alert** - Background gradient, text colors (when showBackground is true)
 
 **Real-time Updates**:
 
@@ -410,7 +550,7 @@ When a user changes the color scheme in the dashboard:
 - `color-scheme-change` - Emitted when preset scheme selected (payload: ColorScheme string)
 - `custom-colors-change` - Emitted when custom colors modified (payload: CustomColors object)
 
-### 7. Custom Background System
+### 9. Custom Background System
 
 **Flow**: Image Upload → Cloudinary → Color Extraction → Database → Socket.io → Overlay
 
