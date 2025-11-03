@@ -249,6 +249,40 @@ export function handlePaintAllCommand(
 }
 
 /**
+ * Generate a random hex color
+ */
+function generateRandomColor(): string {
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+/**
+ * Handle paint-random command from chat (development only)
+ */
+export function handlePaintRandomCommand(
+  paintState: PaintByNumbersState,
+  username: string,
+  timestamp: number
+): PaintByNumbersState {
+  const updatedRegions = paintState.regions.map(r => ({
+    ...r,
+    filled: true,
+    filledBy: username,
+    filledAt: timestamp,
+    customColor: generateRandomColor(),
+  }));
+
+  return {
+    ...paintState,
+    regions: updatedRegions,
+    completedAt: timestamp,
+    lastFilledBy: username,
+  };
+}
+
+/**
  * Serialize paint state for database storage (compact format)
  */
 export function serializePaintState(

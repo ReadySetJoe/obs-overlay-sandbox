@@ -177,6 +177,8 @@ export interface PaintTemplate {
   width: number; // grid width
   height: number; // grid height
   regions: PaintRegion[];
+  imageUrl?: string; // Optional: for custom templates
+  thumbnailUrl?: string | null; // Optional: for custom templates
 }
 
 export interface PaintByNumbersState {

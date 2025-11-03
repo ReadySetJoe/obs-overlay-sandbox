@@ -25,7 +25,7 @@ export default async function handler(
         userId: session.user.id,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
       select: {
         id: true,
@@ -34,6 +34,7 @@ export default async function handler(
         width: true,
         height: true,
         regions: true,
+        imageUrl: true,
         thumbnailUrl: true,
         createdAt: true,
       },

@@ -74,6 +74,19 @@ export async function startTwitchChatMonitoring(
       return;
     }
 
+    // Debug command: !paint random (development only)
+    if (
+      process.env.NODE_ENV === 'development' &&
+      message.trim().match(/^!paint\s+random$/i)
+    ) {
+      const username = tags['display-name'] || tags.username || 'Anonymous';
+      io.to(sessionId).emit('paint-random-command', {
+        username,
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
     // Regular paint commands: !paint 1 red, !paint 2 #FF0000, !paint 3
     const paintCommand = message
       .trim()

@@ -9,6 +9,7 @@ import {
   resetTemplate,
   handlePaintCommand as processPaintCommand,
   handlePaintAllCommand as processPaintAllCommand,
+  handlePaintRandomCommand as processPaintRandomCommand,
 } from '@/lib/paintStateManager';
 
 interface UsePaintByNumbersProps {
@@ -121,12 +122,29 @@ export function usePaintByNumbers({
       socket.emit('paint-state', updatedState);
     };
 
+    const handlePaintRandomCommandEvent = (data: {
+      username: string;
+      timestamp: number;
+    }) => {
+      if (!paintByNumbersState) return;
+
+      const updatedState = processPaintRandomCommand(
+        paintByNumbersState,
+        data.username,
+        data.timestamp
+      );
+      setPaintByNumbersState(updatedState);
+      socket.emit('paint-state', updatedState);
+    };
+
     socket.on('paint-command', handlePaintCommandEvent);
     socket.on('paint-all-command', handlePaintAllCommandEvent);
+    socket.on('paint-random-command', handlePaintRandomCommandEvent);
 
     return () => {
       socket.off('paint-command', handlePaintCommandEvent);
       socket.off('paint-all-command', handlePaintAllCommandEvent);
+      socket.off('paint-random-command', handlePaintRandomCommandEvent);
     };
   }, [socket, paintByNumbersState]);
 

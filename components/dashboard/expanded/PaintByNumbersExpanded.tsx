@@ -329,10 +329,31 @@ export default function PaintByNumbersExpanded({
               >
                 <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
                 <div className='relative flex flex-col items-center gap-2'>
-                  {isCustomTemplate(template.id) ? (
-                    <span className='text-2xl'>🎨</span>
-                  ) : (
-                    <span className='text-2xl'>
+                  {/* Show image preview for both custom and built-in templates */}
+                  <div className='w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-600 flex-shrink-0'>
+                    <img
+                      src={
+                        template.imageUrl ||
+                        `/paint-templates/${template.id}.png`
+                      }
+                      alt={template.name}
+                      className='w-full h-full object-cover'
+                      style={{ imageRendering: 'pixelated' }}
+                      onError={e => {
+                        // Fallback to emoji if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling;
+                        if (fallback) {
+                          (fallback as HTMLElement).style.display = 'block';
+                        }
+                      }}
+                    />
+                    {/* Fallback emoji (hidden by default, shown if image fails) */}
+                    <div
+                      className='w-full h-full flex items-center justify-center text-2xl'
+                      style={{ display: 'none' }}
+                    >
                       {template.id === 'heart'
                         ? '❤️'
                         : template.id === 'pokeball'
@@ -346,8 +367,8 @@ export default function PaintByNumbersExpanded({
                                 : template.id === 'mona-lisa'
                                   ? '🖼️'
                                   : '🎨'}
-                    </span>
-                  )}
+                    </div>
+                  </div>
                   <span className='text-md'>{template.name}</span>
                   {template.description && (
                     <span className='text-sm text-gray-300'>
