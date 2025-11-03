@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { WheelConfig, WheelSegment, ComponentLayouts } from '@/types/overlay';
 import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
-import { CircleDot, Plus, Trash2, Play } from 'lucide-react';
+import { Plus, Trash2, Play, CircleDot } from 'lucide-react';
+import { WheelIcon } from '../tiles/TileIcons';
 
 interface WheelExpandedProps {
   sessionId: string;
@@ -192,9 +193,7 @@ export default function WheelExpanded({
               />
             </svg>
           </button>
-          <div className='w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center'>
-            <CircleDot className='w-6 h-6' />
-          </div>
+          <WheelIcon />
           <h2 className='text-xl font-bold'>Wheel Spinner</h2>
         </div>
         <div className='flex items-center gap-4'>
@@ -296,7 +295,9 @@ export default function WheelExpanded({
                             Spin
                           </button>
                           <button
-                            onClick={() => onUpdateWheel(wheel.id, { isActive: false })}
+                            onClick={() =>
+                              onUpdateWheel(wheel.id, { isActive: false })
+                            }
                             className='px-3 py-1 text-sm bg-orange-600 hover:bg-orange-700 rounded transition-colors'
                           >
                             Deactivate

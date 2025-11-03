@@ -23,6 +23,20 @@ import {
 } from '@/types/overlay';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
+import {
+  ChatHighlightIcon,
+  NowPlayingIcon,
+  CountdownIcon,
+  ColorSchemeIcon,
+  BackgroundIcon,
+  WeatherIcon,
+  EmoteWallIcon,
+  PaintByNumbersIcon,
+  AlertsIcon,
+  EventLabelsIcon,
+  StreamStatsIcon,
+  WheelIcon,
+} from '@/components/dashboard/tiles/TileIcons';
 import ColorSchemeExpanded from '@/components/dashboard/expanded/ColorSchemeExpanded';
 import WeatherExpanded from '@/components/dashboard/expanded/WeatherExpanded';
 import EmoteWallExpanded from '@/components/dashboard/expanded/EmoteWallExpanded';
@@ -595,7 +609,9 @@ export default function DashboardPage() {
   };
 
   // Wheel handlers
-  const handleCreateWheel = async (wheel: Omit<WheelConfig, 'id' | 'layoutId'>) => {
+  const handleCreateWheel = async (
+    wheel: Omit<WheelConfig, 'id' | 'layoutId'>
+  ) => {
     try {
       const response = await fetch('/api/wheels/create', {
         method: 'POST',
@@ -617,7 +633,10 @@ export default function DashboardPage() {
     }
   };
 
-  const handleUpdateWheel = async (wheelId: string, updates: Partial<WheelConfig>) => {
+  const handleUpdateWheel = async (
+    wheelId: string,
+    updates: Partial<WheelConfig>
+  ) => {
     try {
       const response = await fetch(`/api/wheels/${wheelId}`, {
         method: 'PUT',
@@ -631,7 +650,9 @@ export default function DashboardPage() {
         // If activating a wheel, reload all wheels to get the updated states
         // (other wheels will have been deactivated in the database)
         if (updates.isActive === true) {
-          const refreshResponse = await fetch(`/api/wheels/list?sessionId=${sessionId}`);
+          const refreshResponse = await fetch(
+            `/api/wheels/list?sessionId=${sessionId}`
+          );
           if (refreshResponse.ok) {
             const { wheels: refreshedWheels } = await refreshResponse.json();
             setWheels(refreshedWheels);
@@ -645,7 +666,9 @@ export default function DashboardPage() {
         }
 
         // For deactivation or other updates, just update the single wheel
-        const newWheels = wheels.map((w) => (w.id === wheelId ? updatedWheel : w));
+        const newWheels = wheels.map(w =>
+          w.id === wheelId ? updatedWheel : w
+        );
         setWheels(newWheels);
 
         // Broadcast update to overlay
@@ -666,7 +689,7 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
-        const newWheels = wheels.filter((w) => w.id !== wheelId);
+        const newWheels = wheels.filter(w => w.id !== wheelId);
         setWheels(newWheels);
 
         // Broadcast update to overlay
@@ -697,7 +720,9 @@ export default function DashboardPage() {
     }
   };
 
-  const handleWheelPositionChange = (position: 'center' | 'top-center' | 'bottom-center') => {
+  const handleWheelPositionChange = (
+    position: 'center' | 'top-center' | 'bottom-center'
+  ) => {
     setComponentLayouts({
       ...componentLayouts,
       wheel: {
@@ -707,7 +732,7 @@ export default function DashboardPage() {
     });
 
     // Update active wheel's position
-    const activeWheel = wheels.find((w) => w.isActive);
+    const activeWheel = wheels.find(w => w.isActive);
     if (activeWheel) {
       handleUpdateWheel(activeWheel.id, { position });
     }
@@ -723,7 +748,7 @@ export default function DashboardPage() {
     });
 
     // Update active wheel's scale
-    const activeWheel = wheels.find((w) => w.isActive);
+    const activeWheel = wheels.find(w => w.isActive);
     if (activeWheel) {
       handleUpdateWheel(activeWheel.id, { scale });
     }
@@ -772,109 +797,7 @@ export default function DashboardPage() {
             key='summary-grid'
             className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-zoom-in'
           >
-            {/* Chat Highlight Tile - Most important for viewer engagement */}
-            <SummaryTile
-              title='Chat Highlight'
-              subtitle={
-                !session
-                  ? 'Connect Twitch to use'
-                  : chatHook.chatHighlight
-                    ? chatHook.chatHighlight.message.username
-                    : `${chatHook.chatMessages.length} messages`
-              }
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z'
-                  />
-                </svg>
-              }
-              color='yellow'
-              isVisible={layers.find(l => l.id === 'chathighlight')?.visible}
-              onToggleVisibility={() => toggleLayer('chathighlight')}
-              onClick={() => handleExpandElement('chathighlight')}
-              authRequired={!session}
-              onAuthClick={() => signIn('twitch')}
-            />
-
-            {/* Now Playing Tile */}
-            <SummaryTile
-              title='Now Playing'
-              subtitle={
-                spotify.spotifyToken
-                  ? spotify.trackTitle || 'Connected'
-                  : 'Not connected'
-              }
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path d='M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z' />
-                </svg>
-              }
-              color='green'
-              isVisible={layers.find(l => l.id === 'nowplaying')?.visible}
-              onToggleVisibility={() => toggleLayer('nowplaying')}
-              onClick={() => handleExpandElement('nowplaying')}
-            />
-
-            {/* Countdown Timers Tile */}
-            <SummaryTile
-              title='Countdown Timers'
-              subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-                  />
-                </svg>
-              }
-              color='yellow'
-              isVisible={layers.find(l => l.id === 'countdown')?.visible}
-              onToggleVisibility={() => toggleLayer('countdown')}
-              onClick={() => handleExpandElement('countdown')}
-            />
-
-            {/* Color Scheme Tile */}
-            <SummaryTile
-              title='Color Scheme'
-              subtitle={colorScheme}
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'
-                  />
-                </svg>
-              }
-              color='purple'
-              onClick={() => handleExpandElement('color')}
-            />
+            {/* Full Screen Effects */}
 
             {/* Custom Background Tile */}
             <SummaryTile
@@ -884,71 +807,135 @@ export default function DashboardPage() {
                   ? backgroundImageName || 'Uploaded'
                   : 'No background'
               }
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
-                  />
-                </svg>
-              }
-              color='cyan'
+              icon={<BackgroundIcon />}
+              color='pink'
               onClick={() => handleExpandElement('background')}
+            />
+
+            {/* Color Scheme Tile */}
+            <SummaryTile
+              title='Color Scheme'
+              subtitle={colorScheme}
+              icon={<ColorSchemeIcon />}
+              color='purple'
+              onClick={() => handleExpandElement('color')}
             />
 
             {/* Weather Effects Tile */}
             <SummaryTile
               title='Weather Effects'
               subtitle={weatherEffect}
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z'
-                  />
-                </svg>
-              }
-              color='cyan'
+              icon={<WeatherIcon />}
+              color='blue'
               isVisible={layers.find(l => l.id === 'weather')?.visible}
               onToggleVisibility={() => toggleLayer('weather')}
               onClick={() => handleExpandElement('weather')}
+            />
+
+            {/* Goals & Analytics */}
+
+            {/* Stream Alerts Tile */}
+            <SummaryTile
+              title='Stream Alerts'
+              subtitle='5 event types'
+              icon={<AlertsIcon />}
+              color='red'
+              onClick={() => handleExpandElement('alerts')}
+            />
+
+            {/* Event Labels Tile */}
+            <SummaryTile
+              title='Recent Events'
+              subtitle='Latest follower, sub, bits, etc.'
+              icon={<EventLabelsIcon />}
+              color='cyan'
+              isVisible={layers.find(l => l.id === 'eventlabels')?.visible}
+              onToggleVisibility={() => toggleLayer('eventlabels')}
+              onClick={() => handleExpandElement('eventlabels')}
+            />
+
+            {/* Stream Stats Tile */}
+            <SummaryTile
+              title='Stream Stats & Goals'
+              subtitle='Track goals, metrics, & sentiment'
+              icon={<StreamStatsIcon />}
+              color='purple'
+              isVisible={layers.find(l => l.id === 'streamstats')?.visible}
+              onToggleVisibility={() => toggleLayer('streamstats')}
+              onClick={() => handleExpandElement('streamstats')}
+            />
+
+            {/* Widget Components */}
+
+            {/* Now Playing Tile */}
+            <SummaryTile
+              title='Now Playing'
+              subtitle={
+                spotify.spotifyToken
+                  ? spotify.trackTitle || 'Connected'
+                  : 'Not connected'
+              }
+              icon={<NowPlayingIcon />}
+              color='green'
+              isVisible={layers.find(l => l.id === 'nowplaying')?.visible}
+              onToggleVisibility={() => toggleLayer('nowplaying')}
+              onClick={() => handleExpandElement('nowplaying')}
+            />
+
+            {/* Chat Highlight Tile */}
+            <SummaryTile
+              title='Chat Highlight'
+              subtitle={
+                !session
+                  ? 'Connect Twitch to use'
+                  : chatHook.chatHighlight
+                    ? chatHook.chatHighlight.message.username
+                    : `${chatHook.chatMessages.length} messages`
+              }
+              icon={<ChatHighlightIcon />}
+              color='purple'
+              isVisible={layers.find(l => l.id === 'chathighlight')?.visible}
+              onToggleVisibility={() => toggleLayer('chathighlight')}
+              onClick={() => handleExpandElement('chathighlight')}
+              authRequired={!session}
+              onAuthClick={() => signIn('twitch')}
+            />
+
+            {/* Countdown Timers Tile */}
+            <SummaryTile
+              title='Countdown Timers'
+              subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
+              icon={<CountdownIcon />}
+              color='orange'
+              isVisible={layers.find(l => l.id === 'countdown')?.visible}
+              onToggleVisibility={() => toggleLayer('countdown')}
+              onClick={() => handleExpandElement('countdown')}
             />
 
             {/* Emote Wall Tile */}
             <SummaryTile
               title='Emote Wall'
               subtitle={`${emoteIntensity} intensity`}
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                  />
-                </svg>
-              }
-              color='pink'
+              icon={<EmoteWallIcon />}
+              color='yellow'
               onClick={() => handleExpandElement('emote')}
+            />
+
+            {/* Wheel Spinner Tile */}
+            <SummaryTile
+              title='Wheel Spinner'
+              subtitle={
+                wheels.find(w => w.isActive)
+                  ? wheels.find(w => w.isActive)!.name
+                  : wheels.length > 0
+                    ? `${wheels.length} wheel${wheels.length > 1 ? 's' : ''}`
+                    : 'No wheels yet'
+              }
+              icon={<WheelIcon />}
+              color='yellow'
+              isVisible={layers.find(l => l.id === 'wheel')?.visible}
+              onToggleVisibility={() => toggleLayer('wheel')}
+              onClick={() => handleExpandElement('wheel')}
             />
 
             {/* Paint by Numbers Tile */}
@@ -959,73 +946,11 @@ export default function DashboardPage() {
                   ? `${paintHook.paintByNumbersState.regions.filter(r => r.filled).length}/${paintHook.paintByNumbersState.regions.length} filled`
                   : 'Select template'
               }
-              icon={<span className='text-3xl'>🎨</span>}
-              color='purple'
+              icon={<PaintByNumbersIcon />}
+              color='pink'
               isVisible={layers.find(l => l.id === 'paintbynumbers')?.visible}
               onToggleVisibility={() => toggleLayer('paintbynumbers')}
               onClick={() => handleExpandElement('paint')}
-            />
-
-            {/* Alerts Tile */}
-            <SummaryTile
-              title='Stream Alerts'
-              subtitle='5 event types'
-              icon={
-                <svg
-                  className='w-7 h-7'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'
-                  />
-                </svg>
-              }
-              color='pink'
-              onClick={() => handleExpandElement('alerts')}
-            />
-
-            {/* Event Labels Tile */}
-            <SummaryTile
-              title='Recent Events'
-              subtitle='Latest follower, sub, bits, etc.'
-              icon='📊'
-              color='green'
-              isVisible={layers.find(l => l.id === 'eventlabels')?.visible}
-              onToggleVisibility={() => toggleLayer('eventlabels')}
-              onClick={() => handleExpandElement('eventlabels')}
-            />
-
-            {/* Stream Stats Tile */}
-            <SummaryTile
-              title='Stream Stats & Goals'
-              subtitle='Track goals, metrics, & sentiment'
-              icon='📈'
-              color='blue'
-              isVisible={layers.find(l => l.id === 'streamstats')?.visible}
-              onToggleVisibility={() => toggleLayer('streamstats')}
-              onClick={() => handleExpandElement('streamstats')}
-            />
-
-            {/* Wheel Spinner Tile */}
-            <SummaryTile
-              title='Wheel Spinner'
-              subtitle={
-                wheels.find((w) => w.isActive)
-                  ? wheels.find((w) => w.isActive)!.name
-                  : wheels.length > 0
-                  ? `${wheels.length} wheel${wheels.length > 1 ? 's' : ''}`
-                  : 'No wheels yet'
-              }
-              icon='🎡'
-              color='purple'
-              isVisible={layers.find(l => l.id === 'wheel')?.visible}
-              onToggleVisibility={() => toggleLayer('wheel')}
-              onClick={() => handleExpandElement('wheel')}
             />
           </div>
         ) : (

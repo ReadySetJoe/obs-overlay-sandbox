@@ -3,6 +3,7 @@
 
 import { WeatherEffect, ComponentLayouts } from '@/types/overlay';
 import CopyURLButton from '../CopyURLButton';
+import { WeatherIcon } from '../tiles/TileIcons';
 
 interface WeatherExpandedProps {
   sessionId: string;
@@ -48,21 +49,7 @@ export default function WeatherExpanded({
               />
             </svg>
           </button>
-          <div className='w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center'>
-            <svg
-              className='w-6 h-6'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z'
-              />
-            </svg>
-          </div>
+          <WeatherIcon />
           <h2 className='text-xl font-bold'>Weather Effects</h2>
         </div>
         <button

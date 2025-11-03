@@ -7,7 +7,7 @@ interface SummaryTileProps {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
-  color: 'green' | 'yellow' | 'cyan' | 'purple' | 'pink' | 'blue';
+  color: string;
   isVisible?: boolean;
   onToggleVisibility?: () => void;
   onClick: () => void;
@@ -28,41 +28,19 @@ export default function SummaryTile({
   authRequired = false,
   onAuthClick,
 }: SummaryTileProps) {
-  const colorMap = {
-    green: 'hover:border-green-500/50 group-hover:text-green-400',
-    yellow: 'hover:border-yellow-500/50 group-hover:text-yellow-400',
-    cyan: 'hover:border-cyan-500/50 group-hover:text-cyan-400',
-    purple: 'hover:border-purple-500/50 group-hover:text-purple-400',
-    pink: 'hover:border-pink-500/50 group-hover:text-pink-400',
-    blue: 'hover:border-blue-500/50 group-hover:text-blue-400',
-  };
-
-  const gradientMap = {
-    green: 'from-green-500 to-green-600',
-    yellow: 'from-yellow-500 to-orange-500',
-    cyan: 'from-cyan-500 to-blue-500',
-    purple: 'from-blue-500 to-purple-500',
-    pink: 'from-pink-500 to-purple-500',
-    blue: 'from-blue-500 to-indigo-500',
-  };
-
   return (
     <div
       onClick={disabled ? undefined : onClick}
       className={`relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl ${
         disabled
           ? 'opacity-50 cursor-not-allowed'
-          : `${colorMap[color]} cursor-pointer`
+          : `hover:border-${color}-500/50 group-hover:text-${color}-400 cursor-pointer`
       } transition-all group`}
     >
       <div className='mb-4'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-3'>
-            <div
-              className={`w-12 h-12 bg-gradient-to-br ${disabled ? 'from-gray-600 to-gray-700' : gradientMap[color]} rounded-xl flex items-center justify-center`}
-            >
-              {icon}
-            </div>
+            {icon}
             <div>
               <h3 className='text-lg font-bold text-white'>{title}</h3>
               <p className='text-xs text-gray-400'>{subtitle}</p>
@@ -70,7 +48,7 @@ export default function SummaryTile({
           </div>
           {!disabled && !authRequired && (
             <svg
-              className={`w-5 h-5 text-gray-400 ${colorMap[color]} transition`}
+              className={`w-5 h-5 text-gray-400 transition`}
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'

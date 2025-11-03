@@ -9,6 +9,7 @@ import {
   AlertPosition,
 } from '@/types/overlay';
 import CopyURLButton from '../CopyURLButton';
+import { AlertsIcon } from '../tiles/TileIcons';
 
 interface AlertsExpandedProps {
   sessionId: string;
@@ -377,7 +378,7 @@ export default function AlertsExpanded({
           </svg>
         </button>
         <div className='flex items-center gap-3'>
-          <div className='text-4xl'>🔔</div>
+          <AlertsIcon size='lg' />
           <div>
             <h1 className='text-3xl font-bold'>Stream Alerts</h1>
             <p className='text-gray-400'>Configure alerts for Twitch events</p>

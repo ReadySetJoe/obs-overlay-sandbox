@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { StreamStatsConfig, ComponentLayouts } from '@/types/overlay';
 import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
+import { StreamStatsIcon } from '../tiles/TileIcons';
 
 interface StreamStatsExpandedProps {
   sessionId: string;
@@ -117,9 +118,7 @@ export default function StreamStatsExpanded({
             />
           </svg>
         </button>
-        <div className='w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center'>
-          📊
-        </div>
+        <StreamStatsIcon />
         <div>
           <h2 className='text-xl font-bold'>Stream Stats & Goals</h2>
           <p className='text-sm text-gray-400'>

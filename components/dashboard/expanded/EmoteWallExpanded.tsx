@@ -2,6 +2,7 @@
 'use client';
 
 import CopyURLButton from '../CopyURLButton';
+import { EmoteWallIcon } from '../tiles/TileIcons';
 
 interface EmoteWallExpandedProps {
   sessionId: string;
@@ -46,21 +47,7 @@ export default function EmoteWallExpanded({
             />
           </svg>
         </button>
-        <div className='w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center'>
-          <svg
-            className='w-6 h-6'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-            />
-          </svg>
-        </div>
+        <EmoteWallIcon />
         <h2 className='text-xl font-bold'>Emote Wall</h2>
       </div>
 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { EventLabelsConfig, ComponentLayouts } from '@/types/overlay';
 import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
+import { EventLabelsIcon } from '../tiles/TileIcons';
 
 interface EventLabelsExpandedProps {
   sessionId: string;
@@ -108,9 +109,7 @@ export default function EventLabelsExpanded({
             />
           </svg>
         </button>
-        <div className='w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center'>
-          📊
-        </div>
+        <EventLabelsIcon />
         <div>
           <h2 className='text-xl font-bold'>Recent Events</h2>
           <p className='text-sm text-gray-400'>

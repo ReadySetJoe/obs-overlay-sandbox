@@ -10,6 +10,7 @@ import {
 import { paintTemplates, mergeTemplates } from '@/lib/paintTemplates';
 import CopyURLButton from '../CopyURLButton';
 import PositionControls from '../PositionControls';
+import { PaintByNumbersIcon } from '../tiles/TileIcons';
 
 interface PaintByNumbersExpandedProps {
   sessionId: string;
@@ -186,9 +187,7 @@ export default function PaintByNumbersExpanded({
               />
             </svg>
           </button>
-          <div className='w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center'>
-            🎨
-          </div>
+          <PaintByNumbersIcon />
           <h2 className='text-xl font-bold'>Paint by Numbers</h2>
         </div>
         <button

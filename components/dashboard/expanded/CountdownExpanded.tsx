@@ -5,6 +5,7 @@ import { CountdownTimer, ComponentLayouts } from '@/types/overlay';
 import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { Pencil } from 'lucide-react';
+import { CountdownIcon } from '../tiles/TileIcons';
 
 interface CountdownExpandedProps {
   sessionId: string;
@@ -82,21 +83,7 @@ export default function CountdownExpanded({
               />
             </svg>
           </button>
-          <div className='w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center'>
-            <svg
-              className='w-6 h-6'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-              />
-            </svg>
-          </div>
+          <CountdownIcon />
           <h2 className='text-xl font-bold'>Countdown Timers</h2>
         </div>
         <div className='flex items-center gap-2'>

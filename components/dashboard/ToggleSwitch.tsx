@@ -4,7 +4,7 @@
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: () => void;
-  color?: 'green' | 'yellow' | 'cyan' | 'purple' | 'pink' | 'blue';
+  color?: string;
   label?: string;
 }
 
@@ -14,15 +14,6 @@ export default function ToggleSwitch({
   color = 'green',
   label,
 }: ToggleSwitchProps) {
-  const colorMap = {
-    green: 'bg-green-500',
-    yellow: 'bg-yellow-500',
-    cyan: 'bg-cyan-500',
-    purple: 'bg-purple-500',
-    pink: 'bg-pink-500',
-    blue: 'bg-blue-500',
-  };
-
   return (
     <div className='flex items-center gap-2'>
       {label && <span className='text-xs text-gray-500'>{label}</span>}
@@ -32,7 +23,7 @@ export default function ToggleSwitch({
           onChange();
         }}
         className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
-          checked ? colorMap[color] : 'bg-gray-600'
+          checked ? `bg-${color}-500` : 'bg-gray-600'
         }`}
         aria-label={label || 'Toggle'}
       >

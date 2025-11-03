@@ -14,6 +14,7 @@ import {
 } from '@/lib/colorSchemes';
 import ColorPicker from '../ColorPicker';
 import GradientSelector from '../GradientSelector';
+import { ColorSchemeIcon } from '../tiles/TileIcons';
 
 interface ColorSchemeExpandedProps {
   colorScheme: ColorScheme;
@@ -148,9 +149,7 @@ export default function ColorSchemeExpanded({
             />
           </svg>
         </button>
-        <div className='w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center'>
-          🎨
-        </div>
+        <ColorSchemeIcon />
         <h2 className='text-xl font-bold'>Color Schemes</h2>
       </div>
 
