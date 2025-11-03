@@ -4,7 +4,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
-import { AlertConfig, AlertEvent } from '@/types/overlay';
+import { AlertConfig, AlertEvent, ColorScheme, CustomColors } from '@/types/overlay';
 import Alert from '@/components/overlay/Alert';
 
 export default function AlertsOverlay() {
@@ -15,24 +15,43 @@ export default function AlertsOverlay() {
   const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
   const [alertQueue, setAlertQueue] = useState<AlertEvent[]>([]);
   const [currentAlert, setCurrentAlert] = useState<{config: AlertConfig; event: AlertEvent} | null>(null);
+  const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
+  const [customColors, setCustomColors] = useState<CustomColors | null>(null);
 
-  // Load alert configurations
+  // Load alert configurations and color scheme
   useEffect(() => {
     if (!sessionId) return;
 
-    const loadAlerts = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch(`/api/alerts/list?sessionId=${sessionId}`);
-        if (response.ok) {
-          const { alerts } = await response.json();
+        // Load alerts
+        const alertsResponse = await fetch(`/api/alerts/list?sessionId=${sessionId}`);
+        if (alertsResponse.ok) {
+          const { alerts } = await alertsResponse.json();
           setAlertConfigs(alerts);
         }
+
+        // Load color scheme
+        const layoutResponse = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        if (layoutResponse.ok) {
+          const { layout } = await layoutResponse.json();
+          if (layout.colorScheme) {
+            setColorScheme(layout.colorScheme);
+          }
+          if (layout.customColors) {
+            try {
+              setCustomColors(JSON.parse(layout.customColors));
+            } catch (error) {
+              console.error('Error parsing custom colors:', error);
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error loading alert configs:', error);
+        console.error('Error loading data:', error);
       }
     };
 
-    loadAlerts();
+    loadData();
   }, [sessionId]);
 
   // Listen for alert triggers
@@ -63,6 +82,24 @@ export default function AlertsOverlay() {
       socket.off('alert-trigger', handleAlertTrigger);
     };
   }, [socket, sessionId]);
+
+  // Listen for color scheme changes
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('color-scheme-change', (scheme: ColorScheme) => {
+      setColorScheme(scheme);
+    });
+
+    socket.on('custom-colors-change', (colors: CustomColors) => {
+      setCustomColors(colors);
+    });
+
+    return () => {
+      socket.off('color-scheme-change');
+      socket.off('custom-colors-change');
+    };
+  }, [socket]);
 
   // Process alert queue
   useEffect(() => {
@@ -98,6 +135,8 @@ export default function AlertsOverlay() {
           config={currentAlert.config}
           event={currentAlert.event}
           onComplete={handleAlertComplete}
+          colorScheme={colorScheme}
+          customColors={customColors}
         />
       )}
 

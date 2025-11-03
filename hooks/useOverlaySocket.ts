@@ -109,21 +109,21 @@ export function useOverlaySocket(sessionId: string) {
             }
           }
 
-          // Scene layer visibility
+          // Scene layer visibility - explicitly check for false to respect hidden state
           setSceneLayers(prev =>
             prev.map(layer => {
               if (layer.id === 'weather')
-                return { ...layer, visible: layout.weatherVisible ?? true };
+                return { ...layer, visible: layout.weatherVisible === false ? false : true };
               if (layer.id === 'chat')
-                return { ...layer, visible: layout.chatVisible ?? true };
+                return { ...layer, visible: layout.chatVisible === false ? false : true };
               if (layer.id === 'nowplaying')
-                return { ...layer, visible: layout.nowPlayingVisible ?? true };
+                return { ...layer, visible: layout.nowPlayingVisible === false ? false : true };
               if (layer.id === 'countdown')
-                return { ...layer, visible: layout.countdownVisible ?? true };
+                return { ...layer, visible: layout.countdownVisible === false ? false : true };
               if (layer.id === 'chathighlight')
-                return { ...layer, visible: layout.chatHighlightVisible ?? true };
+                return { ...layer, visible: layout.chatHighlightVisible === false ? false : true };
               if (layer.id === 'paintbynumbers')
-                return { ...layer, visible: layout.paintByNumbersVisible ?? true };
+                return { ...layer, visible: layout.paintByNumbersVisible === false ? false : true };
               return layer;
             })
           );

@@ -2,37 +2,57 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { AlertConfig, AlertEvent } from '@/types/overlay';
+import { AlertConfig, AlertEvent, ColorScheme, CustomColors } from '@/types/overlay';
+import { useThemeColors, hexToRgba } from '@/hooks/useThemeColors';
 
 interface AlertProps {
   config: AlertConfig;
   event: AlertEvent;
   onComplete: () => void;
+  colorScheme?: ColorScheme;
+  customColors?: CustomColors | null;
 }
 
-export default function Alert({ config, event, onComplete }: AlertProps) {
+export default function Alert({ config, event, onComplete, colorScheme = 'default', customColors = null }: AlertProps) {
+  const theme = useThemeColors(colorScheme, customColors);
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasPlayedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+
+  // Keep onComplete ref updated
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
-    // Play sound if configured
-    if (config.soundUrl && audioRef.current) {
+    // Play sound if configured (only once)
+    if (config.soundUrl && audioRef.current && !hasPlayedRef.current) {
       audioRef.current.volume = config.volume;
       audioRef.current.play().catch(err => console.error('Error playing alert sound:', err));
+      hasPlayedRef.current = true;
     }
 
     // Show alert
-    setTimeout(() => setIsVisible(true), 50);
+    const showTimer = setTimeout(() => setIsVisible(true), 50);
 
     // Hide after duration
     const hideTimer = setTimeout(() => {
       setIsLeaving(true);
-      setTimeout(onComplete, 500); // Allow exit animation
+      setTimeout(() => onCompleteRef.current(), 500); // Allow exit animation
     }, config.duration * 1000);
 
-    return () => clearTimeout(hideTimer);
-  }, [config, onComplete]);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+      // Stop audio if still playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   // Replace template variables in message
   const formatMessage = (template: string): string => {
@@ -122,7 +142,14 @@ export default function Alert({ config, event, onComplete }: AlertProps) {
       <div
         className={`fixed ${positionClasses[config.position]} ${getAnimationClasses()} z-50`}
       >
-        <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-purple-900/95 to-pink-900/95 backdrop-blur-md rounded-2xl border-2 border-purple-500/50 shadow-2xl shadow-purple-500/50">
+        <div
+          className="flex flex-col items-center gap-4 p-6 backdrop-blur-md rounded-2xl border-2 shadow-2xl"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(theme.primaryDark, 0.95)}, ${hexToRgba(theme.secondaryDark, 0.95)})`,
+            borderColor: hexToRgba(theme.accent, 0.5),
+            boxShadow: `0 20px 25px -5px ${hexToRgba(theme.accent, 0.3)}, 0 10px 10px -5px ${hexToRgba(theme.accent, 0.2)}`,
+          }}
+        >
           {/* Alert Image */}
           {config.imageUrl && (
             <img
@@ -146,20 +173,20 @@ export default function Alert({ config, event, onComplete }: AlertProps) {
 
           {/* Additional info for specific event types */}
           {event.eventType === 'bits' && event.amount && (
-            <div className="text-yellow-400 text-2xl font-bold flex items-center gap-2">
+            <div className="text-2xl font-bold flex items-center gap-2" style={{ color: theme.accentText }}>
               <span className="text-3xl">💎</span>
               {event.amount} Bits
             </div>
           )}
 
           {event.eventType === 'raid' && event.count && (
-            <div className="text-purple-400 text-xl font-bold">
+            <div className="text-xl font-bold" style={{ color: theme.accentText }}>
               with {event.count} viewers!
             </div>
           )}
 
           {event.eventType === 'sub' && event.tier && (
-            <div className="text-purple-400 text-xl font-bold">
+            <div className="text-xl font-bold" style={{ color: theme.accentText }}>
               Tier {event.tier} ⭐
             </div>
           )}

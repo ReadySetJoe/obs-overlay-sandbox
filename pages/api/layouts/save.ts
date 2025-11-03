@@ -34,8 +34,10 @@ export default async function handler(
           ?.visible,
         countdownVisible: layers.find((l: any) => l.id === 'countdown')
           ?.visible,
+        chatHighlightVisible: layers.find((l: any) => l.id === 'chathighlight')
+          ?.visible,
         paintByNumbersVisible:
-          layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
+          layers.find((l: any) => l.id === 'paintbynumbers')?.visible,
         componentLayouts: componentLayouts || null,
         paintByNumbersState: paintByNumbersState || null,
       },
@@ -45,12 +47,14 @@ export default async function handler(
         colorScheme,
         customColors: customColors || null,
         weatherEffect,
-        weatherVisible: layers.find((l: any) => l.id === 'weather')?.visible,
-        chatVisible: layers.find((l: any) => l.id === 'chat')?.visible,
+        weatherVisible: layers.find((l: any) => l.id === 'weather')?.visible ?? true,
+        chatVisible: layers.find((l: any) => l.id === 'chat')?.visible ?? true,
         nowPlayingVisible: layers.find((l: any) => l.id === 'nowplaying')
-          ?.visible,
+          ?.visible ?? true,
         countdownVisible: layers.find((l: any) => l.id === 'countdown')
-          ?.visible,
+          ?.visible ?? true,
+        chatHighlightVisible: layers.find((l: any) => l.id === 'chathighlight')
+          ?.visible ?? true,
         paintByNumbersVisible:
           layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
         componentLayouts: componentLayouts || null,

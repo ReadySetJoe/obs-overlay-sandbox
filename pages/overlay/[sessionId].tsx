@@ -196,6 +196,8 @@ export default function OverlayPage() {
           config={currentAlert.config}
           event={currentAlert.event}
           onComplete={handleAlertComplete}
+          colorScheme={colorScheme}
+          customColors={customColors}
         />
       )}
     </div>
