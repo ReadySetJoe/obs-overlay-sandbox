@@ -214,7 +214,13 @@ export type AlertAnimationType =
   | 'slide-up'
   | 'bounce'
   | 'fade'
-  | 'zoom';
+  | 'zoom'
+  | 'spin'
+  | 'wiggle'
+  | 'flip'
+  | 'rubber-band'
+  | 'swing'
+  | 'tada';
 
 export type AlertPosition =
   | 'top-left'
@@ -250,6 +256,7 @@ export interface AlertConfig {
   fontSize: number; // pixels
   textColor: string;
   textShadow: boolean;
+  showBackground: boolean;
 }
 
 export interface AlertEvent {

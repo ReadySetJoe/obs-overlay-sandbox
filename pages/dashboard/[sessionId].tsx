@@ -72,6 +72,7 @@ export default function DashboardPage() {
   // Overlay settings
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [customColors, setCustomColors] = useState<CustomColors | null>(null);
+  const [fontFamily, setFontFamily] = useState<string>('Inter');
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
 
   // Emote wall
@@ -139,6 +140,11 @@ export default function DashboardPage() {
             } catch (error) {
               console.error('Error parsing custom colors:', error);
             }
+          }
+
+          // Restore font family
+          if (layout.fontFamily) {
+            setFontFamily(layout.fontFamily);
           }
 
           setWeatherEffect(layout.weatherEffect);
@@ -271,6 +277,7 @@ export default function DashboardPage() {
           sessionId,
           colorScheme,
           customColors: customColors ? JSON.stringify(customColors) : null,
+          fontFamily,
           weatherEffect,
           layers,
           componentLayouts: JSON.stringify(componentLayouts),
@@ -313,6 +320,7 @@ export default function DashboardPage() {
     session,
     colorScheme,
     customColors,
+    fontFamily,
     weatherEffect,
     layers,
     componentLayouts,
@@ -341,6 +349,12 @@ export default function DashboardPage() {
       setColorScheme('custom');
       socket.emit('color-scheme-change', 'custom');
     }
+  };
+
+  const handleFontFamilyChange = (font: string) => {
+    if (!socket) return;
+    setFontFamily(font);
+    socket.emit('font-family-change', font);
   };
 
   const changeWeather = (effect: WeatherEffect) => {
@@ -693,8 +707,10 @@ export default function DashboardPage() {
               <ColorSchemeExpanded
                 colorScheme={colorScheme}
                 customColors={customColors}
+                fontFamily={fontFamily}
                 onColorSchemeChange={changeColorScheme}
                 onCustomColorsChange={handleCustomColorsChange}
+                onFontFamilyChange={handleFontFamilyChange}
                 onClose={handleCloseExpanded}
               />
             )}

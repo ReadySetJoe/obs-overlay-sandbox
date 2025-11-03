@@ -22,6 +22,7 @@ export function useOverlaySocket(sessionId: string) {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [customColors, setCustomColors] = useState<CustomColors | null>(null);
+  const [fontFamily, setFontFamily] = useState<string>('Inter');
   const [weatherEffect, setWeatherEffect] = useState<WeatherEffectType>('none');
   const [nowPlaying, setNowPlaying] = useState<NowPlayingType | null>(null);
   const [countdownTimers, setCountdownTimers] = useState<CountdownTimerType[]>(
@@ -96,6 +97,11 @@ export function useOverlaySocket(sessionId: string) {
             } catch (error) {
               console.error('Error parsing custom colors:', error);
             }
+          }
+
+          // Font family
+          if (layout.fontFamily) {
+            setFontFamily(layout.fontFamily);
           }
 
           // Weather effect
@@ -207,6 +213,10 @@ export function useOverlaySocket(sessionId: string) {
       setCustomColors(colors);
     });
 
+    socket.on('font-family-change', (font: string) => {
+      setFontFamily(font);
+    });
+
     socket.on('weather-change', (effect: WeatherEffectType) => {
       setWeatherEffect(effect);
     });
@@ -265,6 +275,7 @@ export function useOverlaySocket(sessionId: string) {
       socket.off('chat-message');
       socket.off('color-scheme-change');
       socket.off('custom-colors-change');
+      socket.off('font-family-change');
       socket.off('weather-change');
       socket.off('now-playing');
       socket.off('scene-toggle');
@@ -348,6 +359,7 @@ export function useOverlaySocket(sessionId: string) {
     colorScheme,
     customColors,
     customGradientCSS,
+    fontFamily,
     weatherEffect,
     nowPlaying,
     countdownTimers,

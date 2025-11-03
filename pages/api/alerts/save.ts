@@ -26,6 +26,7 @@ export default async function handler(
     fontSize,
     textColor,
     textShadow,
+    showBackground,
   } = req.body;
 
   if (!sessionId || !eventType) {
@@ -66,6 +67,7 @@ export default async function handler(
         fontSize,
         textColor,
         textShadow,
+        showBackground,
       },
       create: {
         layoutId: layout.id,
@@ -83,6 +85,7 @@ export default async function handler(
         fontSize,
         textColor,
         textShadow,
+        showBackground,
       },
     });
 

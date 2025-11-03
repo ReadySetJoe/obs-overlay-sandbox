@@ -68,6 +68,7 @@ model Layout {
   // Overlay settings
   colorScheme    String   @default("default")
   customColors   String?  // JSON string of CustomColors
+  fontFamily     String   @default("Inter") // Google Font name
   weatherEffect  String   @default("rain")
 
   // Scene layers visibility
@@ -142,6 +143,7 @@ model AlertConfig {
   fontSize      Int     @default(32) // pixels
   textColor     String  @default("#FFFFFF")
   textShadow    Boolean @default(true)
+  showBackground Boolean @default(true) // Show/hide alert background box
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

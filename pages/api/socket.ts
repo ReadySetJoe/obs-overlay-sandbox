@@ -21,9 +21,23 @@ type NextApiResponseServerIO = NextApiResponse & {
 // Global variable to store the socket server instance
 let globalSocketServer: SocketIOServer | null = null;
 
+// Store a reference to the server with io
+let serverWithIO: (NetServer & { io?: SocketIOServer }) | null = null;
+
 // Helper function to get the socket server instance
 export function getSocketServer(): SocketIOServer | null {
-  return globalSocketServer;
+  // First try the global variable
+  if (globalSocketServer) {
+    return globalSocketServer;
+  }
+
+  // Fallback: try to get from the stored server reference
+  if (serverWithIO?.io) {
+    globalSocketServer = serverWithIO.io;
+    return serverWithIO.io;
+  }
+
+  return null;
 }
 
 const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
@@ -69,6 +83,13 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
             data
           );
           io.to(sessionId).emit('custom-colors-change', data);
+        }
+      });
+
+      socket.on('font-family-change', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('font-family-change', data);
         }
       });
 
@@ -163,6 +184,11 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
 
     res.socket.server.io = io;
     globalSocketServer = io; // Store globally for API routes to access
+    serverWithIO = res.socket.server; // Store server reference for recovery
+  } else {
+    // Server already initialized, update our global references
+    globalSocketServer = res.socket.server.io;
+    serverWithIO = res.socket.server;
   }
 
   res.end();

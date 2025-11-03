@@ -22,6 +22,7 @@ export default async function handler(
     sessionId,
     colorScheme,
     customColors,
+    fontFamily,
     weatherEffect,
     layers,
     componentLayouts,
@@ -34,6 +35,7 @@ export default async function handler(
       update: {
         colorScheme,
         customColors: customColors || null,
+        fontFamily: fontFamily || 'Inter',
         weatherEffect,
         weatherVisible: layers.find((l: any) => l.id === 'weather')?.visible,
         chatVisible: layers.find((l: any) => l.id === 'chat')?.visible,
@@ -54,6 +56,7 @@ export default async function handler(
         sessionId,
         colorScheme,
         customColors: customColors || null,
+        fontFamily: fontFamily || 'Inter',
         weatherEffect,
         weatherVisible:
           layers.find((l: any) => l.id === 'weather')?.visible ?? true,

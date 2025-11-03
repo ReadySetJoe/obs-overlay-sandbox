@@ -29,6 +29,7 @@ export default function OverlayPage() {
     customColors,
     colorSchemeStyles,
     customGradientCSS,
+    fontFamily,
     backgroundImageUrl,
     backgroundOpacity,
     backgroundBlur,
@@ -113,7 +114,10 @@ export default function OverlayPage() {
   };
 
   return (
-    <div className='relative w-screen h-screen overflow-hidden'>
+    <div
+      className='relative w-screen h-screen overflow-hidden'
+      style={{ fontFamily }}
+    >
       {/* Custom Background Layer (lowest) */}
       {backgroundImageUrl && (
         <div

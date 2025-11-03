@@ -58,6 +58,12 @@ const ANIMATION_TYPES: { value: AlertAnimationType; label: string }[] = [
   { value: 'bounce', label: 'Bounce' },
   { value: 'fade', label: 'Fade' },
   { value: 'zoom', label: 'Zoom' },
+  { value: 'spin', label: '🌀 Spin' },
+  { value: 'wiggle', label: '🤪 Wiggle' },
+  { value: 'flip', label: '🔄 Flip' },
+  { value: 'rubber-band', label: '🎸 Rubber Band' },
+  { value: 'swing', label: '🎪 Swing' },
+  { value: 'tada', label: '🎉 Tada!' },
 ];
 
 const POSITIONS: { value: AlertPosition; label: string }[] = [
@@ -168,6 +174,7 @@ export default function AlertsExpanded({
         fontSize: config.fontSize ?? 32,
         textColor: config.textColor || '#FFFFFF',
         textShadow: config.textShadow ?? true,
+        showBackground: config.showBackground ?? true,
       };
 
       const response = await fetch('/api/alerts/save', {
@@ -269,6 +276,7 @@ export default function AlertsExpanded({
             fontSize: config.fontSize ?? 32,
             textColor: config.textColor || '#FFFFFF',
             textShadow: config.textShadow ?? true,
+            showBackground: config.showBackground ?? true,
           };
 
           const response = await fetch('/api/alerts/save', {
@@ -316,11 +324,22 @@ export default function AlertsExpanded({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to trigger test alert');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to trigger test alert');
       }
+
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.className =
+        'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      successMessage.textContent = 'Test alert sent successfully!';
+      document.body.appendChild(successMessage);
+      setTimeout(() => successMessage.remove(), 3000);
     } catch (error) {
       console.error('Error testing alert:', error);
-      alert('Failed to trigger test alert');
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to trigger test alert';
+      alert(errorMessage);
     }
   };
 
@@ -736,6 +755,28 @@ export default function AlertsExpanded({
                           Enable Text Shadow
                         </span>
                       </label>
+                    </div>
+
+                    {/* Show Background */}
+                    <div>
+                      <label className='flex items-center gap-2 cursor-pointer'>
+                        <input
+                          type='checkbox'
+                          checked={config.showBackground ?? true}
+                          onChange={e =>
+                            updateConfig(type, {
+                              showBackground: e.target.checked,
+                            })
+                          }
+                          className='w-5 h-5 rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500'
+                        />
+                        <span className='text-sm font-semibold'>
+                          Show Background Box
+                        </span>
+                      </label>
+                      <p className='text-xs text-gray-400 mt-1'>
+                        Uncheck for transparent, floating alert style
+                      </p>
                     </div>
 
                     {/* Test Button */}
