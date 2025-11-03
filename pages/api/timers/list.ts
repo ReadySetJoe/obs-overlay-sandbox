@@ -1,21 +1,18 @@
 // pages/api/timers/list.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * Public endpoint for loading countdown timers
+ * No authentication required - accessible to OBS browser sources
+ * Security: sessionId is a UUID that's difficult to guess
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const { sessionId } = req.query;
@@ -25,7 +22,7 @@ export default async function handler(
   }
 
   try {
-    // Get layout first to verify ownership
+    // Get layout and countdown timers
     const layout = await prisma.layout.findUnique({
       where: { sessionId },
       include: {
@@ -39,13 +36,10 @@ export default async function handler(
       return res.status(404).json({ error: 'Layout not found' });
     }
 
-    if (layout.userId !== session.user.id) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
+    console.log('[API] Timers loaded for overlay:', sessionId, `(${layout.countdowns.length} timers)`);
     return res.status(200).json({ timers: layout.countdowns });
   } catch (error) {
-    console.error('Error fetching timers:', error);
+    console.error('[API] Error fetching timers:', error);
     return res.status(500).json({ error: 'Failed to fetch timers' });
   }
 }

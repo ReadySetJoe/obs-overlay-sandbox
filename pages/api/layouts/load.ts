@@ -1,21 +1,18 @@
 // pages/api/layouts/load.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * Public endpoint for loading layout data
+ * No authentication required - accessible to OBS browser sources
+ * Security: sessionId is a UUID that's difficult to guess
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const { sessionId } = req.query;
@@ -33,14 +30,10 @@ export default async function handler(
       return res.status(404).json({ error: 'Layout not found' });
     }
 
-    // Verify the layout belongs to the authenticated user
-    if (layout.userId !== session.user.id) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
+    console.log('[API] Layout loaded for overlay:', sessionId);
     return res.status(200).json({ layout });
   } catch (error) {
-    console.error('Error loading layout:', error);
+    console.error('[API] Error loading layout:', error);
     return res.status(500).json({ error: 'Failed to load layout' });
   }
 }
