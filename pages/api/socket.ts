@@ -145,6 +145,13 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('alert-trigger', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('alert-trigger', data);
+        }
+      });
+
       socket.on('disconnect', () => {
         // Client disconnected
       });

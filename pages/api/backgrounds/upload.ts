@@ -130,11 +130,13 @@ export default async function handler(
       },
     });
 
-    // Emit socket event to update overlays
+    // Emit socket event to update overlays and dashboard
     const io = getSocketServer();
     if (io) {
       io.to(sessionId).emit('background-change', {
         backgroundImageUrl: uploadResult.url,
+        backgroundImageName: file.originalFilename || 'background.png',
+        backgroundColors: JSON.stringify(extractedColors),
         backgroundOpacity: 1.0,
         backgroundBlur: 0,
       });

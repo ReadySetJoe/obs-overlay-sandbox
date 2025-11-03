@@ -97,6 +97,7 @@ model Layout {
 
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   countdowns CountdownTimer[]
+  alerts     AlertConfig[]
 }
 
 model CountdownTimer {
@@ -111,4 +112,40 @@ model CountdownTimer {
   updatedAt DateTime @updatedAt
 
   layout Layout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+}
+
+model AlertConfig {
+  id        String   @id @default(cuid())
+  layoutId  String
+
+  // Event type: 'follow', 'sub', 'bits', 'raid', 'giftsub'
+  eventType String
+
+  // Visual settings
+  enabled         Boolean @default(true)
+  imageUrl        String? // Cloudinary URL for alert image/gif
+  imagePublicId   String? // Cloudinary public_id for deletion
+  animationType   String  @default("slide-down") // 'slide-down', 'slide-up', 'bounce', 'fade', 'zoom'
+  duration        Int     @default(5) // seconds
+  position        String  @default("top-center") // 'top-left', 'top-center', 'top-right', 'center', 'bottom-left', 'bottom-center', 'bottom-right'
+
+  // Audio settings
+  soundUrl      String? // Cloudinary URL for alert sound
+  soundPublicId String? // Cloudinary public_id for deletion
+  volume        Float   @default(0.7) // 0.0 to 1.0
+
+  // Message template
+  messageTemplate String  @default("{username} just {event}!") // {username}, {event}, {amount}, {count}
+
+  // Font and color customization
+  fontSize      Int     @default(32) // pixels
+  textColor     String  @default("#FFFFFF")
+  textShadow    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  layout Layout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+
+  @@unique([layoutId, eventType])
 }

@@ -189,3 +189,54 @@ export interface ComponentLayouts {
   chatHighlight: ChatHighlightLayout;
   paintByNumbers?: PaintByNumbersLayout;
 }
+
+// Alert types
+export type AlertEventType = 'follow' | 'sub' | 'bits' | 'raid' | 'giftsub';
+
+export type AlertAnimationType = 'slide-down' | 'slide-up' | 'bounce' | 'fade' | 'zoom';
+
+export type AlertPosition =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right';
+
+export interface AlertConfig {
+  id: string;
+  layoutId: string;
+  eventType: AlertEventType;
+
+  // Visual settings
+  enabled: boolean;
+  imageUrl?: string;
+  imagePublicId?: string;
+  animationType: AlertAnimationType;
+  duration: number; // seconds
+  position: AlertPosition;
+
+  // Audio settings
+  soundUrl?: string;
+  soundPublicId?: string;
+  volume: number; // 0.0 to 1.0
+
+  // Message template
+  messageTemplate: string;
+
+  // Font and color customization
+  fontSize: number; // pixels
+  textColor: string;
+  textShadow: boolean;
+}
+
+export interface AlertEvent {
+  eventType: AlertEventType;
+  username: string;
+  amount?: number; // for bits
+  count?: number; // for raid
+  message?: string; // for bits/subs
+  tier?: number; // for subs (1, 2, 3)
+  timestamp: number;
+}

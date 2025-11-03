@@ -2,6 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import WeatherEffect from '@/components/overlay/WeatherEffect';
 import NowPlaying from '@/components/overlay/NowPlaying';
@@ -9,6 +10,8 @@ import CountdownTimer from '@/components/overlay/CountdownTimer';
 import EmoteWall from '@/components/overlay/EmoteWall';
 import ChatHighlight from '@/components/overlay/ChatHighlight';
 import PaintByNumbers from '@/components/overlay/PaintByNumbers';
+import Alert from '@/components/overlay/Alert';
+import { AlertConfig, AlertEvent } from '@/types/overlay';
 
 export default function OverlayPage() {
   const router = useRouter();
@@ -29,7 +32,80 @@ export default function OverlayPage() {
     backgroundImageUrl,
     backgroundOpacity,
     backgroundBlur,
+    socket,
   } = useOverlaySocket(sessionId as string);
+
+  // Alert state
+  const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
+  const [alertQueue, setAlertQueue] = useState<AlertEvent[]>([]);
+  const [currentAlert, setCurrentAlert] = useState<{config: AlertConfig; event: AlertEvent} | null>(null);
+
+  // Load alert configurations
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadAlerts = async () => {
+      try {
+        const response = await fetch(`/api/alerts/list?sessionId=${sessionId}`);
+        if (response.ok) {
+          const { alerts } = await response.json();
+          setAlertConfigs(alerts);
+        }
+      } catch (error) {
+        console.error('Error loading alert configs:', error);
+      }
+    };
+
+    loadAlerts();
+  }, [sessionId]);
+
+  // Listen for alert triggers
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleAlertTrigger = async (event: AlertEvent) => {
+      console.log('Alert triggered:', event);
+
+      // Reload configs to ensure we have the latest configuration
+      try {
+        const response = await fetch(`/api/alerts/list?sessionId=${sessionId}`);
+        if (response.ok) {
+          const { alerts } = await response.json();
+          setAlertConfigs(alerts);
+        }
+      } catch (error) {
+        console.error('Error reloading alert configs:', error);
+      }
+
+      // Add to queue
+      setAlertQueue(prev => [...prev, event]);
+    };
+
+    socket.on('alert-trigger', handleAlertTrigger);
+
+    return () => {
+      socket.off('alert-trigger', handleAlertTrigger);
+    };
+  }, [socket, sessionId]);
+
+  // Process alert queue
+  useEffect(() => {
+    if (currentAlert || alertQueue.length === 0) return;
+
+    const nextEvent = alertQueue[0];
+    const config = alertConfigs.find(c => c.eventType === nextEvent.eventType && c.enabled);
+
+    if (config) {
+      setCurrentAlert({ config, event: nextEvent });
+    }
+
+    // Remove from queue regardless of whether we found a config
+    setAlertQueue(prev => prev.slice(1));
+  }, [alertQueue, currentAlert, alertConfigs]);
+
+  const handleAlertComplete = () => {
+    setCurrentAlert(null);
+  };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
@@ -111,6 +187,15 @@ export default function OverlayPage() {
           }
           colorScheme={colorScheme}
           customColors={customColors}
+        />
+      )}
+
+      {/* Alerts */}
+      {currentAlert && (
+        <Alert
+          config={currentAlert.config}
+          event={currentAlert.event}
+          onComplete={handleAlertComplete}
         />
       )}
     </div>

@@ -52,14 +52,44 @@ export async function uploadToCloudinary(
 }
 
 /**
+ * Upload audio file to Cloudinary
+ */
+export async function uploadAudioToCloudinary(
+  filePath: string,
+  folder: string = 'alert-sounds'
+): Promise<{
+  url: string;
+  public_id: string;
+  format: string;
+  duration: number;
+}> {
+  try {
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder,
+      resource_type: 'video', // Cloudinary treats audio as video resource type
+    });
+
+    return {
+      url: result.secure_url,
+      public_id: result.public_id,
+      format: result.format,
+      duration: result.duration || 0,
+    };
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw new Error('Failed to upload audio to Cloudinary');
+  }
+}
+
+/**
  * Delete image from Cloudinary
  */
-export async function deleteFromCloudinary(publicId: string): Promise<void> {
+export async function deleteFromCloudinary(publicId: string, resourceType: 'image' | 'video' = 'image'): Promise<void> {
   try {
-    await cloudinary.uploader.destroy(publicId);
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
   } catch (error) {
     console.error('Cloudinary delete error:', error);
-    throw new Error('Failed to delete image from Cloudinary');
+    throw new Error(`Failed to delete ${resourceType} from Cloudinary`);
   }
 }
 
