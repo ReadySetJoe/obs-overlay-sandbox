@@ -885,20 +885,12 @@ export default function DashboardPage() {
             {/* Chat Highlight Tile */}
             <SummaryTile
               title='Chat Highlight'
-              subtitle={
-                !session
-                  ? 'Connect Twitch to use'
-                  : chatHook.chatHighlight
-                    ? chatHook.chatHighlight.message.username
-                    : `${chatHook.chatMessages.length} messages`
-              }
+              subtitle={chatHook.chatHighlight ? 'Selected' : 'Inactive'}
               icon={<ChatHighlightIcon />}
               color='purple'
               isVisible={layers.find(l => l.id === 'chathighlight')?.visible}
               onToggleVisibility={() => toggleLayer('chathighlight')}
               onClick={() => handleExpandElement('chathighlight')}
-              authRequired={!session}
-              onAuthClick={() => signIn('twitch')}
             />
 
             {/* Countdown Timers Tile */}
@@ -910,15 +902,6 @@ export default function DashboardPage() {
               isVisible={layers.find(l => l.id === 'countdown')?.visible}
               onToggleVisibility={() => toggleLayer('countdown')}
               onClick={() => handleExpandElement('countdown')}
-            />
-
-            {/* Emote Wall Tile */}
-            <SummaryTile
-              title='Emote Wall'
-              subtitle={`${emoteIntensity} intensity`}
-              icon={<EmoteWallIcon />}
-              color='yellow'
-              onClick={() => handleExpandElement('emote')}
             />
 
             {/* Wheel Spinner Tile */}
@@ -951,6 +934,15 @@ export default function DashboardPage() {
               isVisible={layers.find(l => l.id === 'paintbynumbers')?.visible}
               onToggleVisibility={() => toggleLayer('paintbynumbers')}
               onClick={() => handleExpandElement('paint')}
+            />
+
+            {/* Emote Wall Tile */}
+            <SummaryTile
+              title='Emote Wall'
+              subtitle={`${emoteIntensity} intensity`}
+              icon={<EmoteWallIcon />}
+              color='yellow'
+              onClick={() => handleExpandElement('emote')}
             />
           </div>
         ) : (

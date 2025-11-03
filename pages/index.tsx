@@ -85,10 +85,10 @@ export default function HomePage() {
             <div className='flex items-center justify-between flex-col md:flex-row gap-4'>
               <div className='text-center md:text-left'>
                 <h3 className='text-lg font-bold mb-1'>
-                  Sign in to save your layouts
+                  Sign in to get started
                 </h3>
                 <p className='text-sm text-gray-400'>
-                  Connect with Twitch to persist your settings across sessions
+                  Use your Twitch account to create and join overlay sessions
                 </p>
               </div>
               <button
@@ -109,80 +109,82 @@ export default function HomePage() {
         )}
 
         {/* Action Cards */}
-        <div className='grid md:grid-cols-2 gap-6 mb-8'>
-          {/* Create New Session */}
-          <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105'>
-            <div className='mb-4'>
-              <div className='w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4'>
-                <svg
-                  className='w-6 h-6'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 4v16m8-8H4'
-                  />
-                </svg>
+        {session && (
+          <div className='grid md:grid-cols-2 gap-6 mb-8'>
+            {/* Create New Session */}
+            <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105'>
+              <div className='mb-4'>
+                <div className='w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4'>
+                  <svg
+                    className='w-6 h-6'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M12 4v16m8-8H4'
+                    />
+                  </svg>
+                </div>
+                <h2 className='text-2xl font-bold mb-2'>Create Session</h2>
+                <p className='text-gray-400 text-sm mb-6'>
+                  Get your own Joe-verlay with a unique session ID
+                </p>
               </div>
-              <h2 className='text-2xl font-bold mb-2'>Create Session</h2>
-              <p className='text-gray-400 text-sm mb-6'>
-                Get your own Joe-verlay with a unique session ID
-              </p>
-            </div>
-            <button
-              onClick={createNewSession}
-              className='w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl px-6 py-4 font-bold transition-all duration-200 shadow-lg hover:shadow-xl'
-            >
-              Create Session
-            </button>
-          </div>
-
-          {/* Join Existing Session */}
-          <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105'>
-            <div className='mb-4'>
-              <div className='w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4'>
-                <svg
-                  className='w-6 h-6'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1'
-                  />
-                </svg>
-              </div>
-              <h2 className='text-2xl font-bold mb-2'>Join Session</h2>
-              <p className='text-gray-400 text-sm mb-6'>
-                Enter your friend's session ID to access their Joe-verlay
-              </p>
-            </div>
-            <div className='space-y-3'>
-              <input
-                type='text'
-                value={sessionId}
-                onChange={e => setSessionId(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder='Enter session ID'
-                className='w-full bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors'
-              />
               <button
-                onClick={joinSession}
-                disabled={!sessionId.trim()}
-                className='w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl px-6 py-4 font-bold transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none'
+                onClick={createNewSession}
+                className='w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl px-6 py-4 font-bold transition-all duration-200 shadow-lg hover:shadow-xl'
               >
-                Join Session
+                Create Session
               </button>
             </div>
+
+            {/* Join Existing Session */}
+            <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105'>
+              <div className='mb-4'>
+                <div className='w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4'>
+                  <svg
+                    className='w-6 h-6'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1'
+                    />
+                  </svg>
+                </div>
+                <h2 className='text-2xl font-bold mb-2'>Join Session</h2>
+                <p className='text-gray-400 text-sm mb-6'>
+                  Enter your friend's session ID to access their Joe-verlay
+                </p>
+              </div>
+              <div className='space-y-3'>
+                <input
+                  type='text'
+                  value={sessionId}
+                  onChange={e => setSessionId(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder='Enter session ID'
+                  className='w-full bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors'
+                />
+                <button
+                  onClick={joinSession}
+                  disabled={!sessionId.trim()}
+                  className='w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl px-6 py-4 font-bold transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none'
+                >
+                  Join Session
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Features */}
         <div className='bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30'>

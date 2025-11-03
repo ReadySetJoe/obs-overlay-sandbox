@@ -1,19 +1,23 @@
 // components/dashboard/ToggleSwitch.tsx
 'use client';
 
+import { colorClasses, ThemeColor } from '@/lib/theme';
+
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: () => void;
-  color?: string;
+  color: ThemeColor;
   label?: string;
 }
 
 export default function ToggleSwitch({
   checked,
   onChange,
-  color = 'green',
+  color,
   label,
 }: ToggleSwitchProps) {
+  const bgClass = colorClasses[color]?.bg || 'bg-gray-500';
+
   return (
     <div className='flex items-center gap-2'>
       {label && <span className='text-xs text-gray-500'>{label}</span>}
@@ -23,7 +27,7 @@ export default function ToggleSwitch({
           onChange();
         }}
         className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
-          checked ? `bg-${color}-500` : 'bg-gray-600'
+          checked ? bgClass : 'bg-gray-600'
         }`}
         aria-label={label || 'Toggle'}
       >

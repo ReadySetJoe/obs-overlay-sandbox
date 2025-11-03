@@ -135,7 +135,7 @@ model AlertConfig {
   eventType String
 
   // Visual settings
-  enabled         Boolean @default(true)
+  enabled         Boolean @default(false)
   imageUrl        String? // Cloudinary URL for alert image/gif
   imagePublicId   String? // Cloudinary public_id for deletion
   animationType   String  @default("slide-down") // 'slide-down', 'slide-up', 'bounce', 'fade', 'zoom'
