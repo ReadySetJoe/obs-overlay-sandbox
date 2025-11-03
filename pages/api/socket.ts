@@ -93,6 +93,13 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      socket.on('event-labels-config', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('event-labels-config', data);
+        }
+      });
+
       socket.on('weather-change', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {

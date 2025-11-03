@@ -13,6 +13,8 @@ import {
   ComponentLayouts,
   ChatHighlight as ChatHighlightType,
   PaintByNumbersState,
+  EventLabelsData,
+  EventLabelsConfig,
 } from '@/types/overlay';
 import { colorSchemePresets } from '@/lib/colorSchemes';
 
@@ -71,6 +73,21 @@ export function useOverlaySocket(sessionId: string) {
   );
   const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
   const [backgroundBlur, setBackgroundBlur] = useState(0);
+  const [eventLabelsData, setEventLabelsData] = useState<EventLabelsData>({});
+  const [eventLabelsConfig, setEventLabelsConfig] = useState<EventLabelsConfig>(
+    {
+      showFollower: true,
+      showSub: true,
+      showBits: true,
+      showRaid: true,
+      showGiftSub: true,
+      followerLabel: 'Latest Follower',
+      subLabel: 'Latest Subscriber',
+      bitsLabel: 'Latest Bits',
+      raidLabel: 'Latest Raid',
+      giftSubLabel: 'Latest Gift Sub',
+    }
+  );
 
   // Load initial layout state from database
   useEffect(() => {
@@ -187,6 +204,16 @@ export function useOverlaySocket(sessionId: string) {
             setBackgroundBlur(layout.backgroundBlur);
           }
 
+          // Load event labels data
+          if (layout.eventLabelsData) {
+            try {
+              const parsedEventLabelsData = JSON.parse(layout.eventLabelsData);
+              setEventLabelsData(parsedEventLabelsData);
+            } catch (error) {
+              console.error('Error parsing event labels data:', error);
+            }
+          }
+
           // Note: Paint by numbers state is handled by the dashboard and sent via socket
           // We don't load it here because we need template data to reconstruct the full state
         }
@@ -271,6 +298,14 @@ export function useOverlaySocket(sessionId: string) {
       }
     );
 
+    socket.on('event-labels-update', (data: EventLabelsData) => {
+      setEventLabelsData(data);
+    });
+
+    socket.on('event-labels-config', (config: EventLabelsConfig) => {
+      setEventLabelsConfig(config);
+    });
+
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
@@ -285,6 +320,8 @@ export function useOverlaySocket(sessionId: string) {
       socket.off('chat-highlight');
       socket.off('paint-state');
       socket.off('background-change');
+      socket.off('event-labels-update');
+      socket.off('event-labels-config');
     };
   }, [socket]);
 
@@ -370,6 +407,8 @@ export function useOverlaySocket(sessionId: string) {
     backgroundImageUrl,
     backgroundOpacity,
     backgroundBlur,
+    eventLabelsData,
+    eventLabelsConfig,
     removeMessage,
     getLayerVisible,
     colorSchemeStyles,

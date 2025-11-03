@@ -197,6 +197,13 @@ export interface PaintByNumbersLayout {
   gridSize: number; // pixel size for each grid cell
 }
 
+export interface EventLabelsLayout {
+  position: Position;
+  x: number;
+  y: number;
+  scale: number; // 0.5 to 2.0
+}
+
 export interface ComponentLayouts {
   chat: ChatLayout;
   nowPlaying: NowPlayingLayout;
@@ -204,6 +211,7 @@ export interface ComponentLayouts {
   weather: WeatherLayout;
   chatHighlight: ChatHighlightLayout;
   paintByNumbers?: PaintByNumbersLayout;
+  eventLabels?: EventLabelsLayout;
 }
 
 // Alert types
@@ -267,4 +275,35 @@ export interface AlertEvent {
   message?: string; // for bits/subs
   tier?: number; // for subs (1, 2, 3)
   timestamp: number;
+}
+
+// Event Labels (Recent Events Display)
+export interface EventLabelsData {
+  latestFollower?: string;
+  latestSub?: string;
+  latestBits?: {
+    username: string;
+    amount: number;
+  };
+  latestRaid?: {
+    username: string;
+    count: number;
+  };
+  latestGiftSub?: {
+    gifter: string;
+    recipient?: string;
+  };
+}
+
+export interface EventLabelsConfig {
+  showFollower: boolean;
+  showSub: boolean;
+  showBits: boolean;
+  showRaid: boolean;
+  showGiftSub: boolean;
+  followerLabel: string;
+  subLabel: string;
+  bitsLabel: string;
+  raidLabel: string;
+  giftSubLabel: string;
 }

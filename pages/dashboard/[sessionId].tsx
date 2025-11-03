@@ -16,6 +16,7 @@ import {
   WeatherEffect,
   EmoteWallConfig,
   ComponentLayouts,
+  EventLabelsConfig,
 } from '@/types/overlay';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
@@ -28,6 +29,7 @@ import ChatHighlightExpanded from '@/components/dashboard/expanded/ChatHighlight
 import PaintByNumbersExpanded from '@/components/dashboard/expanded/PaintByNumbersExpanded';
 import BackgroundExpanded from '@/components/dashboard/expanded/BackgroundExpanded';
 import AlertsExpanded from '@/components/dashboard/expanded/AlertsExpanded';
+import EventLabelsExpanded from '@/components/dashboard/expanded/EventLabelsExpanded';
 import Footer from '@/components/Footer';
 
 export default function DashboardPage() {
@@ -50,6 +52,7 @@ export default function DashboardPage() {
     { id: 'countdown', name: 'Countdown', visible: true },
     { id: 'chathighlight', name: 'Chat Highlight', visible: true },
     { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
+    { id: 'eventlabels', name: 'Recent Events', visible: true },
   ]);
 
   // Use extracted hooks
@@ -92,6 +95,22 @@ export default function DashboardPage() {
   const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
   const [backgroundBlur, setBackgroundBlur] = useState(0);
 
+  // Event Labels
+  const [eventLabelsConfig, setEventLabelsConfig] = useState<EventLabelsConfig>(
+    {
+      showFollower: true,
+      showSub: true,
+      showBits: true,
+      showRaid: true,
+      showGiftSub: true,
+      followerLabel: 'Latest Follower',
+      subLabel: 'Latest Subscriber',
+      bitsLabel: 'Latest Bits',
+      raidLabel: 'Latest Raid',
+      giftSubLabel: 'Latest Gift Sub',
+    }
+  );
+
   // Expanded element for editing
   const [expandedElement, setExpandedElement] = useState<string | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
@@ -115,6 +134,12 @@ export default function DashboardPage() {
       y: 0,
       scale: 1,
       gridSize: 20,
+    },
+    eventLabels: {
+      position: 'top-right',
+      x: 20,
+      y: 20,
+      scale: 1,
     },
   });
 
@@ -170,6 +195,11 @@ export default function DashboardPage() {
               id: 'paintbynumbers',
               name: 'Paint by Numbers',
               visible: layout.paintByNumbersVisible ?? true,
+            },
+            {
+              id: 'eventlabels',
+              name: 'Recent Events',
+              visible: layout.eventLabelsVisible ?? true,
             },
           ]);
 
@@ -355,6 +385,12 @@ export default function DashboardPage() {
     if (!socket) return;
     setFontFamily(font);
     socket.emit('font-family-change', font);
+  };
+
+  const handleEventLabelsConfigChange = (config: EventLabelsConfig) => {
+    if (!socket) return;
+    setEventLabelsConfig(config);
+    socket.emit('event-labels-config', config);
   };
 
   const changeWeather = (effect: WeatherEffect) => {
@@ -686,6 +722,17 @@ export default function DashboardPage() {
               color='pink'
               onClick={() => handleExpandElement('alerts')}
             />
+
+            {/* Event Labels Tile */}
+            <SummaryTile
+              title='Recent Events'
+              subtitle='Latest follower, sub, bits, etc.'
+              icon='📊'
+              color='green'
+              isVisible={layers.find(l => l.id === 'eventlabels')?.visible}
+              onToggleVisibility={() => toggleLayer('eventlabels')}
+              onClick={() => handleExpandElement('eventlabels')}
+            />
           </div>
         ) : (
           /* Expanded Element View */
@@ -940,6 +987,40 @@ export default function DashboardPage() {
             {!isExpanding && expandedElement === 'alerts' && (
               <AlertsExpanded
                 sessionId={sessionId as string}
+                onClose={handleCloseExpanded}
+              />
+            )}
+
+            {!isExpanding && expandedElement === 'eventlabels' && (
+              <EventLabelsExpanded
+                sessionId={sessionId as string}
+                config={eventLabelsConfig}
+                componentLayouts={componentLayouts}
+                onConfigChange={handleEventLabelsConfigChange}
+                onPositionChange={(x, y) =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    eventLabels: {
+                      position:
+                        componentLayouts.eventLabels?.position || 'top-right',
+                      x,
+                      y,
+                      scale: componentLayouts.eventLabels?.scale || 1,
+                    },
+                  })
+                }
+                onScaleChange={scale =>
+                  setComponentLayouts({
+                    ...componentLayouts,
+                    eventLabels: {
+                      position:
+                        componentLayouts.eventLabels?.position || 'top-right',
+                      x: componentLayouts.eventLabels?.x || 20,
+                      y: componentLayouts.eventLabels?.y || 20,
+                      scale,
+                    },
+                  })
+                }
                 onClose={handleCloseExpanded}
               />
             )}

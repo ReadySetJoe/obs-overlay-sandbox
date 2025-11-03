@@ -10,6 +10,7 @@ import CountdownTimer from '@/components/overlay/CountdownTimer';
 import EmoteWall from '@/components/overlay/EmoteWall';
 import ChatHighlight from '@/components/overlay/ChatHighlight';
 import PaintByNumbers from '@/components/overlay/PaintByNumbers';
+import EventLabels from '@/components/overlay/EventLabels';
 import Alert from '@/components/overlay/Alert';
 import { AlertConfig, AlertEvent } from '@/types/overlay';
 
@@ -33,6 +34,8 @@ export default function OverlayPage() {
     backgroundImageUrl,
     backgroundOpacity,
     backgroundBlur,
+    eventLabelsData,
+    eventLabelsConfig,
     socket,
   } = useOverlaySocket(sessionId as string);
 
@@ -198,6 +201,36 @@ export default function OverlayPage() {
           customColors={customColors}
         />
       )}
+
+      {/* Event Labels */}
+      {getLayerVisible('eventlabels') &&
+        (() => {
+          const layout = componentLayouts.eventLabels || {
+            position: 'top-right',
+            x: 20,
+            y: 20,
+            scale: 1,
+          };
+
+          return (
+            <div
+              className='fixed transition-all duration-500'
+              style={{
+                zIndex: 15,
+                left: `${layout.x}px`,
+                top: `${layout.y}px`,
+              }}
+            >
+              <EventLabels
+                data={eventLabelsData}
+                config={eventLabelsConfig}
+                scale={layout.scale}
+                colorScheme={colorScheme}
+                customColors={customColors}
+              />
+            </div>
+          );
+        })()}
 
       {/* Alerts */}
       {currentAlert && (

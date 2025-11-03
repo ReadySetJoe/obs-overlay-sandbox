@@ -2,6 +2,7 @@
 import tmi from 'tmi.js';
 import { ChatMessage, UserRole } from '@/types/overlay';
 import { Server as SocketIOServer } from 'socket.io';
+import { prisma } from '@/lib/prisma';
 
 interface TwitchChatConnection {
   client: tmi.Client;
@@ -19,6 +20,44 @@ export function getTwitchUserRole(tags: tmi.ChatUserstate): UserRole {
   if (tags.subscriber) return 'subscriber';
   if (tags['first-msg']) return 'first-timer';
   return 'viewer';
+}
+
+// Helper to update event labels in database
+async function updateEventLabels(
+  sessionId: string,
+  updates: any,
+  io: SocketIOServer
+) {
+  try {
+    const layout = await prisma.layout.findUnique({
+      where: { sessionId },
+    });
+
+    if (!layout) return;
+
+    let eventLabelsData: any = {};
+    if (layout.eventLabelsData) {
+      try {
+        eventLabelsData = JSON.parse(layout.eventLabelsData);
+      } catch (error) {
+        console.error('Error parsing event labels data:', error);
+      }
+    }
+
+    // Merge updates
+    eventLabelsData = { ...eventLabelsData, ...updates };
+
+    // Save to database
+    await prisma.layout.update({
+      where: { sessionId },
+      data: { eventLabelsData: JSON.stringify(eventLabelsData) },
+    });
+
+    // Emit to overlay
+    io.to(sessionId).emit('event-labels-update', eventLabelsData);
+  } catch (error) {
+    console.error('Error updating event labels:', error);
+  }
 }
 
 export async function startTwitchChatMonitoring(
@@ -118,6 +157,9 @@ export async function startTwitchChatMonitoring(
       tier: tier,
       timestamp: Date.now(),
     });
+
+    // Update event labels
+    updateEventLabels(sessionId, { latestSub: displayName }, io);
   });
 
   // Listen for resubscriptions
@@ -136,6 +178,9 @@ export async function startTwitchChatMonitoring(
         months: months,
         timestamp: Date.now(),
       });
+
+      // Update event labels
+      updateEventLabels(sessionId, { latestSub: displayName }, io);
     }
   );
 
@@ -156,6 +201,13 @@ export async function startTwitchChatMonitoring(
         tier: tier,
         timestamp: Date.now(),
       });
+
+      // Update event labels
+      updateEventLabels(
+        sessionId,
+        { latestGiftSub: { gifter: displayName, recipient: recipientName } },
+        io
+      );
     }
   );
 
@@ -178,6 +230,13 @@ export async function startTwitchChatMonitoring(
           timestamp: Date.now() + i, // Slight offset to queue them
         });
       }
+
+      // Update event labels (for mystery gifts, don't specify recipient)
+      updateEventLabels(
+        sessionId,
+        { latestGiftSub: { gifter: displayName } },
+        io
+      );
     }
   );
 
@@ -194,6 +253,13 @@ export async function startTwitchChatMonitoring(
         amount: bits,
         timestamp: Date.now(),
       });
+
+      // Update event labels
+      updateEventLabels(
+        sessionId,
+        { latestBits: { username: displayName, amount: bits } },
+        io
+      );
     }
   });
 
@@ -205,6 +271,13 @@ export async function startTwitchChatMonitoring(
       count: viewers,
       timestamp: Date.now(),
     });
+
+    // Update event labels
+    updateEventLabels(
+      sessionId,
+      { latestRaid: { username: username, count: viewers } },
+      io
+    );
   });
 
   client.on('connected', (address, port) => {

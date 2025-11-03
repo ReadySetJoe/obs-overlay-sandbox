@@ -48,6 +48,8 @@ export default async function handler(
         paintByNumbersVisible: layers.find(
           (l: any) => l.id === 'paintbynumbers'
         )?.visible,
+        eventLabelsVisible: layers.find((l: any) => l.id === 'eventlabels')
+          ?.visible,
         componentLayouts: componentLayouts || null,
         paintByNumbersState: paintByNumbersState || null,
       },
@@ -69,6 +71,8 @@ export default async function handler(
           layers.find((l: any) => l.id === 'chathighlight')?.visible ?? true,
         paintByNumbersVisible:
           layers.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
+        eventLabelsVisible:
+          layers.find((l: any) => l.id === 'eventlabels')?.visible ?? true,
         componentLayouts: componentLayouts || null,
         paintByNumbersState: paintByNumbersState || null,
       },

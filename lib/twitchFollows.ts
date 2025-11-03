@@ -1,5 +1,6 @@
 // lib/twitchFollows.ts
 import { Server as SocketIOServer } from 'socket.io';
+import { prisma } from '@/lib/prisma';
 
 interface FollowMonitor {
   intervalId: NodeJS.Timeout;
@@ -9,6 +10,44 @@ interface FollowMonitor {
 
 // Store active follow monitors
 const activeMonitors = new Map<string, FollowMonitor>();
+
+// Helper to update event labels in database
+async function updateEventLabels(
+  sessionId: string,
+  updates: any,
+  io: SocketIOServer
+) {
+  try {
+    const layout = await prisma.layout.findUnique({
+      where: { sessionId },
+    });
+
+    if (!layout) return;
+
+    let eventLabelsData: any = {};
+    if (layout.eventLabelsData) {
+      try {
+        eventLabelsData = JSON.parse(layout.eventLabelsData);
+      } catch (error) {
+        console.error('Error parsing event labels data:', error);
+      }
+    }
+
+    // Merge updates
+    eventLabelsData = { ...eventLabelsData, ...updates };
+
+    // Save to database
+    await prisma.layout.update({
+      where: { sessionId },
+      data: { eventLabelsData: JSON.stringify(eventLabelsData) },
+    });
+
+    // Emit to overlay
+    io.to(sessionId).emit('event-labels-update', eventLabelsData);
+  } catch (error) {
+    console.error('Error updating event labels:', error);
+  }
+}
 
 /**
  * Get broadcaster ID from username
@@ -128,6 +167,9 @@ export async function startFollowMonitoring(
             username: follower.user_name,
             timestamp: Date.now(),
           });
+
+          // Update event labels
+          updateEventLabels(sessionId, { latestFollower: follower.user_name }, io);
 
           // Update last follower ID
           monitor.lastFollowerId = follower.user_id;
