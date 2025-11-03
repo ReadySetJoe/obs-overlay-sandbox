@@ -14,6 +14,7 @@ import { AlertsIcon } from '../tiles/TileIcons';
 interface AlertsExpandedProps {
   sessionId: string;
   onClose: () => void;
+  onAlertsSaved?: () => void;
 }
 
 const ALERT_TYPES: {
@@ -89,6 +90,7 @@ const DEFAULT_MESSAGES: Record<AlertEventType, string> = {
 export default function AlertsExpanded({
   sessionId,
   onClose,
+  onAlertsSaved,
 }: AlertsExpandedProps) {
   const [alertConfigs, setAlertConfigs] = useState<
     Record<AlertEventType, Partial<AlertConfig>>
@@ -107,6 +109,7 @@ export default function AlertsExpanded({
   const [uploadingSound, setUploadingSound] = useState<AlertEventType | null>(
     null
   );
+  const [autoSaving, setAutoSaving] = useState(false);
 
   // Load alert configurations
   useEffect(() => {
@@ -150,6 +153,41 @@ export default function AlertsExpanded({
     }));
   };
 
+  // Auto-save when configs change (debounced)
+  useEffect(() => {
+    // Don't auto-save on initial load
+    if (loading) return;
+
+    // Don't auto-save if no configs have been modified
+    const hasModifications = Object.values(alertConfigs).some(
+      config => Object.keys(config).length > 0
+    );
+    if (!hasModifications) return;
+
+    setAutoSaving(true);
+    const timer = setTimeout(async () => {
+      try {
+        const savePromises = Object.entries(alertConfigs).map(
+          async ([eventType, config]) => {
+            // Only save if config has been modified (has at least one property)
+            if (Object.keys(config).length === 0) return;
+
+            await saveAlertConfig(eventType as AlertEventType);
+          }
+        );
+
+        await Promise.all(savePromises);
+        onAlertsSaved?.();
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+      } finally {
+        setAutoSaving(false);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(timer);
+  }, [alertConfigs, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Helper to save a single alert config
   const saveAlertConfig = async (
     eventType: AlertEventType,
@@ -161,7 +199,7 @@ export default function AlertsExpanded({
       const payload = {
         sessionId,
         eventType,
-        enabled: config.enabled ?? true,
+        enabled: config.enabled ?? false,
         imageUrl: config.imageUrl || null,
         imagePublicId: config.imagePublicId || null,
         animationType: config.animationType || 'slide-down',
@@ -188,6 +226,9 @@ export default function AlertsExpanded({
       if (!response.ok) {
         throw new Error(`Failed to save ${eventType} alert`);
       }
+
+      // Notify parent to refresh counts
+      onAlertsSaved?.();
     } catch (error) {
       console.error('Error saving alert config:', error);
       throw error;
@@ -263,7 +304,7 @@ export default function AlertsExpanded({
           const payload = {
             sessionId,
             eventType,
-            enabled: config.enabled ?? true,
+            enabled: config.enabled ?? false,
             imageUrl: config.imageUrl || null,
             imagePublicId: config.imagePublicId || null,
             animationType: config.animationType || 'slide-down',
@@ -294,6 +335,10 @@ export default function AlertsExpanded({
       );
 
       await Promise.all(savePromises);
+
+      // Notify parent to refresh counts
+      onAlertsSaved?.();
+
       alert('Alert configurations saved successfully!');
     } catch (error) {
       console.error('Error saving alerts:', error);
@@ -384,13 +429,38 @@ export default function AlertsExpanded({
             <p className='text-gray-400'>Configure alerts for Twitch events</p>
           </div>
         </div>
+        {/* Auto-save indicator */}
+        <div className='ml-auto'>
+          {autoSaving ? (
+            <div className='flex items-center gap-2 text-yellow-500'>
+              <div className='w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin' />
+              <span className='text-sm font-medium'>Saving...</span>
+            </div>
+          ) : (
+            <div className='flex items-center gap-2 text-green-500'>
+              <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'>
+                <path
+                  fillRule='evenodd'
+                  d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
+                  clipRule='evenodd'
+                />
+              </svg>
+              <span className='text-sm font-medium'>Saved</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Alert Type Sections */}
       <div className='space-y-6 mb-8'>
         {ALERT_TYPES.map(({ type, label, icon, description }) => {
           const config = alertConfigs[type];
-          const enabled = config.enabled ?? true;
+          // If config exists in DB (has an id), use its enabled value
+          // If config has been modified locally (has enabled property), use that
+          // Otherwise default to false for brand new unconfigured alerts
+          const hasBeenModified = 'enabled' in config;
+          const isConfigured = config.id !== undefined;
+          const enabled = hasBeenModified || isConfigured ? (config.enabled ?? false) : false;
 
           return (
             <div key={type} className='bg-gray-800 rounded-lg p-6 space-y-4'>
@@ -796,18 +866,19 @@ export default function AlertsExpanded({
         })}
       </div>
 
-      {/* Save Button */}
+      {/* Manual Save Button (optional - auto-save is enabled) */}
       <div className='flex justify-end gap-4'>
         <button
           onClick={onClose}
           className='px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors font-semibold'
         >
-          Cancel
+          Close
         </button>
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || autoSaving}
           className='px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
+          title='Changes are auto-saved. Use this to force save all configurations.'
         >
           {saving ? (
             <div className='flex items-center gap-2'>
@@ -815,7 +886,7 @@ export default function AlertsExpanded({
               <span>Saving...</span>
             </div>
           ) : (
-            'Save All Alert Configurations'
+            'Save Now'
           )}
         </button>
       </div>
@@ -827,6 +898,7 @@ export default function AlertsExpanded({
           <li>
             Configure each alert type with custom images, sounds, and messages
           </li>
+          <li>Changes are automatically saved after 1 second of inactivity</li>
           <li>Use the Test button to preview how each alert will appear</li>
           <li>Add the Alerts overlay to OBS from the dashboard</li>
           <li>

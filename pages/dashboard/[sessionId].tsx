@@ -1,26 +1,26 @@
 // pages/dashboard/[sessionId].tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useSocket } from '@/hooks/useSocket';
 import { useSpotify } from '@/hooks/useSpotify';
 import { useTimers } from '@/hooks/useTimers';
 import { usePaintByNumbers } from '@/hooks/usePaintByNumbers';
 import { useTwitchChat } from '@/hooks/useTwitchChat';
-import { serializePaintState } from '@/lib/paintStateManager';
-import {
-  ColorScheme,
-  CustomColors,
-  WeatherEffect,
-  EmoteWallConfig,
-  ComponentLayouts,
-  EventLabelsConfig,
-  StreamStatsConfig,
-  StreamStatsData,
-  WheelConfig,
-} from '@/types/overlay';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useBackground } from '@/hooks/useBackground';
+import { useWeatherEffect } from '@/hooks/useWeatherEffect';
+import { useEmoteWall } from '@/hooks/useEmoteWall';
+import { useLayers } from '@/hooks/useLayers';
+import { useEventLabels } from '@/hooks/useEventLabels';
+import { useStreamStats } from '@/hooks/useStreamStats';
+import { useWheels } from '@/hooks/useWheels';
+import { useExpandedView } from '@/hooks/useExpandedView';
+import { useLayoutPersistence } from '@/hooks/useLayoutPersistence';
+import { useAlerts } from '@/hooks/useAlerts';
+import { ComponentLayouts } from '@/types/overlay';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
 import {
@@ -57,119 +57,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const { socket, isConnected } = useSocket(sessionId as string);
 
-  // Save status
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
-    'saved'
-  );
-  const [_lastSaved, setLastSaved] = useState<Date | null>(null);
-
-  // Scene Layers
-  const [layers, setLayers] = useState([
-    { id: 'weather', name: 'Weather', visible: true },
-    { id: 'chat', name: 'Chat', visible: true },
-    { id: 'nowplaying', name: 'Now Playing', visible: true },
-    { id: 'countdown', name: 'Countdown', visible: true },
-    { id: 'chathighlight', name: 'Chat Highlight', visible: true },
-    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
-    { id: 'eventlabels', name: 'Recent Events', visible: true },
-    { id: 'streamstats', name: 'Stream Stats', visible: true },
-    { id: 'wheel', name: 'Wheel Spinner', visible: true },
-  ]);
-
-  // Use extracted hooks
-  const nowPlayingVisible =
-    layers.find(l => l.id === 'nowplaying')?.visible ?? true;
-  const spotify = useSpotify({ socket, isConnected, nowPlayingVisible });
-  const timersHook = useTimers({ sessionId: sessionId as string, session });
-  const paintHook = usePaintByNumbers({
-    sessionId: sessionId as string,
-    session,
-    socket,
-    isConnected,
-  });
-  const chatHook = useTwitchChat({
-    sessionId: sessionId as string,
-    session,
-    socket,
-  });
-
-  // Overlay settings
-  const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
-  const [customColors, setCustomColors] = useState<CustomColors | null>(null);
-  const [fontFamily, setFontFamily] = useState<string>('Inter');
-  const [weatherEffect, setWeatherEffect] = useState<WeatherEffect>('none');
-
-  // Emote wall
-  const [emoteInput, setEmoteInput] = useState('🎉 🎊 ✨ 🌟 💫');
-  const [emoteIntensity, setEmoteIntensity] = useState<
-    'light' | 'medium' | 'heavy'
-  >('medium');
-
-  // Background
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
-    null
-  );
-  const [backgroundImageName, setBackgroundImageName] = useState<string | null>(
-    null
-  );
-  const [backgroundColors, setBackgroundColors] = useState<string | null>(null);
-  const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
-  const [backgroundBlur, setBackgroundBlur] = useState(0);
-
-  // Event Labels
-  const [eventLabelsConfig, setEventLabelsConfig] = useState<EventLabelsConfig>(
-    {
-      showFollower: true,
-      showSub: true,
-      showBits: true,
-      showRaid: true,
-      showGiftSub: true,
-      followerLabel: 'Latest Follower',
-      subLabel: 'Latest Subscriber',
-      bitsLabel: 'Latest Bits',
-      raidLabel: 'Latest Raid',
-      giftSubLabel: 'Latest Gift Sub',
-    }
-  );
-
-  // Stream Stats
-  const [streamStatsConfig, setStreamStatsConfig] = useState<StreamStatsConfig>(
-    {
-      followerGoal: 100,
-      subGoal: 50,
-      bitsGoal: 1000,
-      showFollowerGoal: true,
-      showSubGoal: true,
-      showBitsGoal: true,
-      showTotalMessages: true,
-      showUniqueChatters: true,
-      showMessagesPerMinute: true,
-      showMostActiveChatter: true,
-      showPositivityScore: true,
-      showNicestChatter: true,
-      resetOnStream: false,
-    }
-  );
-  const [streamStatsData, setStreamStatsData] = useState<StreamStatsData>({
-    currentFollowers: 0,
-    currentSubs: 0,
-    currentBits: 0,
-    totalMessages: 0,
-    uniqueChatters: 0,
-    messagesPerMinute: 0,
-    mostActiveChatterCount: 0,
-    overallPositivityScore: 0,
-    nicestChatterScore: 0,
-  });
-
-  // Wheel Spinner
-  const [wheels, setWheels] = useState<WheelConfig[]>([]);
-
-  // Expanded element for editing
-  const [expandedElement, setExpandedElement] = useState<string | null>(null);
-  const [isExpanding, setIsExpanding] = useState(false);
-
-  // Component layouts
+  // Component layouts state
   const [componentLayouts, setComponentLayouts] = useState<ComponentLayouts>({
     chat: { position: 'top-left', x: 0, y: 80, maxWidth: 400 },
     nowPlaying: { position: 'top-left', x: 0, y: 0, width: 400, scale: 1 },
@@ -201,373 +89,66 @@ export default function DashboardPage() {
     },
   });
 
-  // Load saved layout when user is authenticated
-  useEffect(() => {
-    if (!session || !sessionId) return;
-
-    const loadLayout = async () => {
-      try {
-        const response = await fetch(
-          `/api/layouts/load?sessionId=${sessionId}`
-        );
-        if (response.ok) {
-          const { layout } = await response.json();
-
-          setColorScheme(layout.colorScheme);
-
-          // Restore custom colors if they exist
-          if (layout.customColors) {
-            try {
-              const parsedCustomColors = JSON.parse(layout.customColors);
-              setCustomColors(parsedCustomColors);
-            } catch (error) {
-              console.error('Error parsing custom colors:', error);
-            }
-          }
-
-          // Restore font family
-          if (layout.fontFamily) {
-            setFontFamily(layout.fontFamily);
-          }
-
-          setWeatherEffect(layout.weatherEffect);
-          setLayers([
-            { id: 'weather', name: 'Weather', visible: layout.weatherVisible },
-            { id: 'chat', name: 'Chat', visible: layout.chatVisible },
-            {
-              id: 'nowplaying',
-              name: 'Now Playing',
-              visible: layout.nowPlayingVisible,
-            },
-            {
-              id: 'countdown',
-              name: 'Countdown',
-              visible: layout.countdownVisible,
-            },
-            {
-              id: 'chathighlight',
-              name: 'Chat Highlight',
-              visible: layout.chatHighlightVisible ?? true,
-            },
-            {
-              id: 'paintbynumbers',
-              name: 'Paint by Numbers',
-              visible: layout.paintByNumbersVisible ?? true,
-            },
-            {
-              id: 'eventlabels',
-              name: 'Recent Events',
-              visible: layout.eventLabelsVisible ?? true,
-            },
-            {
-              id: 'streamstats',
-              name: 'Stream Stats',
-              visible: layout.streamStatsVisible ?? true,
-            },
-            {
-              id: 'wheel',
-              name: 'Wheel Spinner',
-              visible: layout.wheelVisible ?? true,
-            },
-          ]);
-
-          if (layout.componentLayouts) {
-            try {
-              const parsedLayouts = JSON.parse(layout.componentLayouts);
-              setComponentLayouts({
-                chat: parsedLayouts.chat || {
-                  position: 'top-left',
-                  x: 0,
-                  y: 80,
-                  maxWidth: 400,
-                },
-                nowPlaying: parsedLayouts.nowPlaying || {
-                  position: 'top-left',
-                  x: 0,
-                  y: 0,
-                  width: 400,
-                  scale: 1,
-                },
-                countdown: parsedLayouts.countdown || {
-                  position: 'top-left',
-                  x: 0,
-                  y: 0,
-                  scale: 1,
-                  minWidth: 320,
-                },
-                weather: parsedLayouts.weather || { density: 1 },
-                chatHighlight: parsedLayouts.chatHighlight || {
-                  position: 'bottom-left',
-                  x: 20,
-                  y: 20,
-                  width: 500,
-                  scale: 1,
-                },
-                paintByNumbers: parsedLayouts.paintByNumbers || {
-                  position: 'top-left',
-                  x: 0,
-                  y: 0,
-                  scale: 1,
-                  gridSize: 20,
-                },
-                eventLabels: parsedLayouts.eventLabels || {
-                  position: 'top-right',
-                  x: 20,
-                  y: 20,
-                  scale: 1,
-                },
-                streamStats: parsedLayouts.streamStats || {
-                  position: 'top-right',
-                  x: 20,
-                  y: 20,
-                  scale: 1,
-                  displayMode: 'full',
-                },
-                wheel: parsedLayouts.wheel || {
-                  position: 'center',
-                  scale: 1.0,
-                },
-              });
-            } catch (error) {
-              console.error('Error parsing component layouts:', error);
-            }
-          }
-
-          // Load background data
-          if (layout.backgroundImageUrl) {
-            setBackgroundImageUrl(layout.backgroundImageUrl);
-            setBackgroundImageName(layout.backgroundImageName || null);
-            setBackgroundColors(layout.backgroundColors || null);
-            setBackgroundOpacity(layout.backgroundOpacity ?? 1.0);
-            setBackgroundBlur(layout.backgroundBlur ?? 0);
-          }
-
-          // Load stream stats config
-          if (layout.streamStatsConfig) {
-            try {
-              const parsedConfig = JSON.parse(layout.streamStatsConfig);
-              setStreamStatsConfig(parsedConfig);
-            } catch (error) {
-              console.error('Error parsing stream stats config:', error);
-            }
-          }
-
-          // Load stream stats data
-          if (layout.streamStatsData) {
-            try {
-              const parsedData = JSON.parse(layout.streamStatsData);
-              setStreamStatsData(parsedData);
-            } catch (error) {
-              console.error('Error parsing stream stats data:', error);
-            }
-          }
-
-          setLastSaved(new Date(layout.updatedAt));
-        }
-      } catch (error) {
-        console.error('Error loading layout:', error);
-      }
-    };
-
-    loadLayout();
-  }, [session, sessionId]);
-
-  // Load wheels
-  useEffect(() => {
-    if (!sessionId) return;
-
-    const loadWheels = async () => {
-      try {
-        const response = await fetch(`/api/wheels/list?sessionId=${sessionId}`);
-        if (response.ok) {
-          const { wheels: loadedWheels } = await response.json();
-          setWheels(loadedWheels);
-        }
-      } catch (error) {
-        console.error('Error loading wheels:', error);
-      }
-    };
-
-    loadWheels();
-  }, [sessionId]);
-
-  // Auto-save layout when settings change
-  const saveLayout = useCallback(async () => {
-    if (!session || !sessionId) return;
-
-    setSaveStatus('saving');
-
-    try {
-      // Load existing saved states
-      const loadResponse = await fetch(
-        `/api/layouts/load?sessionId=${sessionId}`
-      );
-      let existingStates: Record<string, any> = {};
-
-      if (loadResponse.ok) {
-        const { layout } = await loadResponse.json();
-        if (layout.paintByNumbersState) {
-          try {
-            existingStates = JSON.parse(layout.paintByNumbersState);
-          } catch (error) {
-            console.error('Error parsing existing paint states:', error);
-          }
-        }
-      }
-
-      // Serialize paint state if it exists
-      let serializedPaintState = JSON.stringify(existingStates);
-      if (paintHook.paintByNumbersState) {
-        serializedPaintState = serializePaintState(
-          paintHook.paintByNumbersState,
-          existingStates
-        );
-      }
-
-      const response = await fetch('/api/layouts/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          colorScheme,
-          customColors: customColors ? JSON.stringify(customColors) : null,
-          fontFamily,
-          weatherEffect,
-          layers,
-          componentLayouts: JSON.stringify(componentLayouts),
-          paintByNumbersState: serializedPaintState,
-        }),
-      });
-
-      if (response.ok) {
-        setSaveStatus('saved');
-        setLastSaved(new Date());
-      } else {
-        setSaveStatus('unsaved');
-      }
-    } catch (error) {
-      console.error('Error saving layout:', error);
-      setSaveStatus('unsaved');
-    }
-  }, [
-    session,
-    sessionId,
-    colorScheme,
-    customColors,
-    fontFamily,
-    weatherEffect,
-    layers,
+  // Initialize all custom hooks
+  const colorSchemeHook = useColorScheme({ socket, isConnected });
+  const backgroundHook = useBackground({ socket });
+  const weatherHook = useWeatherEffect({ socket });
+  const emoteWallHook = useEmoteWall({ socket, isConnected });
+  const layersHook = useLayers({ socket });
+  const eventLabelsHook = useEventLabels({ socket });
+  const streamStatsHook = useStreamStats({ sessionId: sessionId as string, socket });
+  const wheelsHook = useWheels({
+    sessionId: sessionId as string,
+    socket,
     componentLayouts,
-    paintHook.paintByNumbersState,
-  ]);
+    setComponentLayouts,
+  });
+  const expandedViewHook = useExpandedView();
+  const alertsHook = useAlerts({ sessionId: sessionId as string });
 
-  // Debounced auto-save
-  useEffect(() => {
-    if (!session) return;
-
-    setSaveStatus('unsaved');
-    const timer = setTimeout(() => {
-      saveLayout();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [
+  // Use existing hooks
+  const nowPlayingVisible =
+    layersHook.layers.find(l => l.id === 'nowplaying')?.visible ?? true;
+  const spotify = useSpotify({ socket, isConnected, nowPlayingVisible });
+  const timersHook = useTimers({ sessionId: sessionId as string, session });
+  const paintHook = usePaintByNumbers({
+    sessionId: sessionId as string,
     session,
-    colorScheme,
-    customColors,
-    fontFamily,
-    weatherEffect,
-    layers,
+    socket,
+    isConnected,
+  });
+  const chatHook = useTwitchChat({
+    sessionId: sessionId as string,
+    session,
+    socket,
+  });
+
+  // Layout persistence hook (handles loading and saving)
+  const persistenceHook = useLayoutPersistence({
+    sessionId: sessionId as string,
+    session,
+    setColorScheme: colorSchemeHook.setColorScheme,
+    setCustomColors: colorSchemeHook.setCustomColors,
+    setFontFamily: colorSchemeHook.setFontFamily,
+    setWeatherEffect: weatherHook.setWeatherEffect,
+    setLayers: layersHook.setLayers,
+    setComponentLayouts,
+    setBackgroundImageUrl: backgroundHook.setBackgroundImageUrl,
+    setBackgroundImageName: backgroundHook.setBackgroundImageName,
+    setBackgroundColors: backgroundHook.setBackgroundColors,
+    setBackgroundOpacity: backgroundHook.setBackgroundOpacity,
+    setBackgroundBlur: backgroundHook.setBackgroundBlur,
+    setStreamStatsConfig: streamStatsHook.setStreamStatsConfig,
+    setStreamStatsData: streamStatsHook.setStreamStatsData,
+    colorScheme: colorSchemeHook.colorScheme,
+    customColors: colorSchemeHook.customColors,
+    fontFamily: colorSchemeHook.fontFamily,
+    weatherEffect: weatherHook.weatherEffect,
+    layers: layersHook.layers,
     componentLayouts,
-    paintHook.paintByNumbersState,
-    saveLayout,
-  ]);
+    paintByNumbersState: paintHook.paintByNumbersState,
+  });
 
-  const changeColorScheme = (scheme: ColorScheme) => {
-    if (!socket) return;
-    setColorScheme(scheme);
-    socket.emit('color-scheme-change', scheme);
-
-    // Emit custom colors if using custom scheme
-    if (scheme === 'custom' && customColors) {
-      socket.emit('custom-colors-change', customColors);
-    }
-  };
-
-  const handleCustomColorsChange = (colors: CustomColors) => {
-    if (!socket) return;
-    setCustomColors(colors);
-    socket.emit('custom-colors-change', colors);
-
-    // If not already on custom scheme, switch to it
-    if (colorScheme !== 'custom') {
-      setColorScheme('custom');
-      socket.emit('color-scheme-change', 'custom');
-    }
-  };
-
-  const handleFontFamilyChange = (font: string) => {
-    if (!socket) return;
-    setFontFamily(font);
-    socket.emit('font-family-change', font);
-  };
-
-  const handleEventLabelsConfigChange = (config: EventLabelsConfig) => {
-    if (!socket) return;
-    setEventLabelsConfig(config);
-    socket.emit('event-labels-config', config);
-  };
-
-  const handleStreamStatsConfigChange = async (config: StreamStatsConfig) => {
-    if (!socket || !sessionId) return;
-    setStreamStatsConfig(config);
-    socket.emit('stream-stats-config', config);
-
-    // Save to database
-    try {
-      await fetch('/api/layouts/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          streamStatsConfig: JSON.stringify(config),
-        }),
-      });
-    } catch (error) {
-      console.error('Error saving stream stats config:', error);
-    }
-  };
-
-  const changeWeather = (effect: WeatherEffect) => {
-    if (!socket) return;
-    setWeatherEffect(effect);
-    socket.emit('weather-change', effect);
-  };
-
-  const toggleLayer = (layerId: string) => {
-    if (!socket) return;
-
-    const layer = layers.find(l => l.id === layerId);
-    if (!layer) return;
-
-    const newVisible = !layer.visible;
-    setLayers(prev =>
-      prev.map(l => (l.id === layerId ? { ...l, visible: newVisible } : l))
-    );
-
-    socket.emit('scene-toggle', { layerId, visible: newVisible });
-  };
-
-  const handleBackgroundChange = (data: {
-    backgroundImageUrl: string | null;
-    backgroundOpacity: number;
-    backgroundBlur: number;
-  }) => {
-    if (!socket) return;
-    setBackgroundOpacity(data.backgroundOpacity);
-    setBackgroundBlur(data.backgroundBlur);
-    socket.emit('background-change', data);
-  };
 
   // Emit timers to overlay when they change
   useEffect(() => {
@@ -581,204 +162,6 @@ export default function DashboardPage() {
     socket.emit('component-layouts', componentLayouts);
   }, [socket, isConnected, componentLayouts]);
 
-  const triggerEmoteWall = () => {
-    if (!socket || !isConnected) return;
-
-    const emotes = emoteInput.split(/\s+/).filter(e => e.trim());
-    const config: EmoteWallConfig = {
-      emotes,
-      duration: 10000,
-      intensity: emoteIntensity,
-    };
-
-    socket.emit('emote-wall', config);
-  };
-
-  const handleExpandElement = (element: string) => {
-    setIsExpanding(true);
-    setExpandedElement(element);
-    // Wait for expansion animation to complete before showing content
-    setTimeout(() => {
-      setIsExpanding(false);
-    }, 400);
-  };
-
-  const handleCloseExpanded = () => {
-    setExpandedElement(null);
-    setIsExpanding(false);
-  };
-
-  // Wheel handlers
-  const handleCreateWheel = async (
-    wheel: Omit<WheelConfig, 'id' | 'layoutId'>
-  ) => {
-    try {
-      const response = await fetch('/api/wheels/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, ...wheel }),
-      });
-
-      if (response.ok) {
-        const { wheel: newWheel } = await response.json();
-        setWheels([...wheels, newWheel]);
-
-        // Broadcast update to overlay
-        if (socket) {
-          socket.emit('wheel-list-update', { wheels: [...wheels, newWheel] });
-        }
-      }
-    } catch (error) {
-      console.error('Error creating wheel:', error);
-    }
-  };
-
-  const handleUpdateWheel = async (
-    wheelId: string,
-    updates: Partial<WheelConfig>
-  ) => {
-    try {
-      const response = await fetch(`/api/wheels/${wheelId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-
-      if (response.ok) {
-        const { wheel: updatedWheel } = await response.json();
-
-        // If activating a wheel, reload all wheels to get the updated states
-        // (other wheels will have been deactivated in the database)
-        if (updates.isActive === true) {
-          const refreshResponse = await fetch(
-            `/api/wheels/list?sessionId=${sessionId}`
-          );
-          if (refreshResponse.ok) {
-            const { wheels: refreshedWheels } = await refreshResponse.json();
-            setWheels(refreshedWheels);
-
-            // Broadcast full list update to overlay
-            if (socket) {
-              socket.emit('wheel-list-update', { wheels: refreshedWheels });
-            }
-            return;
-          }
-        }
-
-        // For deactivation or other updates, just update the single wheel
-        const newWheels = wheels.map(w =>
-          w.id === wheelId ? updatedWheel : w
-        );
-        setWheels(newWheels);
-
-        // Broadcast update to overlay
-        if (socket) {
-          socket.emit('wheel-config-update', { wheel: updatedWheel });
-          socket.emit('wheel-list-update', { wheels: newWheels });
-        }
-      }
-    } catch (error) {
-      console.error('Error updating wheel:', error);
-    }
-  };
-
-  const handleDeleteWheel = async (wheelId: string) => {
-    try {
-      const response = await fetch(`/api/wheels/${wheelId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        const newWheels = wheels.filter(w => w.id !== wheelId);
-        setWheels(newWheels);
-
-        // Broadcast update to overlay
-        if (socket) {
-          socket.emit('wheel-list-update', { wheels: newWheels });
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting wheel:', error);
-    }
-  };
-
-  const handleSpinWheel = async (wheelId: string) => {
-    try {
-      const response = await fetch('/api/wheels/spin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wheelId, sessionId }),
-      });
-
-      if (response.ok) {
-        const { winningLabel } = await response.json();
-        console.log('Wheel spin result:', winningLabel);
-        // The spin event is broadcasted via Socket.io from the API
-      }
-    } catch (error) {
-      console.error('Error spinning wheel:', error);
-    }
-  };
-
-  const handleWheelPositionChange = (
-    position: 'center' | 'top-center' | 'bottom-center'
-  ) => {
-    setComponentLayouts({
-      ...componentLayouts,
-      wheel: {
-        ...componentLayouts.wheel!,
-        position,
-      },
-    });
-
-    // Update active wheel's position
-    const activeWheel = wheels.find(w => w.isActive);
-    if (activeWheel) {
-      handleUpdateWheel(activeWheel.id, { position });
-    }
-  };
-
-  const handleWheelScaleChange = (scale: number) => {
-    setComponentLayouts({
-      ...componentLayouts,
-      wheel: {
-        ...componentLayouts.wheel!,
-        scale,
-      },
-    });
-
-    // Update active wheel's scale
-    const activeWheel = wheels.find(w => w.isActive);
-    if (activeWheel) {
-      handleUpdateWheel(activeWheel.id, { scale });
-    }
-  };
-
-  // Listen for background changes from upload/delete API
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleBackgroundUpdate = (data: {
-      backgroundImageUrl: string | null;
-      backgroundImageName: string | null;
-      backgroundColors: string | null;
-      backgroundOpacity: number;
-      backgroundBlur: number;
-    }) => {
-      setBackgroundImageUrl(data.backgroundImageUrl);
-      setBackgroundImageName(data.backgroundImageName);
-      setBackgroundColors(data.backgroundColors);
-      setBackgroundOpacity(data.backgroundOpacity);
-      setBackgroundBlur(data.backgroundBlur);
-    };
-
-    socket.on('background-change', handleBackgroundUpdate);
-
-    return () => {
-      socket.off('background-change', handleBackgroundUpdate);
-    };
-  }, [socket]);
-
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8'>
       <div className='max-w-7xl mx-auto'>
@@ -787,11 +170,11 @@ export default function DashboardPage() {
           sessionId={sessionId as string}
           session={session}
           isConnected={isConnected}
-          saveStatus={saveStatus}
+          saveStatus={persistenceHook.saveStatus}
         />
 
         {/* Main Content */}
-        {!expandedElement ? (
+        {!expandedViewHook.expandedElement ? (
           /* Summary Tiles Grid */
           <div
             key='summary-grid'
@@ -803,33 +186,33 @@ export default function DashboardPage() {
             <SummaryTile
               title='Custom Background'
               subtitle={
-                backgroundImageUrl
-                  ? backgroundImageName || 'Uploaded'
+                backgroundHook.backgroundImageUrl
+                  ? backgroundHook.backgroundImageName || 'Uploaded'
                   : 'No background'
               }
               icon={<BackgroundIcon />}
               color='pink'
-              onClick={() => handleExpandElement('background')}
+              onClick={() => expandedViewHook.handleExpandElement('background')}
             />
 
             {/* Color Scheme Tile */}
             <SummaryTile
               title='Color Scheme'
-              subtitle={colorScheme}
+              subtitle={colorSchemeHook.colorScheme}
               icon={<ColorSchemeIcon />}
               color='purple'
-              onClick={() => handleExpandElement('color')}
+              onClick={() => expandedViewHook.handleExpandElement('color')}
             />
 
             {/* Weather Effects Tile */}
             <SummaryTile
               title='Weather Effects'
-              subtitle={weatherEffect}
+              subtitle={weatherHook.weatherEffect}
               icon={<WeatherIcon />}
               color='blue'
-              isVisible={layers.find(l => l.id === 'weather')?.visible}
-              onToggleVisibility={() => toggleLayer('weather')}
-              onClick={() => handleExpandElement('weather')}
+              isVisible={layersHook.layers.find(l => l.id === 'weather')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('weather')}
+              onClick={() => expandedViewHook.handleExpandElement('weather')}
             />
 
             {/* Goals & Analytics */}
@@ -837,10 +220,14 @@ export default function DashboardPage() {
             {/* Stream Alerts Tile */}
             <SummaryTile
               title='Stream Alerts'
-              subtitle='5 event types'
+              subtitle={
+                alertsHook.totalConfiguredCount === 0
+                  ? 'Not configured'
+                  : `${alertsHook.totalConfiguredCount} configured, ${alertsHook.enabledAlertsCount} enabled`
+              }
               icon={<AlertsIcon />}
               color='red'
-              onClick={() => handleExpandElement('alerts')}
+              onClick={() => expandedViewHook.handleExpandElement('alerts')}
             />
 
             {/* Event Labels Tile */}
@@ -849,9 +236,9 @@ export default function DashboardPage() {
               subtitle='Latest follower, sub, bits, etc.'
               icon={<EventLabelsIcon />}
               color='cyan'
-              isVisible={layers.find(l => l.id === 'eventlabels')?.visible}
-              onToggleVisibility={() => toggleLayer('eventlabels')}
-              onClick={() => handleExpandElement('eventlabels')}
+              isVisible={layersHook.layers.find(l => l.id === 'eventlabels')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('eventlabels')}
+              onClick={() => expandedViewHook.handleExpandElement('eventlabels')}
             />
 
             {/* Stream Stats Tile */}
@@ -860,9 +247,9 @@ export default function DashboardPage() {
               subtitle='Track goals, metrics, & sentiment'
               icon={<StreamStatsIcon />}
               color='purple'
-              isVisible={layers.find(l => l.id === 'streamstats')?.visible}
-              onToggleVisibility={() => toggleLayer('streamstats')}
-              onClick={() => handleExpandElement('streamstats')}
+              isVisible={layersHook.layers.find(l => l.id === 'streamstats')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('streamstats')}
+              onClick={() => expandedViewHook.handleExpandElement('streamstats')}
             />
 
             {/* Widget Components */}
@@ -877,9 +264,9 @@ export default function DashboardPage() {
               }
               icon={<NowPlayingIcon />}
               color='green'
-              isVisible={layers.find(l => l.id === 'nowplaying')?.visible}
-              onToggleVisibility={() => toggleLayer('nowplaying')}
-              onClick={() => handleExpandElement('nowplaying')}
+              isVisible={layersHook.layers.find(l => l.id === 'nowplaying')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('nowplaying')}
+              onClick={() => expandedViewHook.handleExpandElement('nowplaying')}
             />
 
             {/* Chat Highlight Tile */}
@@ -888,9 +275,9 @@ export default function DashboardPage() {
               subtitle={chatHook.chatHighlight ? 'Selected' : 'Inactive'}
               icon={<ChatHighlightIcon />}
               color='purple'
-              isVisible={layers.find(l => l.id === 'chathighlight')?.visible}
-              onToggleVisibility={() => toggleLayer('chathighlight')}
-              onClick={() => handleExpandElement('chathighlight')}
+              isVisible={layersHook.layers.find(l => l.id === 'chathighlight')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('chathighlight')}
+              onClick={() => expandedViewHook.handleExpandElement('chathighlight')}
             />
 
             {/* Countdown Timers Tile */}
@@ -899,26 +286,26 @@ export default function DashboardPage() {
               subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
               icon={<CountdownIcon />}
               color='orange'
-              isVisible={layers.find(l => l.id === 'countdown')?.visible}
-              onToggleVisibility={() => toggleLayer('countdown')}
-              onClick={() => handleExpandElement('countdown')}
+              isVisible={layersHook.layers.find(l => l.id === 'countdown')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('countdown')}
+              onClick={() => expandedViewHook.handleExpandElement('countdown')}
             />
 
             {/* Wheel Spinner Tile */}
             <SummaryTile
               title='Wheel Spinner'
               subtitle={
-                wheels.find(w => w.isActive)
-                  ? wheels.find(w => w.isActive)!.name
-                  : wheels.length > 0
-                    ? `${wheels.length} wheel${wheels.length > 1 ? 's' : ''}`
+                wheelsHook.wheels.find(w => w.isActive)
+                  ? wheelsHook.wheels.find(w => w.isActive)!.name
+                  : wheelsHook.wheels.length > 0
+                    ? `${wheelsHook.wheels.length} wheel${wheelsHook.wheels.length > 1 ? 's' : ''}`
                     : 'No wheels yet'
               }
               icon={<WheelIcon />}
               color='yellow'
-              isVisible={layers.find(l => l.id === 'wheel')?.visible}
-              onToggleVisibility={() => toggleLayer('wheel')}
-              onClick={() => handleExpandElement('wheel')}
+              isVisible={layersHook.layers.find(l => l.id === 'wheel')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('wheel')}
+              onClick={() => expandedViewHook.handleExpandElement('wheel')}
             />
 
             {/* Paint by Numbers Tile */}
@@ -931,28 +318,28 @@ export default function DashboardPage() {
               }
               icon={<PaintByNumbersIcon />}
               color='pink'
-              isVisible={layers.find(l => l.id === 'paintbynumbers')?.visible}
-              onToggleVisibility={() => toggleLayer('paintbynumbers')}
-              onClick={() => handleExpandElement('paint')}
+              isVisible={layersHook.layers.find(l => l.id === 'paintbynumbers')?.visible}
+              onToggleVisibility={() => layersHook.toggleLayer('paintbynumbers')}
+              onClick={() => expandedViewHook.handleExpandElement('paint')}
             />
 
             {/* Emote Wall Tile */}
             <SummaryTile
               title='Emote Wall'
-              subtitle={`${emoteIntensity} intensity`}
+              subtitle={`${emoteWallHook.emoteIntensity} intensity`}
               icon={<EmoteWallIcon />}
               color='yellow'
-              onClick={() => handleExpandElement('emote')}
+              onClick={() => expandedViewHook.handleExpandElement('emote')}
             />
           </div>
         ) : (
           /* Expanded Element View */
           <div
-            key={`expanded-${expandedElement}`}
-            className={`relative ${isExpanding ? 'animate-tile-expand' : 'animate-zoom-in'}`}
+            key={`expanded-${expandedViewHook.expandedElement}`}
+            className={`relative ${expandedViewHook.isExpanding ? 'animate-tile-expand' : 'animate-zoom-in'}`}
           >
             {/* Expanding placeholder - Show during expansion */}
-            {isExpanding && (
+            {expandedViewHook.isExpanding && (
               <div
                 className={`bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl min-h-[400px] flex items-center justify-center`}
               >
@@ -961,39 +348,39 @@ export default function DashboardPage() {
             )}
 
             {/* Render expanded element - Only show after expansion */}
-            {!isExpanding && expandedElement === 'color' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'color' && (
               <ColorSchemeExpanded
-                colorScheme={colorScheme}
-                customColors={customColors}
-                fontFamily={fontFamily}
-                onColorSchemeChange={changeColorScheme}
-                onCustomColorsChange={handleCustomColorsChange}
-                onFontFamilyChange={handleFontFamilyChange}
-                onClose={handleCloseExpanded}
+                colorScheme={colorSchemeHook.colorScheme}
+                customColors={colorSchemeHook.customColors}
+                fontFamily={colorSchemeHook.fontFamily}
+                onColorSchemeChange={colorSchemeHook.changeColorScheme}
+                onCustomColorsChange={colorSchemeHook.handleCustomColorsChange}
+                onFontFamilyChange={colorSchemeHook.handleFontFamilyChange}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'weather' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'weather' && (
               <WeatherExpanded
                 sessionId={sessionId as string}
-                weatherEffect={weatherEffect}
+                weatherEffect={weatherHook.weatherEffect}
                 isVisible={
-                  layers.find(l => l.id === 'weather')?.visible || false
+                  layersHook.layers.find(l => l.id === 'weather')?.visible || false
                 }
                 componentLayouts={componentLayouts}
-                onWeatherChange={changeWeather}
-                onToggleVisibility={() => toggleLayer('weather')}
+                onWeatherChange={weatherHook.changeWeather}
+                onToggleVisibility={() => layersHook.toggleLayer('weather')}
                 onDensityChange={density =>
                   setComponentLayouts({
                     ...componentLayouts,
                     weather: { ...componentLayouts.weather, density },
                   })
                 }
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'nowplaying' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'nowplaying' && (
               <NowPlayingExpanded
                 spotifyToken={spotify.spotifyToken}
                 sessionId={sessionId as string}
@@ -1002,11 +389,11 @@ export default function DashboardPage() {
                 trackAlbumArt={spotify.trackAlbumArt}
                 isPlaying={spotify.isPlaying}
                 isVisible={
-                  layers.find(l => l.id === 'nowplaying')?.visible || false
+                  layersHook.layers.find(l => l.id === 'nowplaying')?.visible || false
                 }
                 componentLayouts={componentLayouts}
                 onDisconnect={spotify.disconnect}
-                onToggleVisibility={() => toggleLayer('nowplaying')}
+                onToggleVisibility={() => layersHook.toggleLayer('nowplaying')}
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
                     ...componentLayouts,
@@ -1035,16 +422,16 @@ export default function DashboardPage() {
                 onTrackAlbumArtChange={spotify.setTrackAlbumArt}
                 onIsPlayingChange={spotify.setIsPlaying}
                 onManualUpdate={spotify.updateNowPlaying}
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'countdown' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'countdown' && (
               <CountdownExpanded
                 sessionId={sessionId as string}
                 timers={timersHook.timers}
                 isVisible={
-                  layers.find(l => l.id === 'countdown')?.visible || false
+                  layersHook.layers.find(l => l.id === 'countdown')?.visible || false
                 }
                 isAuthenticated={!!session}
                 showTimerForm={timersHook.showTimerForm}
@@ -1053,7 +440,7 @@ export default function DashboardPage() {
                 newTimerDescription={timersHook.newTimerDescription}
                 newTimerDate={timersHook.newTimerDate}
                 componentLayouts={componentLayouts}
-                onToggleVisibility={() => toggleLayer('countdown')}
+                onToggleVisibility={() => layersHook.toggleLayer('countdown')}
                 onShowTimerForm={() =>
                   timersHook.setShowTimerForm(!timersHook.showTimerForm)
                 }
@@ -1088,32 +475,32 @@ export default function DashboardPage() {
                     countdown: { ...componentLayouts.countdown, minWidth },
                   })
                 }
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'emote' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'emote' && (
               <EmoteWallExpanded
                 sessionId={sessionId as string}
-                emoteInput={emoteInput}
-                emoteIntensity={emoteIntensity}
+                emoteInput={emoteWallHook.emoteInput}
+                emoteIntensity={emoteWallHook.emoteIntensity}
                 isConnected={isConnected}
-                onEmoteInputChange={setEmoteInput}
-                onIntensityChange={setEmoteIntensity}
-                onTrigger={triggerEmoteWall}
-                onClose={handleCloseExpanded}
+                onEmoteInputChange={emoteWallHook.setEmoteInput}
+                onIntensityChange={emoteWallHook.setEmoteIntensity}
+                onTrigger={emoteWallHook.triggerEmoteWall}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'paint' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'paint' && (
               <PaintByNumbersExpanded
                 sessionId={sessionId as string}
                 paintState={paintHook.paintByNumbersState}
                 isVisible={
-                  layers.find(l => l.id === 'paintbynumbers')?.visible || false
+                  layersHook.layers.find(l => l.id === 'paintbynumbers')?.visible || false
                 }
                 componentLayouts={componentLayouts}
-                onToggleVisibility={() => toggleLayer('paintbynumbers')}
+                onToggleVisibility={() => layersHook.toggleLayer('paintbynumbers')}
                 onTemplateSelect={paintHook.handleTemplateSelect}
                 onReset={paintHook.handleReset}
                 onPositionChange={(x, y) =>
@@ -1138,17 +525,17 @@ export default function DashboardPage() {
                     setComponentLayouts
                   )
                 }
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'chathighlight' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'chathighlight' && (
               <ChatHighlightExpanded
                 sessionId={sessionId as string}
                 messages={chatHook.chatMessages}
                 currentHighlight={chatHook.chatHighlight}
                 isVisible={
-                  layers.find(l => l.id === 'chathighlight')?.visible || false
+                  layersHook.layers.find(l => l.id === 'chathighlight')?.visible || false
                 }
                 isAuthenticated={!!session}
                 twitchUsername={session?.user?.name || null}
@@ -1159,7 +546,7 @@ export default function DashboardPage() {
                 onClearHighlight={() =>
                   chatHook.clearChatHighlight(componentLayouts)
                 }
-                onToggleVisibility={() => toggleLayer('chathighlight')}
+                onToggleVisibility={() => layersHook.toggleLayer('chathighlight')}
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
                     ...componentLayouts,
@@ -1178,36 +565,37 @@ export default function DashboardPage() {
                     chatHighlight: { ...componentLayouts.chatHighlight, scale },
                   })
                 }
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'background' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'background' && (
               <BackgroundExpanded
                 sessionId={sessionId as string}
-                backgroundImageUrl={backgroundImageUrl}
-                backgroundImageName={backgroundImageName}
-                backgroundColors={backgroundColors}
-                backgroundOpacity={backgroundOpacity}
-                backgroundBlur={backgroundBlur}
-                onBackgroundChange={handleBackgroundChange}
-                onClose={handleCloseExpanded}
+                backgroundImageUrl={backgroundHook.backgroundImageUrl}
+                backgroundImageName={backgroundHook.backgroundImageName}
+                backgroundColors={backgroundHook.backgroundColors}
+                backgroundOpacity={backgroundHook.backgroundOpacity}
+                backgroundBlur={backgroundHook.backgroundBlur}
+                onBackgroundChange={backgroundHook.handleBackgroundChange}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'alerts' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'alerts' && (
               <AlertsExpanded
                 sessionId={sessionId as string}
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
+                onAlertsSaved={alertsHook.refetch}
               />
             )}
 
-            {!isExpanding && expandedElement === 'eventlabels' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'eventlabels' && (
               <EventLabelsExpanded
                 sessionId={sessionId as string}
-                config={eventLabelsConfig}
+                config={eventLabelsHook.eventLabelsConfig}
                 componentLayouts={componentLayouts}
-                onConfigChange={handleEventLabelsConfigChange}
+                onConfigChange={eventLabelsHook.handleEventLabelsConfigChange}
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
                     ...componentLayouts,
@@ -1232,16 +620,16 @@ export default function DashboardPage() {
                     },
                   })
                 }
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'streamstats' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'streamstats' && (
               <StreamStatsExpanded
                 sessionId={sessionId as string}
-                config={streamStatsConfig}
+                config={streamStatsHook.streamStatsConfig}
                 componentLayouts={componentLayouts}
-                onConfigChange={handleStreamStatsConfigChange}
+                onConfigChange={streamStatsHook.handleStreamStatsConfigChange}
                 onPositionChange={(x, y) =>
                   setComponentLayouts({
                     ...componentLayouts,
@@ -1283,24 +671,24 @@ export default function DashboardPage() {
                     },
                   })
                 }
-                onClose={handleCloseExpanded}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
 
-            {!isExpanding && expandedElement === 'wheel' && (
+            {!expandedViewHook.isExpanding && expandedViewHook.expandedElement === 'wheel' && (
               <WheelExpanded
                 sessionId={sessionId as string}
-                wheels={wheels}
-                isVisible={layers.find(l => l.id === 'wheel')?.visible || false}
+                wheels={wheelsHook.wheels}
+                isVisible={layersHook.layers.find(l => l.id === 'wheel')?.visible || false}
                 componentLayouts={componentLayouts}
-                onToggleVisibility={() => toggleLayer('wheel')}
-                onPositionChange={handleWheelPositionChange}
-                onScaleChange={handleWheelScaleChange}
-                onCreateWheel={handleCreateWheel}
-                onUpdateWheel={handleUpdateWheel}
-                onDeleteWheel={handleDeleteWheel}
-                onSpinWheel={handleSpinWheel}
-                onClose={handleCloseExpanded}
+                onToggleVisibility={() => layersHook.toggleLayer('wheel')}
+                onPositionChange={wheelsHook.handleWheelPositionChange}
+                onScaleChange={wheelsHook.handleWheelScaleChange}
+                onCreateWheel={wheelsHook.handleCreateWheel}
+                onUpdateWheel={wheelsHook.handleUpdateWheel}
+                onDeleteWheel={wheelsHook.handleDeleteWheel}
+                onSpinWheel={wheelsHook.handleSpinWheel}
+                onClose={expandedViewHook.handleCloseExpanded}
               />
             )}
           </div>
