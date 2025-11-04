@@ -10,7 +10,7 @@ interface CopyURLButtonProps {
 
 export default function CopyURLButton({
   url,
-  label = 'Copy OBS URL',
+  label = 'Copy URL',
 }: CopyURLButtonProps) {
   const [copied, setCopied] = useState(false);
 
@@ -26,7 +26,7 @@ export default function CopyURLButton({
 
   return (
     <div className='mt-6 pt-4 border-t border-gray-700/50'>
-      <div className='flex items-center gap-3'>
+      <div className='flex flex-col md:flex-row items-center gap-3'>
         <div className='flex-1'>
           <div className='text-xs text-gray-400 mb-1'>
             Individual Element URL
@@ -40,7 +40,7 @@ export default function CopyURLButton({
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
             copied
               ? 'bg-green-600 hover:bg-green-500 scale-105 shadow-lg shadow-green-500/50'
-              : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 hover:scale-105'
+              : 'bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 hover:scale-105'
           }`}
         >
           {copied ? (

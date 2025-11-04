@@ -10,6 +10,9 @@ const requiredEnvVars = [
   'NEXTAUTH_URL',
   'TWITCH_CLIENT_ID',
   'TWITCH_CLIENT_SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
 ] as const;
 
 const optionalEnvVars = [

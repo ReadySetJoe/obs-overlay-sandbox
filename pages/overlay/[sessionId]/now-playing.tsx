@@ -22,7 +22,7 @@ export default function NowPlayingOverlay() {
     <div
       className={`
         relative w-screen h-screen overflow-hidden
-        ${customGradientCSS ? '' : `bg-gradient-to-br ${colorSchemeStyles[colorScheme]}`}
+        ${customGradientCSS ? '' : `bg-linear-to-br ${colorSchemeStyles[colorScheme]}`}
         transition-all duration-1000
       `}
       style={customGradientCSS ? { background: customGradientCSS } : {}}

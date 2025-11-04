@@ -29,7 +29,6 @@ export default function PaintByNumbers({
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
 
   // Check if template is complete
   const isComplete = paintState?.regions.every(r => r.filled) || false;
@@ -39,16 +38,13 @@ export default function PaintByNumbers({
     if (isComplete && paintState?.completedAt) {
       const justCompleted = Date.now() - paintState.completedAt < 10000; // Within last 10 seconds
       if (justCompleted) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 10000);
+        setTimeout(() => {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 10000);
+        }, 0);
       }
     }
   }, [isComplete, paintState?.completedAt]);
-
-  // Set window size for confetti
-  useEffect(() => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-  }, []);
 
   // Render the canvas
   useEffect(() => {
@@ -87,11 +83,6 @@ export default function PaintByNumbers({
         pixelToRegion.set(`${x},${y}`, region.id);
       });
     });
-
-    // Helper function to get region ID at a coordinate
-    const getRegionAt = (x: number, y: number): number | null => {
-      return pixelToRegion.get(`${x},${y}`) ?? null;
-    };
 
     // Draw filled regions
     regions.forEach(region => {
@@ -150,8 +141,8 @@ export default function PaintByNumbers({
     <>
       {showConfetti && (
         <Confetti
-          width={windowSize.width}
-          height={windowSize.height}
+          width={window.innerWidth || 1920}
+          height={window.innerHeight || 1080}
           recycle={false}
           numberOfPieces={500}
         />
@@ -192,7 +183,7 @@ export default function PaintByNumbers({
           {/* Canvas and Legend */}
           <div className='flex gap-4 mb-4'>
             {/* Canvas */}
-            <div className='flex-shrink-0'>
+            <div className='shrink-0'>
               <canvas
                 ref={canvasRef}
                 className='rounded-lg shadow-lg'
@@ -219,7 +210,7 @@ export default function PaintByNumbers({
                     >
                       {/* Color swatch */}
                       <div
-                        className='w-8 h-8 rounded border-2 border-gray-600 flex-shrink-0'
+                        className='w-8 h-8 rounded border-2 border-gray-600 shrink-0'
                         style={{ backgroundColor: displayColor }}
                       />
 

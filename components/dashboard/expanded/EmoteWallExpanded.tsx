@@ -26,7 +26,7 @@ export default function EmoteWallExpanded({
   onClose,
 }: EmoteWallExpandedProps) {
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center gap-3 mb-6'>
         <button
           onClick={onClose}
@@ -77,7 +77,7 @@ export default function EmoteWallExpanded({
                 onClick={() => onIntensityChange(intensity)}
                 className={`py-2 rounded-lg text-sm font-semibold capitalize transition ${
                   emoteIntensity === intensity
-                    ? 'bg-gradient-to-r from-pink-600 to-purple-600 border-pink-500'
+                    ? 'bg-linear-to-r from-pink-600 to-purple-600 border-pink-500'
                     : 'bg-gray-700/50 border-gray-600 hover:bg-gray-600/50'
                 } border`}
               >
@@ -90,7 +90,7 @@ export default function EmoteWallExpanded({
         <button
           onClick={onTrigger}
           disabled={!isConnected}
-          className='w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl px-6 py-4 font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl'
+          className='w-full bg-linear-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl px-6 py-4 font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl'
         >
           {isConnected ? '🎉 Trigger Emote Wall! 🎉' : 'Not Connected'}
         </button>

@@ -31,7 +31,7 @@ export default async function handler(
     }
 
     // Parse segments JSON for each wheel
-    const wheels = layout.wheels.map((wheel) => ({
+    const wheels = layout.wheels.map(wheel => ({
       ...wheel,
       segments: JSON.parse(wheel.segments),
     }));

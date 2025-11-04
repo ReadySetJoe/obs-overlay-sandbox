@@ -27,7 +27,7 @@ export default function WeatherExpanded({
   onClose,
 }: WeatherExpandedProps) {
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
           <button
@@ -94,11 +94,11 @@ export default function WeatherExpanded({
               onClick={() => onWeatherChange(effect)}
               className={`group relative rounded-xl px-3 py-3 font-semibold capitalize transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden border ${
                 weatherEffect === effect
-                  ? 'bg-gradient-to-br from-cyan-600/80 to-blue-600/80 border-cyan-500'
-                  : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
+                  ? 'bg-linear-to-br from-cyan-600/80 to-blue-600/80 border-cyan-500'
+                  : 'bg-linear-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
               }`}
             >
-              <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
+              <div className='absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000' />
               <div className='relative flex flex-col items-center gap-1'>
                 <span className='text-2xl'>{icons[effect]}</span>
                 <span className='text-xs'>{effect}</span>

@@ -5,10 +5,9 @@ import { Socket } from 'socket.io-client';
 
 interface UseColorSchemeProps {
   socket: Socket | null;
-  isConnected: boolean;
 }
 
-export function useColorScheme({ socket, isConnected }: UseColorSchemeProps) {
+export function useColorScheme({ socket }: UseColorSchemeProps) {
   const [colorScheme, setColorScheme] = useState<ColorScheme>('default');
   const [customColors, setCustomColors] = useState<CustomColors | null>(null);
   const [fontFamily, setFontFamily] = useState<string>('Inter');

@@ -4,6 +4,147 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@/lib/prisma';
 
+interface LayerVisibility {
+  id: string;
+  visible: boolean;
+}
+
+interface LayoutData {
+  sessionId: string;
+  colorScheme?: string;
+  customColors?: string;
+  fontFamily?: string;
+  weatherEffect?: string;
+  layers?: LayerVisibility[];
+  componentLayouts?: string;
+  paintByNumbersState?: string;
+  streamStatsConfig?: string;
+}
+
+interface LayerVisibilityFields {
+  weatherVisible?: boolean;
+  chatVisible?: boolean;
+  nowPlayingVisible?: boolean;
+  countdownVisible?: boolean;
+  chatHighlightVisible?: boolean;
+  paintByNumbersVisible?: boolean;
+  eventLabelsVisible?: boolean;
+  streamStatsVisible?: boolean;
+  wheelVisible?: boolean;
+}
+
+interface LayoutFields {
+  colorScheme: string;
+  customColors: string | null;
+  fontFamily: string;
+  weatherEffect: string;
+  componentLayouts: string | null;
+  paintByNumbersState: string | null;
+  streamStatsConfig: string | null;
+}
+
+// For updates - all layout fields are optional
+type UpdateData = Partial<LayoutFields> & LayerVisibilityFields;
+
+// For creation - layout fields are required, plus userId and sessionId
+type CreateData = LayoutFields &
+  LayerVisibilityFields & {
+    userId: string;
+    sessionId: string;
+  };
+
+// Default values for various fields
+const DEFAULTS = {
+  colorScheme: 'default',
+  fontFamily: 'Inter',
+  weatherEffect: 'none',
+} as const;
+
+// Layer ID mappings for visibility
+const LAYER_VISIBILITY_MAP = {
+  weather: 'weatherVisible',
+  chat: 'chatVisible',
+  nowplaying: 'nowPlayingVisible',
+  countdown: 'countdownVisible',
+  chathighlight: 'chatHighlightVisible',
+  paintbynumbers: 'paintByNumbersVisible',
+  eventlabels: 'eventLabelsVisible',
+  streamstats: 'streamStatsVisible',
+  wheel: 'wheelVisible',
+} as const;
+
+function buildUpdateData(data: LayoutData): UpdateData {
+  const updateData: UpdateData = {};
+
+  // Handle optional string/config fields
+  if (data.colorScheme !== undefined) {
+    updateData.colorScheme = data.colorScheme;
+  }
+  if (data.customColors !== undefined) {
+    updateData.customColors = data.customColors || null;
+  }
+  if (data.fontFamily !== undefined) {
+    updateData.fontFamily = data.fontFamily || DEFAULTS.fontFamily;
+  }
+  if (data.weatherEffect !== undefined) {
+    updateData.weatherEffect = data.weatherEffect;
+  }
+  if (data.componentLayouts !== undefined) {
+    updateData.componentLayouts = data.componentLayouts || null;
+  }
+  if (data.paintByNumbersState !== undefined) {
+    updateData.paintByNumbersState = data.paintByNumbersState || null;
+  }
+  if (data.streamStatsConfig !== undefined) {
+    updateData.streamStatsConfig = data.streamStatsConfig || null;
+  }
+
+  // Handle layer visibility
+  if (data.layers && Array.isArray(data.layers)) {
+    const layerMap = new Map(
+      data.layers.map(layer => [layer.id, layer.visible])
+    );
+
+    Object.entries(LAYER_VISIBILITY_MAP).forEach(([layerId, visibilityKey]) => {
+      if (layerMap.has(layerId)) {
+        const visible = layerMap.get(layerId);
+        if (visible !== undefined) {
+          (updateData as Record<string, boolean>)[visibilityKey] = visible;
+        }
+      }
+    });
+  }
+
+  return updateData;
+}
+
+function buildCreateData(data: LayoutData, userId: string): CreateData {
+  const layerMap = data.layers
+    ? new Map(data.layers.map(layer => [layer.id, layer.visible]))
+    : new Map();
+
+  return {
+    userId,
+    sessionId: data.sessionId,
+    colorScheme: data.colorScheme || DEFAULTS.colorScheme,
+    customColors: data.customColors || null,
+    fontFamily: data.fontFamily || DEFAULTS.fontFamily,
+    weatherEffect: data.weatherEffect || DEFAULTS.weatherEffect,
+    componentLayouts: data.componentLayouts || null,
+    paintByNumbersState: data.paintByNumbersState || null,
+    streamStatsConfig: data.streamStatsConfig || null,
+    weatherVisible: layerMap.get('weather'),
+    chatVisible: layerMap.get('chat'),
+    nowPlayingVisible: layerMap.get('nowplaying'),
+    countdownVisible: layerMap.get('countdown'),
+    chatHighlightVisible: layerMap.get('chathighlight'),
+    paintByNumbersVisible: layerMap.get('paintbynumbers'),
+    eventLabelsVisible: layerMap.get('eventlabels'),
+    streamStatsVisible: layerMap.get('streamstats'),
+    wheelVisible: layerMap.get('wheel'),
+  };
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -14,78 +155,19 @@ export default async function handler(
 
   const session = await getServerSession(req, res, authOptions);
 
-  if (!session || !session.user) {
+  if (!session?.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const {
-    sessionId,
-    colorScheme,
-    customColors,
-    fontFamily,
-    weatherEffect,
-    layers,
-    componentLayouts,
-    paintByNumbersState,
-    streamStatsConfig,
-  } = req.body;
+  const data: LayoutData = req.body;
 
   try {
-    // Build update object dynamically to handle partial updates
-    const updateData: any = {};
-
-    if (colorScheme !== undefined) updateData.colorScheme = colorScheme;
-    if (customColors !== undefined) updateData.customColors = customColors || null;
-    if (fontFamily !== undefined) updateData.fontFamily = fontFamily || 'Inter';
-    if (weatherEffect !== undefined) updateData.weatherEffect = weatherEffect;
-    if (componentLayouts !== undefined) updateData.componentLayouts = componentLayouts || null;
-    if (paintByNumbersState !== undefined) updateData.paintByNumbersState = paintByNumbersState || null;
-    if (streamStatsConfig !== undefined) updateData.streamStatsConfig = streamStatsConfig || null;
-
-    // Only update visibility if layers array is provided
-    if (layers && Array.isArray(layers)) {
-      updateData.weatherVisible = layers.find((l: any) => l.id === 'weather')?.visible;
-      updateData.chatVisible = layers.find((l: any) => l.id === 'chat')?.visible;
-      updateData.nowPlayingVisible = layers.find((l: any) => l.id === 'nowplaying')?.visible;
-      updateData.countdownVisible = layers.find((l: any) => l.id === 'countdown')?.visible;
-      updateData.chatHighlightVisible = layers.find((l: any) => l.id === 'chathighlight')?.visible;
-      updateData.paintByNumbersVisible = layers.find((l: any) => l.id === 'paintbynumbers')?.visible;
-      updateData.eventLabelsVisible = layers.find((l: any) => l.id === 'eventlabels')?.visible;
-      updateData.streamStatsVisible = layers.find((l: any) => l.id === 'streamstats')?.visible;
-      updateData.wheelVisible = layers.find((l: any) => l.id === 'wheel')?.visible;
-    }
+    const updateData = buildUpdateData(data);
 
     const layout = await prisma.layout.upsert({
-      where: { sessionId },
+      where: { sessionId: data.sessionId },
       update: updateData,
-      create: {
-        userId: session.user.id,
-        sessionId,
-        colorScheme: colorScheme || 'default',
-        customColors: customColors || null,
-        fontFamily: fontFamily || 'Inter',
-        weatherEffect: weatherEffect || 'none',
-        weatherVisible:
-          layers?.find((l: any) => l.id === 'weather')?.visible ?? true,
-        chatVisible: layers?.find((l: any) => l.id === 'chat')?.visible ?? true,
-        nowPlayingVisible:
-          layers?.find((l: any) => l.id === 'nowplaying')?.visible ?? true,
-        countdownVisible:
-          layers?.find((l: any) => l.id === 'countdown')?.visible ?? true,
-        chatHighlightVisible:
-          layers?.find((l: any) => l.id === 'chathighlight')?.visible ?? true,
-        paintByNumbersVisible:
-          layers?.find((l: any) => l.id === 'paintbynumbers')?.visible ?? true,
-        eventLabelsVisible:
-          layers?.find((l: any) => l.id === 'eventlabels')?.visible ?? true,
-        streamStatsVisible:
-          layers?.find((l: any) => l.id === 'streamstats')?.visible ?? true,
-        wheelVisible:
-          layers?.find((l: any) => l.id === 'wheel')?.visible ?? true,
-        componentLayouts: componentLayouts || null,
-        paintByNumbersState: paintByNumbersState || null,
-        streamStatsConfig: streamStatsConfig || null,
-      },
+      create: buildCreateData(data, session.user.id),
     });
 
     return res.status(200).json({ success: true, layout });

@@ -357,8 +357,8 @@ export function useOverlaySocket(sessionId: string) {
 
     socket.on('emote-wall', (config: EmoteWallConfig) => {
       // Trigger emote wall via global function
-      if ((window as any).triggerEmoteWall) {
-        (window as any).triggerEmoteWall(config);
+      if (window.triggerEmoteWall) {
+        window.triggerEmoteWall(config);
       }
     });
 

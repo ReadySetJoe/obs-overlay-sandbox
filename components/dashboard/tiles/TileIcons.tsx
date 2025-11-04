@@ -28,7 +28,7 @@ const GenericTileIcon = ({
   gradientTo,
 }: GenericTileIconProps) => (
   <div
-    className={`w-10 h-10 bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-xl flex items-center justify-center`}
+    className={`w-10 h-10 bg-linear-to-br ${gradientFrom} ${gradientTo} rounded-xl flex items-center justify-center`}
   >
     <Icon />
   </div>

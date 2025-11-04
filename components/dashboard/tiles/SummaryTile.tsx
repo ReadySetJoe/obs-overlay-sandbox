@@ -23,12 +23,13 @@ export default function SummaryTile({
   onToggleVisibility,
   onClick,
 }: SummaryTileProps) {
-  const hoverBorderClass = colorClasses[color]?.hoverBorder || 'hover:border-gray-500/50';
+  const hoverBorderClass =
+    colorClasses[color]?.hoverBorder || 'hover:border-gray-500/50';
 
   return (
     <div
       onClick={onClick}
-      className={`relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl ${hoverBorderClass} cursor-pointer transition-all group`}
+      className={`relative bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl ${hoverBorderClass} cursor-pointer transition-all group`}
     >
       <div className='mb-4'>
         <div className='flex items-center justify-between'>

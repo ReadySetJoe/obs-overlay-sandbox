@@ -87,7 +87,7 @@ export default function EventLabelsExpanded({
   };
 
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
       {/* Header */}
       <div className='flex items-center gap-3 mb-6'>
         <button

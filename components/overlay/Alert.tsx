@@ -9,6 +9,7 @@ import {
   CustomColors,
 } from '@/types/overlay';
 import { useThemeColors, hexToRgba } from '@/hooks/useThemeColors';
+import Image from 'next/image';
 
 interface AlertProps {
   config: AlertConfig;
@@ -38,10 +39,13 @@ export default function Alert({
   }, [onComplete]);
 
   useEffect(() => {
+    // Capture the current audio element reference
+    const currentAudio = audioRef.current;
+
     // Play sound if configured (only once)
-    if (config.soundUrl && audioRef.current && !hasPlayedRef.current) {
-      audioRef.current.volume = config.volume;
-      audioRef.current
+    if (config.soundUrl && currentAudio && !hasPlayedRef.current) {
+      currentAudio.volume = config.volume;
+      currentAudio
         .play()
         .catch(err => console.error('Error playing alert sound:', err));
       hasPlayedRef.current = true;
@@ -60,12 +64,12 @@ export default function Alert({
       clearTimeout(showTimer);
       clearTimeout(hideTimer);
       // Stop audio if still playing
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
       }
     };
-  }, []); // Empty dependency array - only run once on mount
+  }, [config]); // Empty dependency array - only run once on mount
 
   // Replace template variables in message
   const formatMessage = (template: string): string => {
@@ -199,11 +203,7 @@ export default function Alert({
         >
           {/* Alert Image */}
           {config.imageUrl && (
-            <img
-              src={config.imageUrl}
-              alt='Alert'
-              className='max-w-xs max-h-48 object-contain rounded-lg'
-            />
+            <Image src={config.imageUrl} alt='Alert' width={200} height={200} />
           )}
 
           {/* Alert Message */}

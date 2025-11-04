@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from 'react';
 import CopyURLButton from '../CopyURLButton';
 import { BackgroundIcon } from '../tiles/TileIcons';
+import Image from 'next/image';
 
 interface BackgroundExpandedProps {
   sessionId: string;
@@ -99,7 +100,7 @@ export default function BackgroundExpanded({
         throw new Error(data.error || 'Upload failed');
       }
 
-      const data = await response.json();
+      await response.json();
 
       // Show color extraction loading state
       setExtractingColors(true);
@@ -109,8 +110,8 @@ export default function BackgroundExpanded({
         setUploading(false);
         setUploadProgress(0);
       }, 500);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
       setUploading(false);
       setUploadProgress(0);
     }
@@ -159,8 +160,8 @@ export default function BackgroundExpanded({
       }
 
       // Background removal will be handled via socket event
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete');
     }
   };
 
@@ -184,8 +185,8 @@ export default function BackgroundExpanded({
       }
 
       // Color change will be handled via socket event
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to apply colors');
     }
   };
 
@@ -206,7 +207,7 @@ export default function BackgroundExpanded({
   };
 
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       {/* Header */}
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
@@ -292,10 +293,12 @@ export default function BackgroundExpanded({
         <div className='bg-gray-800 rounded-lg p-4 space-y-4'>
           <div className='flex items-start justify-between'>
             <div className='flex items-start gap-4'>
-              <img
+              <Image
                 src={backgroundImageUrl}
                 alt='Background preview'
-                className='w-32 h-18 object-cover rounded'
+                width={256}
+                height={144}
+                className='rounded'
               />
               <div>
                 <div className='text-white font-medium'>
@@ -459,7 +462,8 @@ export default function BackgroundExpanded({
             Apply Colors to Theme
           </button>
           <p className='text-xs text-gray-400 text-center'>
-            This will set your color scheme to "Custom" with these colors
+            This will set your color scheme to &quot;Custom&quot; with these
+            colors
           </p>
         </div>
       )}

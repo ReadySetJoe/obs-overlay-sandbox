@@ -1,10 +1,11 @@
 // hooks/useTimers.ts
 import { useState, useEffect, useCallback } from 'react';
 import { CountdownTimer } from '@/types/overlay';
+import { Session } from 'next-auth';
 
 interface UseTimersProps {
   sessionId: string | undefined;
-  session: any;
+  session: Session | null;
 }
 
 export function useTimers({ sessionId, session }: UseTimersProps) {

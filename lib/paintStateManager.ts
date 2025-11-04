@@ -4,6 +4,7 @@ import {
   createPaintStateFromTemplate,
   mergeTemplates,
 } from '@/lib/paintTemplates';
+import { parseColor } from './colorUtils';
 
 /**
  * Fetch custom templates for the current user
@@ -105,7 +106,19 @@ export async function loadTemplateState(
  */
 async function reconstructTemplateState(
   templateId: string,
-  savedState: any
+  savedState: {
+    startedAt?: string;
+    completedAt?: string | null;
+    lastFilledBy?: string | null;
+    filledRegions?: Record<
+      string,
+      {
+        filledBy?: string;
+        filledAt?: string;
+        customColor?: string;
+      }
+    >;
+  }
 ): Promise<PaintByNumbersState | null> {
   const allTemplates = await getAllTemplates();
   const template = createPaintStateFromTemplate(templateId, allTemplates);
@@ -113,17 +126,21 @@ async function reconstructTemplateState(
 
   return {
     templateId,
-    startedAt: savedState.startedAt,
-    completedAt: savedState.completedAt,
-    lastFilledBy: savedState.lastFilledBy,
+    startedAt: savedState.startedAt ? Number(savedState.startedAt) : Date.now(),
+    completedAt: savedState.completedAt
+      ? Number(savedState.completedAt)
+      : undefined,
+    lastFilledBy: savedState.lastFilledBy || undefined,
     regions: template.regions.map(region => {
-      const filledData = savedState.filledRegions[region.id];
+      const filledData = savedState.filledRegions?.[region.id];
       if (filledData) {
         return {
           ...region,
           filled: true,
           filledBy: filledData.filledBy,
-          filledAt: filledData.filledAt,
+          filledAt: filledData.filledAt
+            ? Number(filledData.filledAt)
+            : undefined,
           customColor: filledData.customColor,
         };
       }
@@ -197,7 +214,6 @@ export function handlePaintCommand(
   // Parse and validate custom color if provided
   let validatedColor: string | undefined;
   if (customColor) {
-    const { parseColor } = require('@/lib/colorUtils');
     validatedColor = parseColor(customColor) || undefined;
   }
 

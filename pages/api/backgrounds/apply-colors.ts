@@ -67,11 +67,11 @@ export default async function handler(
       success: true,
       customColors,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Apply colors error:', error);
     res.status(500).json({
       error: 'Failed to apply colors',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

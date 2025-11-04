@@ -1,10 +1,13 @@
 // components/dashboard/DashboardHeader.tsx
 import Link from 'next/link';
+import { Session } from 'next-auth';
 import SessionInfo from '@/components/dashboard/SessionInfo';
+import UserProfileDropdown from '@/components/UserProfileDropdown';
+import Image from 'next/image';
 
 interface DashboardHeaderProps {
   sessionId: string | undefined;
-  session: any;
+  session: Session | null;
   isConnected: boolean;
   saveStatus: 'saved' | 'saving' | 'unsaved';
 }
@@ -16,12 +19,17 @@ export default function DashboardHeader({
   saveStatus,
 }: DashboardHeaderProps) {
   return (
-    <div className='mb-8 md:mb-12'>
+    <div className='relative mb-8 md:mb-12'>
+      <div className='absolute top-2 right-2'>
+        <UserProfileDropdown />
+      </div>
       <Link href='/' className='block'>
-        <img
+        <Image
           src='/title-white.png'
           alt='Joe-verlay'
           className='mx-auto mb-6 max-w-sm md:max-w-md w-full'
+          width={400}
+          height={100}
         />
       </Link>
       <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>

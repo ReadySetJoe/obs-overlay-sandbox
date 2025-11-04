@@ -111,7 +111,7 @@ export default function CountdownTimer({
         return (
           <div
             key={timer.id}
-            className='bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg rounded-2xl p-6 shadow-2xl animate-fade-in'
+            className='bg-linear-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg rounded-2xl p-6 shadow-2xl animate-fade-in'
             style={{
               minWidth: `${layout.minWidth}px`,
               borderWidth: '1px',

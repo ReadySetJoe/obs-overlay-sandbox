@@ -14,7 +14,7 @@ import {
 
 interface UsePaintByNumbersProps {
   sessionId: string | undefined;
-  session: any;
+  session: { user?: { id?: string } } | null;
   socket: Socket | null;
   isConnected: boolean;
 }

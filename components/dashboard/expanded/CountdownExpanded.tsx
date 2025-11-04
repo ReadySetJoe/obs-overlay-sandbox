@@ -61,7 +61,7 @@ export default function CountdownExpanded({
   onClose,
 }: CountdownExpandedProps) {
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
           <button
@@ -100,7 +100,7 @@ export default function CountdownExpanded({
           {isAuthenticated && !showTimerForm && (
             <button
               onClick={onShowTimerForm}
-              className='bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
+              className='bg-linear-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
             >
               + Add Timer
             </button>
@@ -158,7 +158,7 @@ export default function CountdownExpanded({
               <div className='flex gap-2'>
                 <button
                   onClick={onCreateTimer}
-                  className='flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
+                  className='flex-1 bg-linear-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 rounded-lg px-4 py-2 text-sm font-semibold transition'
                 >
                   {editingTimerId ? 'Update Timer' : 'Create Timer'}
                 </button>

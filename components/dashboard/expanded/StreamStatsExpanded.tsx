@@ -96,7 +96,7 @@ export default function StreamStatsExpanded({
   };
 
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
       {/* Header */}
       <div className='flex items-center gap-3 mb-6'>
         <button
@@ -180,7 +180,15 @@ export default function StreamStatsExpanded({
           ].map(mode => (
             <button
               key={mode.value}
-              onClick={() => onDisplayModeChange(mode.value as any)}
+              onClick={() =>
+                onDisplayModeChange(
+                  mode.value as
+                    | 'full'
+                    | 'compact'
+                    | 'goals-only'
+                    | 'metrics-only'
+                )
+              }
               className={`p-3 rounded-lg border-2 transition-all ${
                 (componentLayouts.streamStats?.displayMode || 'full') ===
                 mode.value
@@ -211,7 +219,8 @@ export default function StreamStatsExpanded({
           </button>
         </div>
         <p className='text-xs text-gray-400 mb-3'>
-          Click "Sync from Twitch" to load your current follower/sub counts
+          Click &quot;Sync from Twitch&quot; to load your current follower/sub
+          counts
         </p>
         <div className='space-y-3'>
           {/* Follower Goal */}

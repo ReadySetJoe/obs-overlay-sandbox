@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import { WheelConfig, WheelSegment, ComponentLayouts } from '@/types/overlay';
-import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { Plus, Trash2, Play, CircleDot } from 'lucide-react';
 import { WheelIcon } from '../tiles/TileIcons';
@@ -131,7 +130,7 @@ export default function WheelExpanded({
         spinDuration,
         soundEnabled,
         soundVolume,
-      } as any);
+      });
     }
 
     handleCancelForm();
@@ -171,7 +170,7 @@ export default function WheelExpanded({
   };
 
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
           <button
@@ -205,7 +204,7 @@ export default function WheelExpanded({
                 onChange={onToggleVisibility}
                 className='sr-only peer'
               />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
             </div>
             <span className='text-sm font-medium'>Visible</span>
           </label>

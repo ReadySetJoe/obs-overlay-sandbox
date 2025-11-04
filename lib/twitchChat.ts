@@ -150,8 +150,7 @@ async function updateStreamStats(
     if (statsData.streamStartTime) {
       const startTime = new Date(statsData.streamStartTime);
       const now = new Date();
-      const minutesElapsed =
-        (now.getTime() - startTime.getTime()) / 1000 / 60;
+      const minutesElapsed = (now.getTime() - startTime.getTime()) / 1000 / 60;
       statsData.messagesPerMinute =
         minutesElapsed > 0 ? totalMessages / minutesElapsed : 0;
     } else {
@@ -186,7 +185,7 @@ export function getTwitchUserRole(tags: tmi.ChatUserstate): UserRole {
 // Helper to update event labels in database
 async function updateEventLabels(
   sessionId: string,
-  updates: any,
+  updates: Record<string, unknown>,
   io: SocketIOServer
 ) {
   try {
@@ -196,7 +195,7 @@ async function updateEventLabels(
 
     if (!layout) return;
 
-    let eventLabelsData: any = {};
+    let eventLabelsData: Record<string, unknown> = {};
     if (layout.eventLabelsData) {
       try {
         eventLabelsData = JSON.parse(layout.eventLabelsData);
@@ -469,7 +468,7 @@ export async function startTwitchChatMonitoring(
   );
 
   // Listen for bits/cheers
-  client.on('cheer', (channel, userstate, message) => {
+  client.on('cheer', (_channel, userstate) => {
     const displayName =
       userstate['display-name'] || userstate.username || 'Anonymous';
     const bits = parseInt(userstate.bits || '0', 10);
@@ -511,11 +510,11 @@ export async function startTwitchChatMonitoring(
     );
   });
 
-  client.on('connected', (address, port) => {
+  client.on('connected', () => {
     // Connection successful
   });
 
-  client.on('disconnected', reason => {
+  client.on('disconnected', () => {
     activeConnections.delete(sessionId);
   });
 

@@ -42,9 +42,19 @@ export default async function handler(
         }
       }
 
-      const updateData: any = {};
+      const updateData: {
+        name?: string;
+        segments?: string;
+        isActive?: boolean;
+        position?: string;
+        scale?: number;
+        spinDuration?: number;
+        soundEnabled?: boolean;
+        soundVolume?: number;
+      } = {};
       if (name !== undefined) updateData.name = name;
-      if (segments !== undefined) updateData.segments = JSON.stringify(segments);
+      if (segments !== undefined)
+        updateData.segments = JSON.stringify(segments);
       if (isActive !== undefined) updateData.isActive = isActive;
       if (position !== undefined) updateData.position = position;
       if (scale !== undefined) updateData.scale = scale;

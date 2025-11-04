@@ -50,11 +50,11 @@ export default async function handler(
       success: true,
       templates: parsedTemplates,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('List templates error:', error);
     res.status(500).json({
       error: 'Failed to list templates',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

@@ -69,10 +69,14 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
 
       // Handle joining a session room
       socket.on('join-session', (sessionId: string) => {
-        console.log(`[Socket Server] Client ${socket.id} joining session: ${sessionId}`);
+        console.log(
+          `[Socket Server] Client ${socket.id} joining session: ${sessionId}`
+        );
         socket.join(sessionId);
         socket.data.sessionId = sessionId;
-        console.log(`[Socket Server] Client ${socket.id} successfully joined session: ${sessionId}`);
+        console.log(
+          `[Socket Server] Client ${socket.id} successfully joined session: ${sessionId}`
+        );
       });
 
       // Emit events to the specific session room
@@ -93,11 +97,6 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       socket.on('custom-colors-change', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {
-          console.log(
-            '[Socket Server] Relaying custom-colors-change to session:',
-            sessionId,
-            data
-          );
           io.to(sessionId).emit('custom-colors-change', data);
         }
       });
@@ -210,7 +209,6 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       socket.on('wheel-config-update', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {
-          console.log('[Socket Server] Relaying wheel-config-update to session:', sessionId);
           io.to(sessionId).emit('wheel-config-update', data);
         }
       });
@@ -218,7 +216,6 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       socket.on('wheel-list-update', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {
-          console.log('[Socket Server] Relaying wheel-list-update to session:', sessionId);
           io.to(sessionId).emit('wheel-list-update', data);
         }
       });
@@ -226,13 +223,14 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       socket.on('wheel-spin', data => {
         const sessionId = socket.data.sessionId;
         if (sessionId) {
-          console.log('[Socket Server] Relaying wheel-spin to session:', sessionId);
           io.to(sessionId).emit('wheel-spin', data);
         }
       });
 
-      socket.on('disconnect', (reason) => {
-        console.log(`[Socket Server] Client ${socket.id} disconnected. Reason: ${reason}`);
+      socket.on('disconnect', reason => {
+        console.log(
+          `[Socket Server] Client ${socket.id} disconnected. Reason: ${reason}`
+        );
       });
     });
 

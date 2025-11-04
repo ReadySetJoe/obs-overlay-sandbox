@@ -59,11 +59,11 @@ export default async function handler(
       success: true,
       message: 'Template deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Delete template error:', error);
     res.status(500).json({
       error: 'Failed to delete template',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

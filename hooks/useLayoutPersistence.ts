@@ -8,6 +8,7 @@ import {
   ComponentLayouts,
   StreamStatsConfig,
   StreamStatsData,
+  PaintByNumbersState,
 } from '@/types/overlay';
 import { serializePaintState } from '@/lib/paintStateManager';
 
@@ -41,7 +42,7 @@ interface UseLayoutPersistenceProps {
   weatherEffect: WeatherEffect;
   layers: Layer[];
   componentLayouts: ComponentLayouts;
-  paintByNumbersState: any;
+  paintByNumbersState: PaintByNumbersState | null;
 }
 
 export function useLayoutPersistence({
@@ -271,7 +272,7 @@ export function useLayoutPersistence({
       const loadResponse = await fetch(
         `/api/layouts/load?sessionId=${sessionId}`
       );
-      let existingStates: Record<string, any> = {};
+      let existingStates: Record<string, PaintByNumbersState> = {};
 
       if (loadResponse.ok) {
         const { layout } = await loadResponse.json();

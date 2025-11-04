@@ -1,5 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { WheelConfig, WheelSpinEvent, ColorScheme, CustomColors } from '@/types/overlay';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import {
+  WheelConfig,
+  WheelSpinEvent,
+  ColorScheme,
+  CustomColors,
+} from '@/types/overlay';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface WheelProps {
@@ -9,7 +14,12 @@ interface WheelProps {
   customColors?: CustomColors | null;
 }
 
-export default function Wheel({ config, spinEvent, colorScheme, customColors }: WheelProps) {
+export default function Wheel({
+  config,
+  spinEvent,
+  colorScheme,
+  customColors,
+}: WheelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(0);
@@ -19,79 +29,91 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
   const theme = useThemeColors(colorScheme, customColors || null);
 
   // Draw the wheel
-  const drawWheel = (rotation: number = 0) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !config) return;
+  const drawWheel = useCallback(
+    (rotation: number = 0) => {
+      const canvas = canvasRef.current;
+      if (!canvas || !config) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 20;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(centerX, centerY) - 20;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const segments = config.segments;
-    const totalWeight = segments.reduce((sum, seg) => sum + (seg.weight || 1), 0);
-    let currentAngle = rotation;
+      const segments = config.segments;
+      const totalWeight = segments.reduce(
+        (sum, seg) => sum + (seg.weight || 1),
+        0
+      );
+      let currentAngle = rotation;
 
-    // Draw segments
-    segments.forEach((segment, index) => {
-      const weight = segment.weight || 1;
-      const segmentAngle = (weight / totalWeight) * Math.PI * 2;
+      // Draw segments
+      segments.forEach(segment => {
+        const weight = segment.weight || 1;
+        const segmentAngle = (weight / totalWeight) * Math.PI * 2;
 
-      // Draw segment
+        // Draw segment
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(
+          centerX,
+          centerY,
+          radius,
+          currentAngle,
+          currentAngle + segmentAngle
+        );
+        ctx.closePath();
+        ctx.fillStyle = segment.color;
+        ctx.fill();
+
+        // Draw border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw text
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(currentAngle + segmentAngle / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px Inter';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(segment.label, radius * 0.7, 0);
+        ctx.restore();
+
+        currentAngle += segmentAngle;
+      });
+
+      // Draw center circle
       ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + segmentAngle);
-      ctx.closePath();
-      ctx.fillStyle = segment.color;
+      ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+      ctx.fillStyle = theme.primary;
       ctx.fill();
-
-      // Draw border
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = theme.accent;
+      ctx.lineWidth = 4;
       ctx.stroke();
 
-      // Draw text
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(currentAngle + segmentAngle / 2);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 20px Inter';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      ctx.shadowBlur = 4;
-      ctx.fillText(segment.label, radius * 0.7, 0);
-      ctx.restore();
-
-      currentAngle += segmentAngle;
-    });
-
-    // Draw center circle
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
-    ctx.fillStyle = theme.primary;
-    ctx.fill();
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    // Draw pointer at top
-    ctx.beginPath();
-    ctx.moveTo(centerX, 20);
-    ctx.lineTo(centerX - 20, 50);
-    ctx.lineTo(centerX + 20, 50);
-    ctx.closePath();
-    ctx.fillStyle = theme.accent;
-    ctx.fill();
-    ctx.strokeStyle = theme.accentLight;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-  };
+      // Draw pointer at top
+      ctx.beginPath();
+      ctx.moveTo(centerX, 20);
+      ctx.lineTo(centerX - 20, 50);
+      ctx.lineTo(centerX + 20, 50);
+      ctx.closePath();
+      ctx.fillStyle = theme.accent;
+      ctx.fill();
+      ctx.strokeStyle = theme.accentLight;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    },
+    [config, theme]
+  );
 
   // Spin animation
   useEffect(() => {
@@ -107,7 +129,10 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
 
     // Calculate target rotation
     const segments = config.segments;
-    const totalWeight = segments.reduce((sum, seg) => sum + (seg.weight || 1), 0);
+    const totalWeight = segments.reduce(
+      (sum, seg) => sum + (seg.weight || 1),
+      0
+    );
 
     // Calculate the center angle of the winning segment (from 0 radians, going clockwise)
     let centerAngleOfWinner = 0;
@@ -117,7 +142,7 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
     }
     // Add half of winning segment to get to its center
     const winningWeight = segments[spinEvent.winningIndex].weight || 1;
-    centerAngleOfWinner += ((winningWeight / 2) / totalWeight) * Math.PI * 2;
+    centerAngleOfWinner += (winningWeight / 2 / totalWeight) * Math.PI * 2;
 
     // The pointer is at the top (-π/2 or 3π/2 radians)
     // Calculate how much to rotate to align the winning segment with the pointer
@@ -134,7 +159,8 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
     }
 
     // Add extra spins for effect
-    const totalRotation = startRotation + (extraSpins * Math.PI * 2) + rotationNeeded;
+    const totalRotation =
+      startRotation + extraSpins * Math.PI * 2 + rotationNeeded;
 
     const animate = () => {
       const now = Date.now();
@@ -144,7 +170,8 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
       // Easing function (ease-out cubic)
       const easeOut = 1 - Math.pow(1 - progress, 3);
 
-      const newRotation = startRotation + (totalRotation - startRotation) * easeOut;
+      const newRotation =
+        startRotation + (totalRotation - startRotation) * easeOut;
       setCurrentRotation(newRotation);
       drawWheel(newRotation);
 
@@ -178,14 +205,21 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [spinEvent]);
+  }, [spinEvent, config, currentRotation, drawWheel]);
 
   // Initial draw
   useEffect(() => {
     if (!isSpinning) {
       drawWheel(currentRotation);
     }
-  }, [config, currentRotation, isSpinning, colorScheme, customColors]);
+  }, [
+    config,
+    currentRotation,
+    isSpinning,
+    colorScheme,
+    customColors,
+    drawWheel,
+  ]);
 
   // Handle window resize
   useEffect(() => {
@@ -197,7 +231,7 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [currentRotation, isSpinning]);
+  }, [currentRotation, isSpinning, drawWheel]);
 
   if (!config || !config.isActive) {
     return null;
@@ -213,13 +247,33 @@ export default function Wheel({ config, spinEvent, colorScheme, customColors }: 
 
     switch (config.position) {
       case 'center':
-        return { ...baseStyles, top: '50%', left: '50%', transform: `translate(-50%, -50%) scale(${config.scale})` };
+        return {
+          ...baseStyles,
+          top: '50%',
+          left: '50%',
+          transform: `translate(-50%, -50%) scale(${config.scale})`,
+        };
       case 'top-center':
-        return { ...baseStyles, top: '10%', left: '50%', transform: `translate(-50%, 0) scale(${config.scale})` };
+        return {
+          ...baseStyles,
+          top: '10%',
+          left: '50%',
+          transform: `translate(-50%, 0) scale(${config.scale})`,
+        };
       case 'bottom-center':
-        return { ...baseStyles, bottom: '10%', left: '50%', transform: `translate(-50%, 0) scale(${config.scale})` };
+        return {
+          ...baseStyles,
+          bottom: '10%',
+          left: '50%',
+          transform: `translate(-50%, 0) scale(${config.scale})`,
+        };
       default:
-        return { ...baseStyles, top: '50%', left: '50%', transform: `translate(-50%, -50%) scale(${config.scale})` };
+        return {
+          ...baseStyles,
+          top: '50%',
+          left: '50%',
+          transform: `translate(-50%, -50%) scale(${config.scale})`,
+        };
     }
   };
 

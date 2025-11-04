@@ -1,11 +1,12 @@
 // hooks/useTwitchChat.ts
 import { useState, useEffect, useCallback } from 'react';
-import { ChatMessage, ChatHighlight } from '@/types/overlay';
+import { ChatMessage, ChatHighlight, ComponentLayouts } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
+import { Session } from 'next-auth';
 
 interface UseTwitchChatProps {
   sessionId: string | undefined;
-  session: any;
+  session: Session | null;
   socket: Socket | null;
 }
 
@@ -82,7 +83,7 @@ export function useTwitchChat({
 
   // Highlight a chat message
   const highlightChatMessage = useCallback(
-    (message: ChatMessage, componentLayouts: any) => {
+    (message: ChatMessage, componentLayouts: ComponentLayouts) => {
       if (!socket) return;
 
       const highlight: ChatHighlight = {
@@ -105,7 +106,7 @@ export function useTwitchChat({
 
   // Clear chat highlight
   const clearChatHighlight = useCallback(
-    (componentLayouts: any) => {
+    (componentLayouts: ComponentLayouts) => {
       if (!socket) return;
 
       setChatHighlight(null);

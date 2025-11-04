@@ -3,6 +3,25 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
+import { Server as SocketIOServer } from 'socket.io';
+
+interface StreamStatsData {
+  currentFollowers: number;
+  currentSubs: number;
+  currentBits: number;
+  totalMessages: number;
+  uniqueChatters: number;
+  messagesPerMinute: number;
+  mostActiveChatterCount: number;
+  overallPositivityScore: number;
+  nicestChatterScore: number;
+}
+
+interface GlobalWithSocketIO {
+  io?: SocketIOServer;
+}
+
+declare const global: GlobalWithSocketIO;
 
 export default async function handler(
   req: NextApiRequest,
@@ -46,7 +65,7 @@ export default async function handler(
       `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${broadcasterId}`,
       {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Client-Id': process.env.TWITCH_CLIENT_ID!,
         },
       }
@@ -66,7 +85,7 @@ export default async function handler(
         `https://api.twitch.tv/helix/subscriptions?broadcaster_id=${broadcasterId}&first=1`,
         {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             'Client-Id': process.env.TWITCH_CLIENT_ID!,
           },
         }
@@ -79,7 +98,10 @@ export default async function handler(
         subCount = subsData.total || 0;
       }
     } catch (error) {
-      console.log('Could not fetch subscriber count (requires affiliate/partner status)');
+      console.log(
+        'Could not fetch subscriber count (requires affiliate/partner status)',
+        error
+      );
     }
 
     // Load existing streamStatsData
@@ -91,7 +113,7 @@ export default async function handler(
       return res.status(404).json({ error: 'Layout not found' });
     }
 
-    let statsData: any = {
+    let statsData: StreamStatsData = {
       currentFollowers: 0,
       currentSubs: 0,
       currentBits: 0,
@@ -106,7 +128,10 @@ export default async function handler(
     // Parse existing data to preserve chat metrics
     if (layout.streamStatsData) {
       try {
-        statsData = JSON.parse(layout.streamStatsData);
+        const parsedData = JSON.parse(
+          layout.streamStatsData
+        ) as Partial<StreamStatsData>;
+        statsData = { ...statsData, ...parsedData };
       } catch (error) {
         console.error('Error parsing stream stats data:', error);
       }
@@ -126,7 +151,7 @@ export default async function handler(
     });
 
     // Emit update via socket.io
-    const io = (global as any).io;
+    const io = global.io;
     if (io) {
       io.to(sessionId).emit('stream-stats-update', statsData);
     }

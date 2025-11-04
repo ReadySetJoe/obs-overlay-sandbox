@@ -97,7 +97,7 @@ export function parseColor(input: string | undefined): string | null {
   }
 
   // Check if it's a hex code (with or without #)
-  let hex = trimmed.startsWith('#') ? trimmed : '#' + trimmed;
+  const hex = trimmed.startsWith('#') ? trimmed : '#' + trimmed;
 
   if (isValidHexColor(hex)) {
     return normalizeHexColor(hex);

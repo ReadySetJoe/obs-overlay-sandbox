@@ -51,7 +51,15 @@ export default async function handler(
     });
 
     // Emit reset event via socket.io
-    const io = (global as any).io;
+    const io = (
+      global as {
+        io?: {
+          to: (room: string) => {
+            emit: (event: string, data: unknown) => void;
+          };
+        };
+      }
+    ).io;
     if (io) {
       io.to(sessionId).emit('stream-stats-update', emptyStats);
     }

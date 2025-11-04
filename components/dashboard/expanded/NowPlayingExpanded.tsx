@@ -5,6 +5,7 @@ import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { ComponentLayouts } from '@/types/overlay';
 import { NowPlayingIcon } from '../tiles/TileIcons';
+import Image from 'next/image';
 
 interface NowPlayingExpandedProps {
   spotifyToken: string | null;
@@ -50,7 +51,7 @@ export default function NowPlayingExpanded({
   onClose,
 }: NowPlayingExpandedProps) {
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
           <button
@@ -95,7 +96,7 @@ export default function NowPlayingExpanded({
           </div>
           <a
             href={`/api/spotify/login?sessionId=${sessionId}`}
-            className='inline-block bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 rounded-xl px-8 py-3 font-bold transition-all duration-200 shadow-lg hover:shadow-xl'
+            className='inline-block bg-linear-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 rounded-xl px-8 py-3 font-bold transition-all duration-200 shadow-lg hover:shadow-xl'
           >
             Connect Spotify
           </a>
@@ -118,10 +119,10 @@ export default function NowPlayingExpanded({
           </div>
 
           {trackTitle && (
-            <div className='bg-gradient-to-br from-gray-700/50 to-gray-800/50 rounded-xl p-4 border border-gray-600'>
+            <div className='bg-linear-to-br from-gray-700/50 to-gray-800/50 rounded-xl p-4 border border-gray-600'>
               <div className='flex items-center gap-4'>
                 {trackAlbumArt && (
-                  <img
+                  <Image
                     src={trackAlbumArt}
                     alt='Album art'
                     className='w-20 h-20 rounded-lg shadow-lg'
@@ -263,7 +264,7 @@ export default function NowPlayingExpanded({
               </label>
               <button
                 onClick={onManualUpdate}
-                className='w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-gray-600'
+                className='w-full bg-linear-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-gray-600'
               >
                 Update Manually
               </button>

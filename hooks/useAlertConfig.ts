@@ -214,7 +214,14 @@ export function useAlertConfig(sessionId: string) {
         // Save the current config before testing
         await saveAlertConfig(eventType);
 
-        const testData: any = {
+        const testData: {
+          sessionId: string;
+          eventType: AlertEventType;
+          username?: string;
+          amount?: number;
+          count?: number;
+          tier?: number;
+        } = {
           sessionId,
           eventType,
           username: 'TestUser',

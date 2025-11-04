@@ -36,7 +36,11 @@ export default async function handler(
       return res.status(404).json({ error: 'Layout not found' });
     }
 
-    console.log('[API] Timers loaded for overlay:', sessionId, `(${layout.countdowns.length} timers)`);
+    console.log(
+      '[API] Timers loaded for overlay:',
+      sessionId,
+      `(${layout.countdowns.length} timers)`
+    );
     return res.status(200).json({ timers: layout.countdowns });
   } catch (error) {
     console.error('[API] Error fetching timers:', error);

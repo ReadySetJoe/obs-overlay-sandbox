@@ -117,7 +117,7 @@ export default async function handler(
     }
 
     // Update database
-    const updatedLayout = await prisma.layout.update({
+    await prisma.layout.update({
       where: { sessionId },
       data: {
         backgroundImageUrl: uploadResult.url,
@@ -149,10 +149,15 @@ export default async function handler(
       width: uploadResult.width,
       height: uploadResult.height,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload error:', error);
 
-    if (error.code === 'LIMIT_FILE_SIZE') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'LIMIT_FILE_SIZE'
+    ) {
       return res
         .status(400)
         .json({ error: 'File too large. Maximum size is 10MB.' });
@@ -160,7 +165,7 @@ export default async function handler(
 
     res.status(500).json({
       error: 'Failed to upload background',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

@@ -1,7 +1,7 @@
 // components/overlay/NowPlaying.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   NowPlaying as NowPlayingType,
   NowPlayingLayout,
@@ -18,7 +18,6 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
   const [currentProgress, setCurrentProgress] = useState(0);
   const [dominantColor, setDominantColor] = useState<string>('#16a34a');
   const [accentColor, setAccentColor] = useState<string>('#166534');
-  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     if (track?.isPlaying) {
@@ -88,7 +87,7 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [track?.progress, track?.duration, track?.isPlaying, track?.timestamp]);
+  }, [track]);
 
   if (!track) return null;
 
@@ -125,7 +124,7 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
       >
         <div className='flex items-center gap-4 p-4'>
           {/* Album Art */}
-          <div className='relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden shadow-lg'>
+          <div className='relative w-20 h-20 shrink-0 rounded-md overflow-hidden shadow-lg'>
             {track.albumArt ? (
               <Image
                 src={track.albumArt}
@@ -165,7 +164,7 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
           </div>
 
           {/* Spotify Icon */}
-          <div className='flex-shrink-0 pr-2'>
+          <div className='shrink-0 pr-2'>
             <svg
               className='w-8 h-8 text-white'
               viewBox='0 0 24 24'

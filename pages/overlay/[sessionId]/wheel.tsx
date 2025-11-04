@@ -2,7 +2,12 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Wheel from '@/components/overlay/Wheel';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
-import { WheelConfig, WheelSpinEvent, ColorScheme, CustomColors } from '@/types/overlay';
+import {
+  WheelConfig,
+  WheelSpinEvent,
+  ColorScheme,
+  CustomColors,
+} from '@/types/overlay';
 
 export default function WheelOverlay() {
   const router = useRouter();
@@ -22,7 +27,9 @@ export default function WheelOverlay() {
     const loadData = async () => {
       try {
         // Load layout for color scheme
-        const layoutRes = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        const layoutRes = await fetch(
+          `/api/layouts/load?sessionId=${sessionId}`
+        );
         const layoutData = await layoutRes.json();
 
         if (layoutData.layout) {
@@ -33,7 +40,9 @@ export default function WheelOverlay() {
         }
 
         // Load wheels
-        const wheelsRes = await fetch(`/api/wheels/list?sessionId=${sessionId}`);
+        const wheelsRes = await fetch(
+          `/api/wheels/list?sessionId=${sessionId}`
+        );
         const wheelsData = await wheelsRes.json();
 
         if (wheelsData.wheels) {
@@ -63,7 +72,7 @@ export default function WheelOverlay() {
 
     // Listen for wheel list updates
     const handleWheelListUpdate = (data: { wheels: WheelConfig[] }) => {
-      const active = data.wheels.find((w) => w.isActive);
+      const active = data.wheels.find(w => w.isActive);
       setActiveWheel(active || null);
     };
 

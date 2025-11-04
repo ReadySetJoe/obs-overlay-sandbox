@@ -7,10 +7,11 @@ import {
   ComponentLayouts,
   PaintTemplate,
 } from '@/types/overlay';
-import { paintTemplates, mergeTemplates } from '@/lib/paintTemplates';
+import { mergeTemplates } from '@/lib/paintTemplates';
 import CopyURLButton from '../CopyURLButton';
 import PositionControls from '../PositionControls';
 import { PaintByNumbersIcon } from '../tiles/TileIcons';
+import Image from 'next/image';
 
 interface PaintByNumbersExpandedProps {
   sessionId: string;
@@ -130,9 +131,9 @@ export default function PaintByNumbersExpanded({
       setUploadMaxDimension(100);
 
       await loadCustomTemplates();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Upload error:', error);
-      setUploadError(error.message);
+      setUploadError(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setIsUploading(false);
     }
@@ -165,7 +166,7 @@ export default function PaintByNumbersExpanded({
   };
 
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
           <button
@@ -301,7 +302,7 @@ export default function PaintByNumbersExpanded({
               <button
                 type='submit'
                 disabled={isUploading}
-                className='w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed'
+                className='w-full bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isUploading ? 'Generating...' : 'Upload & Generate'}
               </button>
@@ -321,32 +322,24 @@ export default function PaintByNumbersExpanded({
                 onClick={() => onTemplateSelect(template.id)}
                 className={`w-full rounded-xl px-4 py-4 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden border ${
                   paintState?.templateId === template.id
-                    ? 'bg-gradient-to-br from-purple-600/80 to-pink-600/80 border-purple-500'
-                    : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
+                    ? 'bg-linear-to-br from-purple-600/80 to-pink-600/80 border-purple-500'
+                    : 'bg-linear-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
                 }`}
                 disabled={paintState?.templateId === template.id}
               >
-                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
+                <div className='absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000' />
                 <div className='relative flex flex-col items-center gap-2'>
                   {/* Show image preview for both custom and built-in templates */}
-                  <div className='w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-600 flex-shrink-0'>
-                    <img
+                  <div className='w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-600 shrink-0'>
+                    <Image
                       src={
                         template.imageUrl ||
                         `/paint-templates/${template.id}.png`
                       }
                       alt={template.name}
-                      className='w-full h-full object-cover'
+                      width={80}
+                      height={80}
                       style={{ imageRendering: 'pixelated' }}
-                      onError={e => {
-                        // Fallback to emoji if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const fallback = target.nextElementSibling;
-                        if (fallback) {
-                          (fallback as HTMLElement).style.display = 'block';
-                        }
-                      }}
                     />
                     {/* Fallback emoji (hidden by default, shown if image fails) */}
                     <div
@@ -416,7 +409,7 @@ export default function PaintByNumbersExpanded({
             </div>
             <div className='h-4 bg-gray-700/50 rounded-full overflow-hidden'>
               <div
-                className='h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500'
+                className='h-full bg-linear-to-r from-purple-500 to-pink-500 transition-all duration-500'
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -428,7 +421,7 @@ export default function PaintByNumbersExpanded({
             <div className='flex gap-2 mt-3'>
               <button
                 onClick={onReset}
-                className='flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
+                className='flex-1 bg-linear-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl'
               >
                 🔄 Reset Canvas
               </button>

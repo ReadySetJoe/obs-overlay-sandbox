@@ -71,11 +71,11 @@ export default async function handler(
     }
 
     res.status(200).json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Delete error:', error);
     res.status(500).json({
       error: 'Failed to delete background',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

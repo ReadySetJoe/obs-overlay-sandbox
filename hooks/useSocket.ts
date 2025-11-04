@@ -25,7 +25,6 @@ export const useSocket = (sessionId?: string) => {
     }
 
     let socketInstance: Socket | null = null;
-    let isCleaningUp = false;
 
     const initializeSocket = async () => {
       console.log('[useSocket] Initializing socket for session:', sessionId);
@@ -38,7 +37,10 @@ export const useSocket = (sessionId?: string) => {
         const response = await fetch('/api/socket');
         console.log('[useSocket] Socket server initialized:', response.ok);
       } catch (error) {
-        console.warn('[useSocket] Failed to initialize socket server (will retry connection):', error);
+        console.warn(
+          '[useSocket] Failed to initialize socket server (will retry connection):',
+          error
+        );
       }
 
       // Step 2: Wait a bit for server to be fully ready (especially important in OBS)
@@ -64,7 +66,10 @@ export const useSocket = (sessionId?: string) => {
       socketInstance.on('connect', () => {
         console.log('[useSocket] ✅ Socket connected successfully!');
         console.log('[useSocket] Socket ID:', socketInstance?.id);
-        console.log('[useSocket] Transport:', socketInstance?.io.engine.transport.name);
+        console.log(
+          '[useSocket] Transport:',
+          socketInstance?.io.engine.transport.name
+        );
 
         // Join the session room
         socketInstance?.emit('join-session', sessionId);
@@ -75,36 +80,40 @@ export const useSocket = (sessionId?: string) => {
       });
 
       // Disconnection handler
-      socketInstance.on('disconnect', (reason) => {
+      socketInstance.on('disconnect', reason => {
         console.log('[useSocket] ⚠️ Socket disconnected. Reason:', reason);
         setIsConnected(false);
       });
 
       // Reconnection attempt handler
-      socketInstance.on('reconnect_attempt', (attemptNumber) => {
+      socketInstance.on('reconnect_attempt', attemptNumber => {
         console.log(`[useSocket] 🔄 Reconnection attempt #${attemptNumber}...`);
       });
 
       // Reconnection success handler
-      socketInstance.on('reconnect', (attemptNumber) => {
-        console.log(`[useSocket] ✅ Reconnected after ${attemptNumber} attempts`);
+      socketInstance.on('reconnect', attemptNumber => {
+        console.log(
+          `[useSocket] ✅ Reconnected after ${attemptNumber} attempts`
+        );
         // Re-join the session room after reconnection
         socketInstance?.emit('join-session', sessionId);
         console.log('[useSocket] Re-joined session room:', sessionId);
       });
 
       // Reconnection error handler
-      socketInstance.on('reconnect_error', (error) => {
+      socketInstance.on('reconnect_error', error => {
         console.error('[useSocket] ❌ Reconnection error:', error);
       });
 
       // Reconnection failed handler
       socketInstance.on('reconnect_failed', () => {
-        console.error('[useSocket] ❌ Reconnection failed after maximum attempts');
+        console.error(
+          '[useSocket] ❌ Reconnection failed after maximum attempts'
+        );
       });
 
       // Connection error handler
-      socketInstance.on('connect_error', (error) => {
+      socketInstance.on('connect_error', error => {
         console.error('[useSocket] ❌ Connection error:', error.message);
         console.error('[useSocket] Error details:', error);
 
@@ -112,12 +121,14 @@ export const useSocket = (sessionId?: string) => {
         if (error.message.includes('xhr poll error')) {
           console.error('[useSocket] This may indicate CORS or network issues');
         } else if (error.message.includes('websocket error')) {
-          console.error('[useSocket] WebSocket connection failed, will try polling');
+          console.error(
+            '[useSocket] WebSocket connection failed, will try polling'
+          );
         }
       });
 
       // Generic error handler
-      socketInstance.on('error', (error) => {
+      socketInstance.on('error', error => {
         console.error('[useSocket] ❌ Socket error:', error);
       });
 
@@ -129,7 +140,6 @@ export const useSocket = (sessionId?: string) => {
 
     // Cleanup function
     return () => {
-      isCleaningUp = true;
       console.log('[useSocket] Cleaning up socket connection');
       if (socketInstance) {
         socketInstance.removeAllListeners();

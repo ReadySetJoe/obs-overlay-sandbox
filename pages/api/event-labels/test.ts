@@ -37,7 +37,17 @@ export default async function handler(
 
   try {
     // Get socket server
-    const io = (res.socket as any)?.server?.io;
+    const io = (
+      res.socket as unknown as {
+        server: {
+          io?: {
+            to: (room: string) => {
+              emit: (event: string, data: unknown) => void;
+            };
+          };
+        };
+      }
+    )?.server?.io;
     if (!io) {
       return res
         .status(500)

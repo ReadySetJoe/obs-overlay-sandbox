@@ -110,14 +110,15 @@ export function getOptimizedImageUrl(
     opacity?: number;
   } = {}
 ): string {
-  const transformations: any[] = [];
+  const transformations: Record<string, string | number>[] = [];
 
   if (options.width || options.height) {
-    transformations.push({
-      width: options.width,
-      height: options.height,
+    const sizeTransform: Record<string, string | number> = {
       crop: 'limit',
-    });
+    };
+    if (options.width) sizeTransform.width = options.width;
+    if (options.height) sizeTransform.height = options.height;
+    transformations.push(sizeTransform);
   }
 
   if (options.blur) {

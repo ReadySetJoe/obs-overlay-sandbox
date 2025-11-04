@@ -22,7 +22,7 @@ export default async function handler(
       maxFileSize: 5 * 1024 * 1024, // 5MB for images/gifs
     });
 
-    const [fields, files] = await form.parse(req);
+    const [, files] = await form.parse(req);
 
     const file = files.file?.[0];
     if (!file) {
@@ -38,11 +38,9 @@ export default async function handler(
       'image/webp',
     ];
     if (!allowedTypes.includes(file.mimetype || '')) {
-      return res
-        .status(400)
-        .json({
-          error: 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.',
-        });
+      return res.status(400).json({
+        error: 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.',
+      });
     }
 
     // Upload to Cloudinary
@@ -55,10 +53,10 @@ export default async function handler(
       width: result.width,
       height: result.height,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading alert image:', error);
-    return res
-      .status(500)
-      .json({ error: error.message || 'Failed to upload image' });
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to upload image',
+    });
   }
 }

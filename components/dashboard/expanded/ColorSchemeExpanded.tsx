@@ -7,11 +7,7 @@ import {
   ColorSchemeCategory,
   CustomColors,
 } from '@/types/overlay';
-import {
-  colorSchemePresets,
-  getColorSchemesByCategory,
-  categoryInfo,
-} from '@/lib/colorSchemes';
+import { getColorSchemesByCategory, categoryInfo } from '@/lib/colorSchemes';
 import ColorPicker from '../ColorPicker';
 import GradientSelector from '../GradientSelector';
 import { ColorSchemeIcon } from '../tiles/TileIcons';
@@ -127,7 +123,7 @@ export default function ColorSchemeExpanded({
   })();
 
   return (
-    <div className='bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
+    <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
       {/* Header */}
       <div className='flex items-center gap-3 mb-6 top-0 bg-gray-800/95 backdrop-blur-sm -mx-6 -mt-6 px-6 py-4 border-b border-gray-700/50 z-10'>
         <button
@@ -312,7 +308,7 @@ export default function ColorSchemeExpanded({
               // Always emit custom colors to force overlay update
               handleCustomColorChange(currentCustomColors);
             }}
-            className='w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl'
+            className='w-full bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl'
           >
             Apply Custom Colors
           </button>
@@ -328,7 +324,7 @@ export default function ColorSchemeExpanded({
               <button
                 key={preset.id}
                 onClick={() => onColorSchemeChange(preset.id)}
-                className={`group relative bg-gradient-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 rounded-xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-200 ${
+                className={`group relative bg-linear-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 rounded-xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-200 ${
                   colorScheme === preset.id
                     ? 'border-purple-500 ring-2 ring-purple-500/50'
                     : 'border-gray-600 hover:border-gray-500'
@@ -370,7 +366,7 @@ export default function ColorSchemeExpanded({
                 </div>
 
                 {/* Hover effect */}
-                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none' />
+                <div className='absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none' />
 
                 {/* Selected indicator */}
                 {colorScheme === preset.id && (

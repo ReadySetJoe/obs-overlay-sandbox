@@ -27,7 +27,7 @@ export default function SessionInfo({
   };
 
   return (
-    <div className='mt-6 bg-gradient-to-br from-purple-800/30 to-pink-800/30 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30'>
+    <div className='mt-6 bg-linear-to-br from-purple-800/30 to-pink-800/30 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30'>
       <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
         <div>
           <div className='text-xs text-gray-400 mb-1'>
@@ -97,7 +97,7 @@ export default function SessionInfo({
             </button>
           </div>
           <div className='text-xs text-gray-500 mt-1'>
-            Width: 1920 × Height: 1080 × FPS: 60
+            Width: 1920 x Height: 1080 x FPS: 60
           </div>
         </div>
       </div>

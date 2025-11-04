@@ -93,7 +93,7 @@ export default async function handler(
       templateDescription: description || '',
     });
 
-    const { template, width, height } = await generator.generate(fileBuffer);
+    const { template } = await generator.generate(fileBuffer);
 
     console.log('Template generated successfully');
 
@@ -132,18 +132,26 @@ export default async function handler(
         thumbnailUrl: paintTemplate.thumbnailUrl,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload error:', error);
 
-    if (error.code === 'LIMIT_FILE_SIZE') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'LIMIT_FILE_SIZE'
+    ) {
       return res
         .status(400)
         .json({ error: 'File too large. Maximum size is 10MB.' });
     }
 
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred';
+
     res.status(500).json({
       error: 'Failed to generate paint template',
-      message: error.message,
+      message: errorMessage,
     });
   }
 }

@@ -13,7 +13,9 @@ export default async function handler(
   const { wheelId, sessionId } = req.body;
 
   if (!wheelId || !sessionId) {
-    return res.status(400).json({ error: 'wheelId and sessionId are required' });
+    return res
+      .status(400)
+      .json({ error: 'wheelId and sessionId are required' });
   }
 
   try {
@@ -31,7 +33,7 @@ export default async function handler(
 
     // Calculate winning segment based on weights
     const totalWeight = segments.reduce(
-      (sum: number, seg: any) => sum + (seg.weight || 1),
+      (sum: number, seg: { weight?: number }) => sum + (seg.weight || 1),
       0
     );
 
@@ -52,7 +54,10 @@ export default async function handler(
     // Emit spin event via Socket.io
     const io = getSocketServer();
     if (io) {
-      console.log('[Wheel Spin API] Emitting wheel-spin event to session:', sessionId);
+      console.log(
+        '[Wheel Spin API] Emitting wheel-spin event to session:',
+        sessionId
+      );
       io.to(sessionId).emit('wheel-spin', {
         wheelId,
         winningIndex,

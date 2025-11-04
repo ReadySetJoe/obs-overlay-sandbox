@@ -177,7 +177,13 @@ export default function StreamStats({
   }
   if (config.showSubGoal) {
     goals.push(
-      renderGoal('Subscribers', data.currentSubs, config.subGoal, '⭐', '#f59e0b')
+      renderGoal(
+        'Subscribers',
+        data.currentSubs,
+        config.subGoal,
+        '⭐',
+        '#f59e0b'
+      )
     );
   }
   if (config.showBitsGoal) {
@@ -243,9 +249,12 @@ export default function StreamStats({
 
   // Check if we have anything to display
   const showGoals =
-    (displayMode === 'full' || displayMode === 'goals-only') && goals.length > 0;
+    (displayMode === 'full' || displayMode === 'goals-only') &&
+    goals.length > 0;
   const showMetrics =
-    (displayMode === 'full' || displayMode === 'metrics-only' || displayMode === 'compact') &&
+    (displayMode === 'full' ||
+      displayMode === 'metrics-only' ||
+      displayMode === 'compact') &&
     metrics.length > 0;
 
   if (!showGoals && !showMetrics) {
@@ -253,7 +262,8 @@ export default function StreamStats({
   }
 
   // For compact mode, limit metrics to top 3
-  const displayMetrics = displayMode === 'compact' ? metrics.slice(0, 3) : metrics;
+  const displayMetrics =
+    displayMode === 'compact' ? metrics.slice(0, 3) : metrics;
 
   return (
     <div
@@ -263,7 +273,10 @@ export default function StreamStats({
         transformOrigin: 'top left',
       }}
     >
-      <div className='space-y-3' style={{ minWidth: '300px', maxWidth: '400px' }}>
+      <div
+        className='space-y-3'
+        style={{ minWidth: '300px', maxWidth: '400px' }}
+      >
         {/* Goals */}
         {showGoals && (
           <div className='space-y-2'>

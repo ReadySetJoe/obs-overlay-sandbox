@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
         hostname: 'i.scdn.co',
         pathname: '/image/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static-cdn.jtvnw.net',
+        pathname: '/**',
+      },
     ],
   },
 };

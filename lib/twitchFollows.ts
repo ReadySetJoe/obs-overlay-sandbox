@@ -2,6 +2,12 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '@/lib/prisma';
 
+interface TwitchFollower {
+  user_id: string;
+  user_name: string;
+  followed_at: string;
+}
+
 interface FollowMonitor {
   intervalId: NodeJS.Timeout;
   lastFollowerId: string | null;
@@ -14,7 +20,7 @@ const activeMonitors = new Map<string, FollowMonitor>();
 // Helper to update event labels in database
 async function updateEventLabels(
   sessionId: string,
-  updates: any,
+  updates: Record<string, unknown>,
   io: SocketIOServer
 ) {
   try {
@@ -24,7 +30,7 @@ async function updateEventLabels(
 
     if (!layout) return;
 
-    let eventLabelsData: any = {};
+    let eventLabelsData: Record<string, unknown> = {};
     if (layout.eventLabelsData) {
       try {
         eventLabelsData = JSON.parse(layout.eventLabelsData);
@@ -84,14 +90,11 @@ async function getBroadcasterIdFromUsername(
   }
 }
 
-/**
- * Get recent followers for a broadcaster
- */
 async function getRecentFollowers(
   broadcasterId: string,
   accessToken: string,
   limit: number = 1
-): Promise<any[]> {
+): Promise<TwitchFollower[]> {
   try {
     const response = await fetch(
       `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${broadcasterId}&first=${limit}`,
@@ -169,7 +172,11 @@ export async function startFollowMonitoring(
           });
 
           // Update event labels
-          updateEventLabels(sessionId, { latestFollower: follower.user_name }, io);
+          updateEventLabels(
+            sessionId,
+            { latestFollower: follower.user_name },
+            io
+          );
 
           // Update last follower ID
           monitor.lastFollowerId = follower.user_id;

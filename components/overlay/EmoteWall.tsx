@@ -4,6 +4,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { EmoteWallConfig } from '@/types/overlay';
 
+declare global {
+  interface Window {
+    triggerEmoteWall?: (config: EmoteWallConfig) => void;
+  }
+}
+
 interface EmoteParticle {
   id: number;
   emote: string;
@@ -24,20 +30,6 @@ export default function EmoteWall() {
   const particlesRef = useRef<EmoteParticle[]>([]);
   const animationRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
-
-  // Expose trigger function globally for socket events
-  useEffect(() => {
-    (window as any).triggerEmoteWall = (wallConfig: EmoteWallConfig) => {
-      setConfig(wallConfig);
-      setIsActive(true);
-      startTimeRef.current = Date.now();
-      initializeParticles(wallConfig);
-    };
-
-    return () => {
-      delete (window as any).triggerEmoteWall;
-    };
-  }, []);
 
   const initializeParticles = (wallConfig: EmoteWallConfig) => {
     const canvas = canvasRef.current;
@@ -72,6 +64,20 @@ export default function EmoteWall() {
 
     particlesRef.current = particles;
   };
+
+  // Expose trigger function globally for socket events
+  useEffect(() => {
+    window.triggerEmoteWall = (wallConfig: EmoteWallConfig) => {
+      setConfig(wallConfig);
+      setIsActive(true);
+      startTimeRef.current = Date.now();
+      initializeParticles(wallConfig);
+    };
+
+    return () => {
+      delete window.triggerEmoteWall;
+    };
+  }, []);
 
   useEffect(() => {
     if (!isActive || !config) return;

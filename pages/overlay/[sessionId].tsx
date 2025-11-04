@@ -14,7 +14,16 @@ import EventLabels from '@/components/overlay/EventLabels';
 import StreamStats from '@/components/overlay/StreamStats';
 import Alert from '@/components/overlay/Alert';
 import Wheel from '@/components/overlay/Wheel';
-import { AlertConfig, AlertEvent, CountdownTimer, EventLabelsData, EventLabelsConfig, StreamStatsData, StreamStatsConfig, WheelConfig, WheelSpinEvent } from '@/types/overlay';
+import {
+  AlertConfig,
+  AlertEvent,
+  CountdownTimer,
+  EventLabelsData,
+  StreamStatsData,
+  StreamStatsConfig,
+  WheelConfig,
+  WheelSpinEvent,
+} from '@/types/overlay';
 
 export default function OverlayPage() {
   const router = useRouter();
@@ -46,11 +55,15 @@ export default function OverlayPage() {
 
   // Local state for initial data (takes precedence until socket updates)
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  const [localCountdownTimers, setLocalCountdownTimers] = useState<CountdownTimer[]>([]);
-  const [localEventLabelsData, setLocalEventLabelsData] = useState<EventLabelsData>({});
-  const [localEventLabelsConfig, setLocalEventLabelsConfig] = useState<EventLabelsConfig | null>(null);
-  const [localStreamStatsData, setLocalStreamStatsData] = useState<StreamStatsData | null>(null);
-  const [localStreamStatsConfig, setLocalStreamStatsConfig] = useState<StreamStatsConfig | null>(null);
+  const [localCountdownTimers, setLocalCountdownTimers] = useState<
+    CountdownTimer[]
+  >([]);
+  const [localEventLabelsData, setLocalEventLabelsData] =
+    useState<EventLabelsData>({});
+  const [localStreamStatsData, setLocalStreamStatsData] =
+    useState<StreamStatsData | null>(null);
+  const [localStreamStatsConfig, setLocalStreamStatsConfig] =
+    useState<StreamStatsConfig | null>(null);
 
   // Debug state
   const [debugInfo, setDebugInfo] = useState({
@@ -63,11 +76,23 @@ export default function OverlayPage() {
   });
 
   // Use local data if not yet replaced by socket data
-  const countdownTimers = initialDataLoaded && socketCountdownTimers.length === 0 ? localCountdownTimers : socketCountdownTimers;
-  const eventLabelsData = initialDataLoaded && Object.keys(socketEventLabelsData).length === 0 ? localEventLabelsData : socketEventLabelsData;
-  const eventLabelsConfig = initialDataLoaded && !socketEventLabelsConfig ? localEventLabelsConfig : socketEventLabelsConfig;
-  const streamStatsData = initialDataLoaded && !socketStreamStatsData ? localStreamStatsData : socketStreamStatsData;
-  const streamStatsConfig = initialDataLoaded && !socketStreamStatsConfig ? localStreamStatsConfig : socketStreamStatsConfig;
+  const countdownTimers =
+    initialDataLoaded && socketCountdownTimers.length === 0
+      ? localCountdownTimers
+      : socketCountdownTimers;
+  const eventLabelsData =
+    initialDataLoaded && Object.keys(socketEventLabelsData).length === 0
+      ? localEventLabelsData
+      : socketEventLabelsData;
+  const eventLabelsConfig = socketEventLabelsConfig;
+  const streamStatsData =
+    initialDataLoaded && !socketStreamStatsData
+      ? localStreamStatsData
+      : socketStreamStatsData;
+  const streamStatsConfig =
+    initialDataLoaded && !socketStreamStatsConfig
+      ? localStreamStatsConfig
+      : socketStreamStatsConfig;
 
   // Alert state
   const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
@@ -79,19 +104,26 @@ export default function OverlayPage() {
 
   // Wheel state
   const [wheels, setWheels] = useState<WheelConfig[]>([]);
-  const [wheelSpinEvent, setWheelSpinEvent] = useState<WheelSpinEvent | null>(null);
+  const [wheelSpinEvent, setWheelSpinEvent] = useState<WheelSpinEvent | null>(
+    null
+  );
 
   // Load initial data from database (critical for OBS where page loads fresh each time)
   useEffect(() => {
     if (!sessionId) return;
 
     const loadInitialData = async () => {
-      console.log('[Overlay] Loading initial data from database for session:', sessionId);
+      console.log(
+        '[Overlay] Loading initial data from database for session:',
+        sessionId
+      );
 
       try {
         // Load layout data (includes streamStatsData, streamStatsConfig, eventLabelsData, etc.)
         setDebugInfo(prev => ({ ...prev, layoutFetchStatus: 'fetching' }));
-        const layoutResponse = await fetch(`/api/layouts/load?sessionId=${sessionId}`);
+        const layoutResponse = await fetch(
+          `/api/layouts/load?sessionId=${sessionId}`
+        );
 
         if (layoutResponse.ok) {
           const { layout } = await layoutResponse.json();
@@ -103,12 +135,18 @@ export default function OverlayPage() {
             try {
               const parsedEventLabelsData = JSON.parse(layout.eventLabelsData);
               setLocalEventLabelsData(parsedEventLabelsData);
-              console.log('[Overlay] Event labels data loaded:', parsedEventLabelsData);
+              console.log(
+                '[Overlay] Event labels data loaded:',
+                parsedEventLabelsData
+              );
             } catch (error) {
-              console.error('[Overlay] Error parsing event labels data:', error);
+              console.error(
+                '[Overlay] Error parsing event labels data:',
+                error
+              );
               setDebugInfo(prev => ({
                 ...prev,
-                errors: [...prev.errors, `Event labels parse error: ${error}`]
+                errors: [...prev.errors, `Event labels parse error: ${error}`],
               }));
             }
           }
@@ -118,12 +156,18 @@ export default function OverlayPage() {
             try {
               const parsedStreamStatsData = JSON.parse(layout.streamStatsData);
               setLocalStreamStatsData(parsedStreamStatsData);
-              console.log('[Overlay] Stream stats data loaded:', parsedStreamStatsData);
+              console.log(
+                '[Overlay] Stream stats data loaded:',
+                parsedStreamStatsData
+              );
             } catch (error) {
-              console.error('[Overlay] Error parsing stream stats data:', error);
+              console.error(
+                '[Overlay] Error parsing stream stats data:',
+                error
+              );
               setDebugInfo(prev => ({
                 ...prev,
-                errors: [...prev.errors, `Stream stats parse error: ${error}`]
+                errors: [...prev.errors, `Stream stats parse error: ${error}`],
               }));
             }
           }
@@ -131,14 +175,25 @@ export default function OverlayPage() {
           // Parse and set stream stats config
           if (layout.streamStatsConfig) {
             try {
-              const parsedStreamStatsConfig = JSON.parse(layout.streamStatsConfig);
+              const parsedStreamStatsConfig = JSON.parse(
+                layout.streamStatsConfig
+              );
               setLocalStreamStatsConfig(parsedStreamStatsConfig);
-              console.log('[Overlay] Stream stats config loaded:', parsedStreamStatsConfig);
+              console.log(
+                '[Overlay] Stream stats config loaded:',
+                parsedStreamStatsConfig
+              );
             } catch (error) {
-              console.error('[Overlay] Error parsing stream stats config:', error);
+              console.error(
+                '[Overlay] Error parsing stream stats config:',
+                error
+              );
               setDebugInfo(prev => ({
                 ...prev,
-                errors: [...prev.errors, `Stream stats config parse error: ${error}`]
+                errors: [
+                  ...prev.errors,
+                  `Stream stats config parse error: ${error}`,
+                ],
               }));
             }
           }
@@ -146,13 +201,18 @@ export default function OverlayPage() {
           setDebugInfo(prev => ({
             ...prev,
             layoutFetchStatus: 'error',
-            errors: [...prev.errors, `Layout fetch failed: ${layoutResponse.status}`]
+            errors: [
+              ...prev.errors,
+              `Layout fetch failed: ${layoutResponse.status}`,
+            ],
           }));
         }
 
         // Load countdown timers
         setDebugInfo(prev => ({ ...prev, timersFetchStatus: 'fetching' }));
-        const timersResponse = await fetch(`/api/timers/list?sessionId=${sessionId}`);
+        const timersResponse = await fetch(
+          `/api/timers/list?sessionId=${sessionId}`
+        );
 
         if (timersResponse.ok) {
           const { timers } = await timersResponse.json();
@@ -163,12 +223,17 @@ export default function OverlayPage() {
           setDebugInfo(prev => ({
             ...prev,
             timersFetchStatus: 'error',
-            errors: [...prev.errors, `Timers fetch failed: ${timersResponse.status}`]
+            errors: [
+              ...prev.errors,
+              `Timers fetch failed: ${timersResponse.status}`,
+            ],
           }));
         }
 
         // Load wheels
-        const wheelsResponse = await fetch(`/api/wheels/list?sessionId=${sessionId}`);
+        const wheelsResponse = await fetch(
+          `/api/wheels/list?sessionId=${sessionId}`
+        );
         if (wheelsResponse.ok) {
           const { wheels: loadedWheels } = await wheelsResponse.json();
           setWheels(loadedWheels);
@@ -184,7 +249,7 @@ export default function OverlayPage() {
           ...prev,
           layoutFetchStatus: 'error',
           timersFetchStatus: 'error',
-          errors: [...prev.errors, `Fatal error: ${error}`]
+          errors: [...prev.errors, `Fatal error: ${error}`],
         }));
         setInitialDataLoaded(true); // Set anyway to allow socket updates
       }
@@ -217,7 +282,7 @@ export default function OverlayPage() {
     if (isConnected && !debugInfo.socketConnectTime) {
       setDebugInfo(prev => ({
         ...prev,
-        socketConnectTime: new Date().toISOString()
+        socketConnectTime: new Date().toISOString(),
       }));
     }
   }, [isConnected, debugInfo.socketConnectTime]);
@@ -231,8 +296,8 @@ export default function OverlayPage() {
         ...prev,
         socketEventsReceived: [
           ...prev.socketEventsReceived.slice(-9), // Keep last 10 events
-          `${eventName} @ ${new Date().toLocaleTimeString()}`
-        ]
+          `${eventName} @ ${new Date().toLocaleTimeString()}`,
+        ],
       }));
     };
 
@@ -297,7 +362,9 @@ export default function OverlayPage() {
     if (!socket) return;
 
     const handleWheelConfigUpdate = (data: { wheel: WheelConfig }) => {
-      setWheels(prev => prev.map(w => w.id === data.wheel.id ? data.wheel : w));
+      setWheels(prev =>
+        prev.map(w => (w.id === data.wheel.id ? data.wheel : w))
+      );
     };
 
     const handleWheelListUpdate = (data: { wheels: WheelConfig[] }) => {
@@ -364,7 +431,7 @@ export default function OverlayPage() {
       <div
         className={`
           absolute inset-0 -z-20
-          ${customGradientCSS ? '' : `bg-gradient-to-br ${colorSchemeStyles[colorScheme]}`}
+          ${customGradientCSS ? '' : `bg-linear-to-br ${colorSchemeStyles[colorScheme]}`}
           transition-all duration-1000
           ${backgroundImageUrl ? 'opacity-0' : 'opacity-100'}
         `}
@@ -379,52 +446,71 @@ export default function OverlayPage() {
 
       {/* Debug Panel - Add ?debug=true to URL to show */}
       {showDebug && (
-        <div className='fixed top-4 right-4 bg-black/90 text-white p-4 rounded-lg shadow-2xl z-[9999] max-w-md text-xs font-mono border-2 border-green-500'>
-          <div className='text-lg font-bold mb-3 text-green-400'>🔍 OBS Debug Panel</div>
+        <div className='fixed top-4 right-4 bg-black/90 text-white p-4 rounded-lg shadow-2xl z-9999 max-w-md text-xs font-mono border-2 border-green-500'>
+          <div className='text-lg font-bold mb-3 text-green-400'>
+            🔍 OBS Debug Panel
+          </div>
 
           {/* Session Info */}
           <div className='mb-3 pb-3 border-b border-gray-700'>
             <div className='font-semibold text-yellow-400 mb-1'>Session</div>
             <div className='truncate'>ID: {sessionId || 'Not loaded'}</div>
-            <div>Loaded: {debugInfo.pageLoaded.split('T')[1].split('.')[0]}</div>
+            <div>
+              Loaded: {debugInfo.pageLoaded.split('T')[1].split('.')[0]}
+            </div>
           </div>
 
           {/* Socket Status */}
           <div className='mb-3 pb-3 border-b border-gray-700'>
-            <div className='font-semibold text-yellow-400 mb-1'>Socket Status</div>
+            <div className='font-semibold text-yellow-400 mb-1'>
+              Socket Status
+            </div>
             <div className={isConnected ? 'text-green-400' : 'text-red-400'}>
               {isConnected ? '✅ Connected' : '❌ Disconnected'}
             </div>
             {debugInfo.socketConnectTime && (
               <div className='text-xs text-gray-400'>
-                Connected at: {debugInfo.socketConnectTime.split('T')[1].split('.')[0]}
+                Connected at:{' '}
+                {debugInfo.socketConnectTime.split('T')[1].split('.')[0]}
               </div>
             )}
           </div>
 
           {/* Data Loading Status */}
           <div className='mb-3 pb-3 border-b border-gray-700'>
-            <div className='font-semibold text-yellow-400 mb-1'>Data Loading</div>
+            <div className='font-semibold text-yellow-400 mb-1'>
+              Data Loading
+            </div>
             <div className='space-y-1'>
               <div>
                 Layout:
-                <span className={
-                  debugInfo.layoutFetchStatus === 'success' ? 'text-green-400 ml-1' :
-                  debugInfo.layoutFetchStatus === 'fetching' ? 'text-yellow-400 ml-1' :
-                  debugInfo.layoutFetchStatus === 'error' ? 'text-red-400 ml-1' :
-                  'text-gray-400 ml-1'
-                }>
+                <span
+                  className={
+                    debugInfo.layoutFetchStatus === 'success'
+                      ? 'text-green-400 ml-1'
+                      : debugInfo.layoutFetchStatus === 'fetching'
+                        ? 'text-yellow-400 ml-1'
+                        : debugInfo.layoutFetchStatus === 'error'
+                          ? 'text-red-400 ml-1'
+                          : 'text-gray-400 ml-1'
+                  }
+                >
                   {debugInfo.layoutFetchStatus}
                 </span>
               </div>
               <div>
                 Timers:
-                <span className={
-                  debugInfo.timersFetchStatus === 'success' ? 'text-green-400 ml-1' :
-                  debugInfo.timersFetchStatus === 'fetching' ? 'text-yellow-400 ml-1' :
-                  debugInfo.timersFetchStatus === 'error' ? 'text-red-400 ml-1' :
-                  'text-gray-400 ml-1'
-                }>
+                <span
+                  className={
+                    debugInfo.timersFetchStatus === 'success'
+                      ? 'text-green-400 ml-1'
+                      : debugInfo.timersFetchStatus === 'fetching'
+                        ? 'text-yellow-400 ml-1'
+                        : debugInfo.timersFetchStatus === 'error'
+                          ? 'text-red-400 ml-1'
+                          : 'text-gray-400 ml-1'
+                  }
+                >
                   {debugInfo.timersFetchStatus}
                 </span>
               </div>
@@ -434,11 +520,15 @@ export default function OverlayPage() {
 
           {/* Data Counts */}
           <div className='mb-3 pb-3 border-b border-gray-700'>
-            <div className='font-semibold text-yellow-400 mb-1'>Loaded Data</div>
+            <div className='font-semibold text-yellow-400 mb-1'>
+              Loaded Data
+            </div>
             <div className='space-y-1'>
               <div>Countdown Timers: {countdownTimers.length}</div>
               <div>Alert Configs: {alertConfigs.length}</div>
-              <div>Event Labels: {Object.keys(eventLabelsData).length} fields</div>
+              <div>
+                Event Labels: {Object.keys(eventLabelsData).length} fields
+              </div>
               <div>Stream Stats Data: {streamStatsData ? '✅' : '❌'}</div>
               <div>Stream Stats Config: {streamStatsConfig ? '✅' : '❌'}</div>
             </div>
@@ -446,13 +536,17 @@ export default function OverlayPage() {
 
           {/* Recent Socket Events */}
           <div className='mb-3 pb-3 border-b border-gray-700'>
-            <div className='font-semibold text-yellow-400 mb-1'>Recent Events (last 10)</div>
+            <div className='font-semibold text-yellow-400 mb-1'>
+              Recent Events (last 10)
+            </div>
             {debugInfo.socketEventsReceived.length === 0 ? (
               <div className='text-gray-500 italic'>No events yet</div>
             ) : (
               <div className='space-y-1 max-h-32 overflow-y-auto'>
                 {debugInfo.socketEventsReceived.map((event, i) => (
-                  <div key={i} className='text-green-300 text-[10px]'>{event}</div>
+                  <div key={i} className='text-green-300 text-[10px]'>
+                    {event}
+                  </div>
                 ))}
               </div>
             )}
@@ -464,7 +558,12 @@ export default function OverlayPage() {
               <div className='font-semibold text-red-400 mb-1'>⚠️ Errors</div>
               <div className='space-y-1 max-h-32 overflow-y-auto'>
                 {debugInfo.errors.map((error, i) => (
-                  <div key={i} className='text-red-300 text-[10px] break-words'>{error}</div>
+                  <div
+                    key={i}
+                    className='text-red-300 text-[10px] wrap-break-word'
+                  >
+                    {error}
+                  </div>
                 ))}
               </div>
             </div>
@@ -527,7 +626,8 @@ export default function OverlayPage() {
       )}
 
       {/* Event Labels */}
-      {getLayerVisible('eventlabels') && eventLabelsConfig &&
+      {getLayerVisible('eventlabels') &&
+        eventLabelsConfig &&
         (() => {
           const layout = componentLayouts.eventLabels || {
             position: 'top-right',
@@ -557,7 +657,9 @@ export default function OverlayPage() {
         })()}
 
       {/* Stream Stats */}
-      {getLayerVisible('streamstats') && streamStatsData && streamStatsConfig &&
+      {getLayerVisible('streamstats') &&
+        streamStatsData &&
+        streamStatsConfig &&
         (() => {
           const layout = componentLayouts.streamStats || {
             position: 'top-right',
@@ -589,19 +691,20 @@ export default function OverlayPage() {
         })()}
 
       {/* Wheel Spinner */}
-      {getLayerVisible('wheel') && (() => {
-        const activeWheel = wheels.find(w => w.isActive);
-        if (!activeWheel) return null;
+      {getLayerVisible('wheel') &&
+        (() => {
+          const activeWheel = wheels.find(w => w.isActive);
+          if (!activeWheel) return null;
 
-        return (
-          <Wheel
-            config={activeWheel}
-            spinEvent={wheelSpinEvent}
-            colorScheme={colorScheme}
-            customColors={customColors}
-          />
-        );
-      })()}
+          return (
+            <Wheel
+              config={activeWheel}
+              spinEvent={wheelSpinEvent}
+              colorScheme={colorScheme}
+              customColors={customColors}
+            />
+          );
+        })()}
 
       {/* Alerts */}
       {currentAlert && (

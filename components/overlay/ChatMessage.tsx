@@ -58,9 +58,7 @@ export default function ChatMessage({ message, onComplete }: ChatMessageProps) {
         `}
       >
         <div className='flex items-start gap-3'>
-          <span className='text-2xl flex-shrink-0'>
-            {roleIcons[message.role]}
-          </span>
+          <span className='text-2xl shrink-0'>{roleIcons[message.role]}</span>
           <div className='flex-1 min-w-0'>
             <div className='flex items-center gap-2 mb-1'>
               <span
@@ -73,7 +71,7 @@ export default function ChatMessage({ message, onComplete }: ChatMessageProps) {
                 {message.role}
               </span>
             </div>
-            <p className='text-white text-base leading-relaxed break-words'>
+            <p className='text-white text-base leading-relaxed wrap-break-word'>
               {message.message}
             </p>
           </div>

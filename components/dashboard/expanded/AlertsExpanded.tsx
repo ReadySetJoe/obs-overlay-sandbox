@@ -10,6 +10,7 @@ import {
 } from '@/types/overlay';
 import CopyURLButton from '../CopyURLButton';
 import { AlertsIcon } from '../tiles/TileIcons';
+import Image from 'next/image';
 
 interface AlertsExpandedProps {
   sessionId: string;
@@ -353,7 +354,14 @@ export default function AlertsExpanded({
       // Save the current config before testing
       await saveAlertConfig(eventType);
 
-      const testData: any = {
+      const testData: {
+        sessionId: string;
+        eventType: AlertEventType;
+        username: string;
+        amount?: number;
+        count?: number;
+        tier?: number;
+      } = {
         sessionId,
         eventType,
         username: 'TestUser',
@@ -460,7 +468,8 @@ export default function AlertsExpanded({
           // Otherwise default to false for brand new unconfigured alerts
           const hasBeenModified = 'enabled' in config;
           const isConfigured = config.id !== undefined;
-          const enabled = hasBeenModified || isConfigured ? (config.enabled ?? false) : false;
+          const enabled =
+            hasBeenModified || isConfigured ? (config.enabled ?? false) : false;
 
           return (
             <div key={type} className='bg-gray-800 rounded-lg p-6 space-y-4'>
@@ -497,11 +506,15 @@ export default function AlertsExpanded({
                       </label>
                       {config.imageUrl ? (
                         <div className='relative'>
-                          <img
-                            src={config.imageUrl}
-                            alt='Alert'
-                            className='w-full max-h-48 object-contain rounded-lg bg-gray-700'
-                          />
+                          <div className='w-full max-h-48 flex items-center justify-center bg-gray-700 rounded-lg overflow-hidden'>
+                            <Image
+                              src={config.imageUrl}
+                              alt='Alert'
+                              width={200}
+                              height={200}
+                              className='rounded-lg'
+                            />
+                          </div>
                           <button
                             onClick={async () => {
                               updateConfig(type, {

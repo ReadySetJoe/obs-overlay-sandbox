@@ -81,7 +81,7 @@ export default function ChatHighlight({
     'top-right': 'top-0 right-0',
     'bottom-left': 'bottom-0 left-0',
     'bottom-right': 'bottom-0 right-0',
-    custom: 'top-0 left-0',
+    custom: '',
   };
 
   return (
@@ -107,7 +107,7 @@ export default function ChatHighlight({
           <div className='absolute inset-0 shine-effect pointer-events-none' />
 
           <div className='flex items-start gap-4 relative z-10'>
-            <div className='flex-shrink-0'>
+            <div className='shrink-0'>
               <div className='text-4xl mb-2 animate-bounce-gentle'>
                 {roleIcons[message.role]}
               </div>
@@ -137,7 +137,7 @@ export default function ChatHighlight({
                   {message.role}
                 </span>
               </div>
-              <p className='text-white text-xl leading-relaxed break-words animate-fade-in-delay'>
+              <p className='text-white text-xl leading-relaxed wrap-break-word animate-fade-in-delay'>
                 {message.message}
               </p>
             </div>
