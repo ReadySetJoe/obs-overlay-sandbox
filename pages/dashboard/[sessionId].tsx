@@ -178,6 +178,8 @@ export default function DashboardPage() {
             session={session}
             isConnected={isConnected}
             saveStatus={persistenceHook.saveStatus}
+            layoutName={persistenceHook.layoutName}
+            onLayoutNameChange={persistenceHook.setLayoutName}
           />
 
           {/* Main Content */}

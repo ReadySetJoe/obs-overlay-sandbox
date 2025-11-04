@@ -73,6 +73,7 @@ export function useLayoutPersistence({
     'saved'
   );
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [layoutName, setLayoutName] = useState<string>('My Layout');
 
   // Load saved layout when user is authenticated
   useEffect(() => {
@@ -85,6 +86,11 @@ export function useLayoutPersistence({
         );
         if (response.ok) {
           const { layout } = await response.json();
+
+          // Set layout name
+          if (layout.name) {
+            setLayoutName(layout.name);
+          }
 
           setColorScheme(layout.colorScheme);
 
@@ -357,5 +363,7 @@ export function useLayoutPersistence({
     saveStatus,
     lastSaved,
     saveLayout,
+    layoutName,
+    setLayoutName,
   };
 }

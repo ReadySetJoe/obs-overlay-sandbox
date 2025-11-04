@@ -25,6 +25,8 @@ export default function ProfilePage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'date'>('date');
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [newName, setNewName] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -74,6 +76,49 @@ export default function ProfilePage() {
       alert('Failed to delete layout');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const startRename = (layout: Layout) => {
+    setRenamingId(layout.id);
+    setNewName(layout.name);
+  };
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setNewName('');
+  };
+
+  const saveRename = async (sessionId: string) => {
+    if (!newName.trim()) {
+      alert('Layout name cannot be empty');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/layouts/rename', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId, name: newName.trim() }),
+      });
+
+      if (res.ok) {
+        setLayouts(
+          layouts.map(l =>
+            l.sessionId === sessionId ? { ...l, name: newName.trim() } : l
+          )
+        );
+        setRenamingId(null);
+        setNewName('');
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to rename layout');
+      }
+    } catch (error) {
+      console.error('Error renaming layout:', error);
+      alert('Failed to rename layout');
     }
   };
 
@@ -147,7 +192,7 @@ export default function ProfilePage() {
             <div className='flex items-center justify-between h-16'>
               <div className='flex items-center gap-4'>
                 <button
-                  onClick={() => router.push('/')}
+                  onClick={() => router.back()}
                   className='flex items-center gap-2 text-gray-300 hover:text-white transition-colors group'
                 >
                   <svg
@@ -163,7 +208,7 @@ export default function ProfilePage() {
                       d='M10 19l-7-7m0 0l7-7m-7 7h18'
                     />
                   </svg>
-                  <span className='font-medium'>Back to Home</span>
+                  <span className='font-medium'>Back</span>
                 </button>
               </div>
 
@@ -318,10 +363,88 @@ export default function ProfilePage() {
                 >
                   <div className='mb-6'>
                     <div className='flex items-start justify-between mb-3'>
-                      <h3 className='text-xl font-bold text-white group-hover:text-purple-200 transition-colors line-clamp-2'>
-                        {layout.name}
-                      </h3>
-                      <div className='shrink-0 w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50'></div>
+                      {renamingId === layout.id ? (
+                        <div className='flex-1 flex items-center gap-2'>
+                          <input
+                            type='text'
+                            value={newName}
+                            onChange={e => setNewName(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                saveRename(layout.sessionId);
+                              } else if (e.key === 'Escape') {
+                                cancelRename();
+                              }
+                            }}
+                            className='flex-1 px-3 py-2 bg-gray-700/50 border border-purple-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50'
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveRename(layout.sessionId)}
+                            className='p-2 bg-green-600 hover:bg-green-500 rounded-lg transition-colors'
+                            title='Save'
+                          >
+                            <svg
+                              className='w-4 h-4'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M5 13l4 4L19 7'
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={cancelRename}
+                            className='p-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors'
+                            title='Cancel'
+                          >
+                            <svg
+                              className='w-4 h-4'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M6 18L18 6M6 6l12 12'
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className='flex items-center gap-2 flex-1'>
+                          <h3 className='text-xl font-bold text-white group-hover:text-purple-200 transition-colors line-clamp-2'>
+                            {layout.name}
+                          </h3>
+                          <button
+                            onClick={() => startRename(layout)}
+                            className='opacity-0 group-hover:opacity-100 p-1.5 hover:bg-gray-700/50 rounded-lg transition-all'
+                            title='Rename layout'
+                          >
+                            <svg
+                              className='w-4 h-4 text-gray-400 hover:text-white'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z'
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                      <div className='shrink-0 w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50 ml-2'></div>
                     </div>
 
                     <div className='space-y-3 text-sm text-gray-400'>
