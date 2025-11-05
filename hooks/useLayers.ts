@@ -14,15 +14,15 @@ interface UseLayersProps {
 
 export function useLayers({ socket }: UseLayersProps) {
   const [layers, setLayers] = useState<Layer[]>([
-    { id: 'weather', name: 'Weather', visible: true },
-    { id: 'chat', name: 'Chat', visible: true },
-    { id: 'nowplaying', name: 'Now Playing', visible: true },
-    { id: 'countdown', name: 'Countdown', visible: true },
-    { id: 'chathighlight', name: 'Chat Highlight', visible: true },
-    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: true },
-    { id: 'eventlabels', name: 'Recent Events', visible: true },
-    { id: 'streamstats', name: 'Stream Stats', visible: true },
-    { id: 'wheel', name: 'Wheel Spinner', visible: true },
+    { id: 'weather', name: 'Weather', visible: false },
+    { id: 'chat', name: 'Chat', visible: false },
+    { id: 'nowplaying', name: 'Now Playing', visible: false },
+    { id: 'countdown', name: 'Countdown', visible: false },
+    { id: 'chathighlight', name: 'Chat Highlight', visible: false },
+    { id: 'paintbynumbers', name: 'Paint by Numbers', visible: false },
+    { id: 'eventlabels', name: 'Recent Events', visible: false },
+    { id: 'streamstats', name: 'Stream Stats', visible: false },
+    { id: 'wheel', name: 'Wheel Spinner', visible: false },
   ]);
 
   const toggleLayer = useCallback(

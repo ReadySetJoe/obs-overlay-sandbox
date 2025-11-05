@@ -10,11 +10,11 @@ interface UseEventLabelsProps {
 export function useEventLabels({ socket }: UseEventLabelsProps) {
   const [eventLabelsConfig, setEventLabelsConfig] = useState<EventLabelsConfig>(
     {
-      showFollower: true,
-      showSub: true,
-      showBits: true,
-      showRaid: true,
-      showGiftSub: true,
+      showFollower: false,
+      showSub: false,
+      showBits: false,
+      showRaid: false,
+      showGiftSub: false,
       followerLabel: 'Latest Follower',
       subLabel: 'Latest Subscriber',
       bitsLabel: 'Latest Bits',

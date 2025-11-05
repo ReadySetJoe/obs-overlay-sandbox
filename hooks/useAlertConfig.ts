@@ -83,7 +83,7 @@ export function useAlertConfig(sessionId: string) {
         const payload = {
           sessionId,
           eventType,
-          enabled: config.enabled ?? true,
+          enabled: config.enabled ?? false,
           imageUrl: config.imageUrl || null,
           imagePublicId: config.imagePublicId || null,
           animationType: config.animationType || 'slide-down',
