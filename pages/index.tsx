@@ -24,8 +24,13 @@ export default function HomePage() {
     return id;
   };
 
-  const createNewSession = () => {
+  const createNewSession = async () => {
     const newSessionId = generateSessionId();
+    await fetch('/api/layouts/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: newSessionId }),
+    });
     router.push(`/dashboard/${newSessionId}`);
   };
 
