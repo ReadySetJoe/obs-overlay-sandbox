@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "TTSConfig" ADD COLUMN     "chatPermissions" TEXT NOT NULL DEFAULT 'everyone',
+ADD COLUMN     "cooldownSeconds" INTEGER NOT NULL DEFAULT 30,
+ADD COLUMN     "maxCharLength" INTEGER NOT NULL DEFAULT 200,
+ADD COLUMN     "minCharLength" INTEGER NOT NULL DEFAULT 5,
+ADD COLUMN     "skipCommands" BOOLEAN NOT NULL DEFAULT true;

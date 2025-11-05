@@ -265,6 +265,18 @@ model TTSConfig {
   filterProfanity Boolean @default(true)
   allowedSources  String  @default("chat,alerts,manual") // CSV: chat, alerts, manual
 
+  // Chat TTS settings
+  chatPermissions String @default("everyone") // 'everyone', 'subscribers', 'vips', 'moderators'
+  minCharLength   Int    @default(5) // Minimum message length
+  maxCharLength   Int    @default(200) // Maximum message length
+  cooldownSeconds Int    @default(30) // Cooldown per user in seconds
+
+  // Moderation settings
+  bannedWords     String @default("") // Comma-separated list of additional banned words
+  blockedUsers    String @default("") // Comma-separated list of blocked usernames
+  allowLinks      Boolean @default(false) // Allow URLs in TTS
+  requireApproval Boolean @default(false) // Require mod approval before speaking
+
   // Position/layout (stored in componentLayouts JSON in Layout model, but we can add defaults here too)
   position String @default("bottom-right") // 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'
   scale    Float  @default(1.0) // Size multiplier (0.5 to 2.0)

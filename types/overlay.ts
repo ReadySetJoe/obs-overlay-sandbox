@@ -427,6 +427,12 @@ export type TTSVisualizerPosition =
 
 export type TTSSource = 'chat' | 'alerts' | 'manual';
 
+export type TTSChatPermissions =
+  | 'everyone'
+  | 'subscribers'
+  | 'vips'
+  | 'moderators';
+
 export interface TTSMessage {
   id: string;
   text: string;
@@ -463,6 +469,12 @@ export interface TTSConfig {
   // Filters and sources
   filterProfanity: boolean;
   allowedSources: string; // CSV: 'chat', 'alerts', 'manual'
+
+  // Chat TTS settings
+  chatPermissions: TTSChatPermissions;
+  minCharLength: number;
+  maxCharLength: number;
+  cooldownSeconds: number;
 
   // Position/layout
   position: TTSVisualizerPosition | 'center';

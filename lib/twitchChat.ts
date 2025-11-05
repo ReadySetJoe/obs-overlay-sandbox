@@ -1,9 +1,15 @@
 // lib/twitchChat.ts
 import tmi from 'tmi.js';
-import { ChatMessage, UserRole, StreamStatsData } from '@/types/overlay';
+import {
+  ChatMessage,
+  UserRole,
+  StreamStatsData,
+  TTSMessage,
+} from '@/types/overlay';
 import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '@/lib/prisma';
 import Sentiment from 'sentiment';
+import { Filter } from 'bad-words';
 
 interface TwitchChatConnection {
   client: tmi.Client;
@@ -16,6 +22,44 @@ const activeConnections = new Map<string, TwitchChatConnection>();
 
 // Initialize sentiment analyzer
 const sentiment = new Sentiment();
+
+// Initialize profanity filter
+const profanityFilter = new Filter();
+
+// Store TTS cooldowns per user per session (sessionId -> username -> timestamp)
+const ttsCooldowns = new Map<string, Map<string, number>>();
+
+// Helper to detect URLs in text
+function containsURL(text: string): boolean {
+  const urlPattern = /(?:https?:\/\/|www\.)\S+|(?:\w+\.(?:com|net|org|edu|gov|io|co|tv|gg|me|us|uk|ca|de|fr|it|es|jp|cn|ru|br|in)\b)/gi;
+  return urlPattern.test(text);
+}
+
+// Helper to check if text is safe for TTS
+function isSafeForTTS(text: string): { safe: boolean; reason?: string } {
+  // Check for profanity
+  if (profanityFilter.isProfane(text)) {
+    return { safe: false, reason: 'profanity detected' };
+  }
+
+  // Check for URLs
+  if (containsURL(text)) {
+    return { safe: false, reason: 'URLs not allowed' };
+  }
+
+  // Check for excessive special characters (potential spam/trolling)
+  const specialCharRatio = (text.match(/[^a-zA-Z0-9\s]/g) || []).length / text.length;
+  if (specialCharRatio > 0.5) {
+    return { safe: false, reason: 'excessive special characters' };
+  }
+
+  // Check for repeated characters (spam detection)
+  if (/(.)\1{10,}/.test(text)) {
+    return { safe: false, reason: 'repeated characters spam' };
+  }
+
+  return { safe: true };
+}
 
 // Helper to update stream stats and chatter sentiment
 async function updateStreamStats(
@@ -270,6 +314,119 @@ async function incrementStreamStatCount(
   }
 }
 
+// Helper to check if user has permission to trigger TTS
+function hasPermission(
+  userRole: UserRole,
+  requiredPermission: string
+): boolean {
+  if (requiredPermission === 'everyone') return true;
+  if (requiredPermission === 'subscribers') {
+    return ['subscriber', 'vip', 'moderator'].includes(userRole);
+  }
+  if (requiredPermission === 'vips') {
+    return ['vip', 'moderator'].includes(userRole);
+  }
+  if (requiredPermission === 'moderators') {
+    return userRole === 'moderator';
+  }
+  return false;
+}
+
+// Helper to process TTS from chat messages
+async function processTTSFromChat(
+  sessionId: string,
+  username: string,
+  displayName: string,
+  message: string,
+  userRole: UserRole,
+  io: SocketIOServer
+) {
+  try {
+    // Load TTS config
+    const layout = await prisma.layout.findUnique({
+      where: { sessionId },
+      include: { ttsConfig: true },
+    });
+
+    if (!layout || !layout.ttsConfig) return;
+
+    const ttsConfig = layout.ttsConfig;
+
+    // Check if chat is in allowed sources
+    const allowedSources = ttsConfig.allowedSources
+      .split(',')
+      .map(s => s.trim());
+    if (!allowedSources.includes('chat')) return;
+
+    // Only process messages that start with !tts
+    if (!message.trim().toLowerCase().startsWith('!tts ')) {
+      return;
+    }
+
+    // Extract the actual text after !tts
+    const ttsText = message.trim().substring(5).trim(); // Remove '!tts ' prefix
+
+    // Check if there's any text after the command
+    if (!ttsText) {
+      return;
+    }
+
+    // Check if text is safe for TTS (automatic moderation)
+    const safetyCheck = isSafeForTTS(ttsText);
+    if (!safetyCheck.safe) {
+      console.log(`[TTS] Blocked message from ${username}: ${safetyCheck.reason}`);
+      return;
+    }
+
+    // Check permissions
+    if (!hasPermission(userRole, ttsConfig.chatPermissions)) {
+      return;
+    }
+
+    // Check character length (of the extracted text, not the full message)
+    const messageLength = ttsText.length;
+    if (
+      messageLength < ttsConfig.minCharLength ||
+      messageLength > ttsConfig.maxCharLength
+    ) {
+      return;
+    }
+
+    // Check cooldown
+    const now = Date.now();
+    if (!ttsCooldowns.has(sessionId)) {
+      ttsCooldowns.set(sessionId, new Map());
+    }
+    const sessionCooldowns = ttsCooldowns.get(sessionId)!;
+    const lastTTS = sessionCooldowns.get(username.toLowerCase()) || 0;
+    const cooldownMs = ttsConfig.cooldownSeconds * 1000;
+
+    if (now - lastTTS < cooldownMs) {
+      return; // User is still in cooldown
+    }
+
+    // Update cooldown
+    sessionCooldowns.set(username.toLowerCase(), now);
+
+    // Create TTS message (use the extracted text without the !tts prefix)
+    const ttsMessage: TTSMessage = {
+      id: `tts-${Date.now()}-${Math.random()}`,
+      text: ttsText,
+      voice: ttsConfig.voice,
+      rate: ttsConfig.rate,
+      pitch: ttsConfig.pitch,
+      volume: ttsConfig.volume,
+      priority: 'normal',
+      timestamp: now,
+    };
+
+    // Emit to overlay
+    io.to(sessionId).emit('tts-speak', ttsMessage);
+  } catch (error) {
+    console.error('Error processing TTS from chat:', error);
+  }
+}
+
 export async function startTwitchChatMonitoring(
   twitchUsername: string,
   sessionId: string,
@@ -313,6 +470,16 @@ export async function startTwitchChatMonitoring(
     const username = tags.username || 'anonymous';
     const displayName = tags['display-name'];
     updateStreamStats(sessionId, username, displayName, message, io);
+
+    // Process TTS from chat (if enabled and user has permission)
+    processTTSFromChat(
+      sessionId,
+      username,
+      displayName || username,
+      message,
+      chatMessage.role,
+      io
+    );
 
     // Check for paint-by-numbers commands
     // Debug command: !paint all (development only)

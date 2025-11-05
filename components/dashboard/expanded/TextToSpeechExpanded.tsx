@@ -40,6 +40,10 @@ const getDefaultConfig = () => ({
   textColor: '#ffffff',
   filterProfanity: true,
   allowedSources: 'chat,alerts,manual',
+  chatPermissions: 'everyone' as const,
+  minCharLength: 5,
+  maxCharLength: 200,
+  cooldownSeconds: 30,
   position: 'bottom-right' as TTSVisualizerPosition | 'center',
   scale: 1.0,
 });
@@ -68,9 +72,12 @@ export default function TextToSpeechExpanded({
 
   // Local state for config - initialized from prop or defaults
   const [localConfig, setLocalConfig] = useState(() => {
-    return initialConfig
-      ? { ...getDefaultConfig(), ...initialConfig }
-      : getDefaultConfig();
+    if (initialConfig) {
+      const { id, layoutId, createdAt, updatedAt, ...configData } =
+        initialConfig as any;
+      return { ...getDefaultConfig(), ...configData };
+    }
+    return getDefaultConfig();
   });
 
   // Refs for debouncing auto-save
@@ -86,7 +93,10 @@ export default function TextToSpeechExpanded({
         if (response.ok) {
           const { ttsConfig } = await response.json();
           if (ttsConfig) {
-            setLocalConfig({ ...getDefaultConfig(), ...ttsConfig });
+            // Merge with defaults, excluding id and layoutId
+            const { id, layoutId, createdAt, updatedAt, ...configData } =
+              ttsConfig;
+            setLocalConfig({ ...getDefaultConfig(), ...configData });
           }
         }
       } catch (error) {
@@ -233,7 +243,7 @@ export default function TextToSpeechExpanded({
 
   const handleSourceToggle = (source: string) => {
     const sources = allowedSources.includes(source)
-      ? allowedSources.filter(s => s !== source)
+      ? allowedSources.filter((s: string) => s !== source)
       : [...allowedSources, source];
     handleChange({ allowedSources: sources.join(',') });
   };
@@ -576,6 +586,87 @@ export default function TextToSpeechExpanded({
                 </span>
               </label>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Chat TTS Settings */}
+      <div className='mb-6 bg-blue-900/20 border border-blue-700 rounded-lg p-4'>
+        <h4 className='text-sm font-semibold text-gray-200 mb-4 flex items-center gap-2'>
+          <span>💬</span>
+          <span>Chat TTS Settings</span>
+        </h4>
+
+        <div className='space-y-4'>
+          {/* Permissions */}
+          <div>
+            <label className='block text-sm font-medium text-gray-300 mb-2'>
+              Who can trigger TTS
+            </label>
+            <select
+              value={localConfig.chatPermissions}
+              onChange={e =>
+                handleChange({ chatPermissions: e.target.value as any })
+              }
+              className='w-full px-3 py-2 bg-gray-700 rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500 text-white'
+            >
+              <option value='everyone'>Everyone</option>
+              <option value='subscribers'>Subscribers & VIPs</option>
+              <option value='vips'>VIPs & Mods</option>
+              <option value='moderators'>Moderators Only</option>
+            </select>
+          </div>
+
+          {/* Character Limits */}
+          <div className='grid grid-cols-2 gap-4'>
+            <div>
+              <label className='block text-sm font-medium text-gray-300 mb-2'>
+                Min Length: {localConfig.minCharLength}
+              </label>
+              <input
+                type='range'
+                min='1'
+                max='50'
+                value={localConfig.minCharLength}
+                onChange={e =>
+                  handleChange({ minCharLength: parseInt(e.target.value) })
+                }
+                className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-300 mb-2'>
+                Max Length: {localConfig.maxCharLength}
+              </label>
+              <input
+                type='range'
+                min='50'
+                max='500'
+                value={localConfig.maxCharLength}
+                onChange={e =>
+                  handleChange({ maxCharLength: parseInt(e.target.value) })
+                }
+                className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500'
+              />
+            </div>
+          </div>
+
+          {/* Cooldown */}
+          <div>
+            <label className='block text-sm font-medium text-gray-300 mb-2'>
+              Cooldown per user: {localConfig.cooldownSeconds}s
+            </label>
+            <input
+              type='range'
+              min='0'
+              max='300'
+              step='5'
+              value={localConfig.cooldownSeconds}
+              onChange={e =>
+                handleChange({ cooldownSeconds: parseInt(e.target.value) })
+              }
+              className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500'
+            />
           </div>
         </div>
       </div>
