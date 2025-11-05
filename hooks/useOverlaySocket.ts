@@ -17,6 +17,7 @@ import {
   EventLabelsConfig,
   StreamStatsData,
   StreamStatsConfig,
+  TTSConfig,
 } from '@/types/overlay';
 import { colorSchemePresets } from '@/lib/colorSchemes';
 
@@ -55,19 +56,18 @@ export function useOverlaySocket(sessionId: string) {
       position: 'center',
       scale: 1.0,
     },
+    tts: {
+      position: 'bottom-right',
+      x: 0,
+      y: 0,
+      scale: 1,
+    },
   });
   const [sceneLayers, setSceneLayers] = useState<SceneLayer[]>([
     { id: 'weather', name: 'Weather', visible: true, zIndex: 2 },
     { id: 'chat', name: 'Chat', visible: true, zIndex: 5 },
     { id: 'nowplaying', name: 'Now Playing', visible: true, zIndex: 10 },
     { id: 'countdown', name: 'Countdown', visible: true, zIndex: 15 },
-    { id: 'chathighlight', name: 'Chat Highlight', visible: true, zIndex: 20 },
-    {
-      id: 'paintbynumbers',
-      name: 'Paint by Numbers',
-      visible: true,
-      zIndex: 12,
-    },
     {
       id: 'eventlabels',
       name: 'Event Labels',
@@ -80,6 +80,14 @@ export function useOverlaySocket(sessionId: string) {
       visible: true,
       zIndex: 16,
     },
+    {
+      id: 'paintbynumbers',
+      name: 'Paint by Numbers',
+      visible: true,
+      zIndex: 12,
+    },
+    { id: 'chathighlight', name: 'Chat Highlight', visible: true, zIndex: 20 },
+    { id: 'tts', name: 'Text to Speech', visible: true, zIndex: 18 },
     {
       id: 'wheel',
       name: 'Wheel Spinner',
@@ -98,6 +106,7 @@ export function useOverlaySocket(sessionId: string) {
   const [backgroundOpacity, setBackgroundOpacity] = useState(1.0);
   const [backgroundBlur, setBackgroundBlur] = useState(0);
   const [eventLabelsData, setEventLabelsData] = useState<EventLabelsData>({});
+  const [ttsConfig, setTtsConfig] = useState<TTSConfig | null>(null);
   const [eventLabelsConfig, setEventLabelsConfig] = useState<EventLabelsConfig>(
     {
       showFollower: true,
@@ -237,6 +246,11 @@ export function useOverlaySocket(sessionId: string) {
                   ...layer,
                   visible: layout.wheelVisible === false ? false : true,
                 };
+              if (layer.id === 'tts')
+                return {
+                  ...layer,
+                  visible: layout.ttsVisible === false ? false : true,
+                };
               return layer;
             })
           );
@@ -301,6 +315,21 @@ export function useOverlaySocket(sessionId: string) {
             } catch (error) {
               console.error('Error parsing stream stats config:', error);
             }
+          }
+
+          // Load TTS config
+          try {
+            const ttsResponse = await fetch(
+              `/api/tts/load?sessionId=${sessionId}`
+            );
+            if (ttsResponse.ok) {
+              const { ttsConfig: loadedTtsConfig } = await ttsResponse.json();
+              if (loadedTtsConfig) {
+                setTtsConfig(loadedTtsConfig);
+              }
+            }
+          } catch (error) {
+            console.error('Error loading TTS config:', error);
           }
 
           // Note: Paint by numbers state is handled by the dashboard and sent via socket
@@ -403,6 +432,10 @@ export function useOverlaySocket(sessionId: string) {
       setStreamStatsConfig(config);
     });
 
+    socket.on('tts-config-update', (config: TTSConfig) => {
+      setTtsConfig(config);
+    });
+
     return () => {
       socket.off('chat-message');
       socket.off('color-scheme-change');
@@ -421,6 +454,7 @@ export function useOverlaySocket(sessionId: string) {
       socket.off('event-labels-config');
       socket.off('stream-stats-update');
       socket.off('stream-stats-config');
+      socket.off('tts-config-update');
     };
   }, [socket]);
 
@@ -510,6 +544,7 @@ export function useOverlaySocket(sessionId: string) {
     eventLabelsConfig,
     streamStatsData,
     streamStatsConfig,
+    ttsConfig,
     removeMessage,
     getLayerVisible,
     colorSchemeStyles,

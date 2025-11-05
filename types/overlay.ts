@@ -214,6 +214,7 @@ export interface ComponentLayouts {
   eventLabels?: EventLabelsLayout;
   streamStats?: StreamStatsLayout;
   wheel?: WheelLayout;
+  tts?: TTSLayout;
 }
 
 // Alert types
@@ -410,4 +411,67 @@ export interface WheelSpinEvent {
   winningIndex: number;
   winningLabel: string;
   timestamp: number;
+}
+
+// Text to Speech
+export type TTSPriority = 'low' | 'normal' | 'high';
+
+export type TTSVisualizerStyle = 'waveform' | 'bars' | 'circle' | 'text-only';
+
+export type TTSVisualizerPosition =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'center';
+
+export type TTSSource = 'chat' | 'alerts' | 'manual';
+
+export interface TTSMessage {
+  id: string;
+  text: string;
+  voice?: string;
+  rate?: number; // 0.5 to 2.0
+  pitch?: number; // 0.0 to 2.0
+  volume?: number; // 0.0 to 1.0
+  priority: TTSPriority;
+  timestamp: number;
+}
+
+export interface TTSConfig {
+  id: string;
+  layoutId: string;
+
+  // Voice settings
+  voice: string; // Browser TTS voice name
+  rate: number; // Speaking rate (0.5 to 2.0)
+  pitch: number; // Voice pitch (0.0 to 2.0)
+  volume: number; // Volume level (0.0 to 1.0)
+
+  // Queue settings
+  maxQueueSize: number; // Maximum messages in queue
+
+  // Visualizer settings
+  showVisualizer: boolean;
+  visualizerPosition: TTSVisualizerPosition;
+  visualizerStyle: TTSVisualizerStyle;
+
+  // Styling
+  backgroundColor: string;
+  textColor: string;
+
+  // Filters and sources
+  filterProfanity: boolean;
+  allowedSources: string; // CSV: 'chat', 'alerts', 'manual'
+
+  // Position/layout
+  position: TTSVisualizerPosition | 'center';
+  scale: number; // 0.5 to 2.0
+}
+
+export interface TTSLayout {
+  position: TTSVisualizerPosition | 'center' | 'custom';
+  x?: number;
+  y?: number;
+  scale: number; // 0.5 to 2.0
 }

@@ -80,6 +80,7 @@ model Layout {
   paintByNumbersVisible Boolean @default(false)
   eventLabelsVisible    Boolean @default(false)
   wheelVisible          Boolean @default(false)
+  ttsVisible            Boolean @default(false)
 
   // Component layouts (JSON) - stores position, size, styling for each component
   componentLayouts String? @default("{\"chat\":{\"position\":\"top-left\",\"x\":0,\"y\":80,\"maxWidth\":400},\"nowPlaying\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"width\":400},\"countdown\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1},\"weather\":{\"density\":1},\"paintByNumbers\":{\"position\":\"top-left\",\"x\":0,\"y\":0,\"scale\":1,\"gridSize\":20}}")
@@ -111,6 +112,7 @@ model Layout {
   countdowns CountdownTimer[]
   alerts     AlertConfig[]
   wheels     WheelConfig[]
+  ttsConfig  TTSConfig?
 }
 
 model CountdownTimer {
@@ -230,6 +232,42 @@ model WheelConfig {
   // Audio settings
   soundEnabled Boolean @default(true)
   soundVolume  Float   @default(0.7) // 0.0 to 1.0
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  layout Layout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+}
+
+model TTSConfig {
+  id       String @id @default(cuid())
+  layoutId String @unique
+
+  // Voice settings
+  voice  String @default("Google US English") // Browser TTS voice name
+  rate   Float  @default(1.0) // Speaking rate (0.5 to 2.0)
+  pitch  Float  @default(1.0) // Voice pitch (0.0 to 2.0)
+  volume Float  @default(0.8) // Volume level (0.0 to 1.0)
+
+  // Queue settings
+  maxQueueSize Int @default(5) // Maximum messages in queue
+
+  // Visualizer settings
+  showVisualizer     Boolean @default(true)
+  visualizerPosition String  @default("bottom-right") // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
+  visualizerStyle    String  @default("waveform") // 'waveform', 'bars', 'circle', 'text-only'
+
+  // Styling
+  backgroundColor String @default("#000000")
+  textColor       String @default("#ffffff")
+
+  // Filters and sources
+  filterProfanity Boolean @default(true)
+  allowedSources  String  @default("chat,alerts,manual") // CSV: chat, alerts, manual
+
+  // Position/layout (stored in componentLayouts JSON in Layout model, but we can add defaults here too)
+  position String @default("bottom-right") // 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'
+  scale    Float  @default(1.0) // Size multiplier (0.5 to 2.0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

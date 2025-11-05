@@ -37,6 +37,7 @@ import {
   EventLabelsIcon,
   StreamStatsIcon,
   WheelIcon,
+  TTSIcon,
 } from '@/components/dashboard/tiles/TileIcons';
 import ColorSchemeExpanded from '@/components/dashboard/expanded/ColorSchemeExpanded';
 import WeatherExpanded from '@/components/dashboard/expanded/WeatherExpanded';
@@ -50,6 +51,7 @@ import AlertsExpanded from '@/components/dashboard/expanded/AlertsExpanded';
 import EventLabelsExpanded from '@/components/dashboard/expanded/EventLabelsExpanded';
 import StreamStatsExpanded from '@/components/dashboard/expanded/StreamStatsExpanded';
 import WheelExpanded from '@/components/dashboard/expanded/WheelExpanded';
+import TextToSpeechExpanded from '@/components/dashboard/expanded/TextToSpeechExpanded';
 import Footer from '@/components/Footer';
 
 export default function DashboardPage() {
@@ -372,6 +374,17 @@ export default function DashboardPage() {
                 icon={<EmoteWallIcon />}
                 color='yellow'
                 onClick={() => expandedViewHook.handleExpandElement('emote')}
+              />
+
+              {/* Text to Speech Tile */}
+              <SummaryTile
+                title='Text to Speech'
+                subtitle='Voice overlay & TTS'
+                icon={<TTSIcon />}
+                color='blue'
+                isVisible={layersHook.layers.find(l => l.id === 'tts')?.visible}
+                onToggleVisibility={() => layersHook.toggleLayer('tts')}
+                onClick={() => expandedViewHook.handleExpandElement('tts')}
               />
             </div>
           ) : (
@@ -782,6 +795,49 @@ export default function DashboardPage() {
                     onDeleteWheel={wheelsHook.handleDeleteWheel}
                     onSpinWheel={wheelsHook.handleSpinWheel}
                     onClose={expandedViewHook.handleCloseExpanded}
+                  />
+                )}
+
+              {!expandedViewHook.isExpanding &&
+                expandedViewHook.expandedElement === 'tts' && (
+                  <TextToSpeechExpanded
+                    sessionId={sessionId as string}
+                    config={null}
+                    isVisible={
+                      layersHook.layers.find(l => l.id === 'tts')?.visible ||
+                      false
+                    }
+                    componentLayouts={componentLayouts}
+                    onConfigChange={config => {
+                      // TTS config changes are handled within the component via API calls
+                      console.log('TTS config changed:', config);
+                    }}
+                    onPositionChange={(x, y) =>
+                      setComponentLayouts({
+                        ...componentLayouts,
+                        tts: {
+                          ...componentLayouts.tts,
+                          x,
+                          y,
+                          position: 'custom',
+                          scale: componentLayouts.tts?.scale || 1,
+                        },
+                      })
+                    }
+                    onScaleChange={scale =>
+                      setComponentLayouts({
+                        ...componentLayouts,
+                        tts: {
+                          ...componentLayouts.tts,
+                          scale,
+                          position:
+                            componentLayouts.tts?.position || 'bottom-right',
+                        },
+                      })
+                    }
+                    onToggleVisibility={() => layersHook.toggleLayer('tts')}
+                    onClose={expandedViewHook.handleCloseExpanded}
+                    socket={socket}
                   />
                 )}
             </div>

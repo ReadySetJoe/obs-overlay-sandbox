@@ -227,6 +227,21 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
       });
 
+      // TTS events
+      socket.on('tts-speak', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('tts-speak', data);
+        }
+      });
+
+      socket.on('tts-config-update', data => {
+        const sessionId = socket.data.sessionId;
+        if (sessionId) {
+          io.to(sessionId).emit('tts-config-update', data);
+        }
+      });
+
       socket.on('disconnect', reason => {
         console.log(
           `[Socket Server] Client ${socket.id} disconnected. Reason: ${reason}`

@@ -14,6 +14,7 @@ import {
   TrendingUp,
   CircleDot,
   Music,
+  Volume2,
 } from 'lucide-react';
 
 interface GenericTileIconProps {
@@ -104,4 +105,10 @@ export const WheelIcon = GenericTileIcon.bind(null, {
   gradientFrom: 'from-amber-500',
   gradientTo: 'to-yellow-500',
   icon: CircleDot,
+});
+
+export const TTSIcon = GenericTileIcon.bind(null, {
+  gradientFrom: 'from-blue-500',
+  gradientTo: 'to-indigo-500',
+  icon: Volume2,
 });

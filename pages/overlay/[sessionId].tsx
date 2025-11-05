@@ -14,6 +14,7 @@ import EventLabels from '@/components/overlay/EventLabels';
 import StreamStats from '@/components/overlay/StreamStats';
 import Alert from '@/components/overlay/Alert';
 import Wheel from '@/components/overlay/Wheel';
+import TextToSpeech from '@/components/overlay/TextToSpeech';
 import {
   AlertConfig,
   AlertEvent,
@@ -23,6 +24,7 @@ import {
   StreamStatsConfig,
   WheelConfig,
   WheelSpinEvent,
+  TTSConfig,
 } from '@/types/overlay';
 
 export default function OverlayPage() {
@@ -107,6 +109,24 @@ export default function OverlayPage() {
   const [wheelSpinEvent, setWheelSpinEvent] = useState<WheelSpinEvent | null>(
     null
   );
+
+  // TTS state
+  const [ttsConfig, setTtsConfig] = useState<TTSConfig | null>(null);
+
+  // Listen for TTS config updates via socket
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTTSConfigUpdate = (config: TTSConfig) => {
+      setTtsConfig(config);
+    };
+
+    socket.on('tts-config-update', handleTTSConfigUpdate);
+
+    return () => {
+      socket.off('tts-config-update', handleTTSConfigUpdate);
+    };
+  }, [socket]);
 
   // Load initial data from database (critical for OBS where page loads fresh each time)
   useEffect(() => {
@@ -240,6 +260,15 @@ export default function OverlayPage() {
           console.log('[Overlay] Wheels loaded:', loadedWheels);
         }
 
+        // Load TTS config
+        const ttsResponse = await fetch(
+          `/api/tts/load?sessionId=${sessionId}`
+        );
+        if (ttsResponse.ok) {
+          const { ttsConfig: loadedTtsConfig } = await ttsResponse.json();
+          setTtsConfig(loadedTtsConfig);
+        }
+
         // Mark initial data as loaded
         setInitialDataLoaded(true);
         console.log('[Overlay] ✅ All initial data loaded successfully');
@@ -312,6 +341,8 @@ export default function OverlayPage() {
     socket.on('wheel-config-update', () => trackEvent('wheel-config-update'));
     socket.on('wheel-list-update', () => trackEvent('wheel-list-update'));
     socket.on('wheel-spin', () => trackEvent('wheel-spin'));
+    socket.on('tts-speak', () => trackEvent('tts-speak'));
+    socket.on('tts-config-update', () => trackEvent('tts-config-update'));
 
     return () => {
       socket.off('color-scheme-change');
@@ -325,6 +356,8 @@ export default function OverlayPage() {
       socket.off('wheel-config-update');
       socket.off('wheel-list-update');
       socket.off('wheel-spin');
+      socket.off('tts-speak');
+      socket.off('tts-config-update');
     };
   }, [socket]);
 
@@ -714,6 +747,17 @@ export default function OverlayPage() {
           onComplete={handleAlertComplete}
           colorScheme={colorScheme}
           customColors={customColors}
+        />
+      )}
+
+      {/* Text to Speech */}
+      {getLayerVisible('tts') && ttsConfig && (
+        <TextToSpeech
+          config={ttsConfig}
+          layout={componentLayouts.tts || { position: 'bottom-right', scale: 1 }}
+          colorScheme={colorScheme}
+          customColors={customColors}
+          socket={socket}
         />
       )}
     </div>
