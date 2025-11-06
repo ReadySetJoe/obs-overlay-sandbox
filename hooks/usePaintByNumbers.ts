@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PaintByNumbersState, ComponentLayouts } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
+import { useSocketEmit } from './useSocketEmit';
 import {
   loadMostRecentTemplate,
   loadTemplateState,
@@ -27,6 +28,7 @@ export function usePaintByNumbers({
 }: UsePaintByNumbersProps) {
   const [paintByNumbersState, setPaintByNumbersState] =
     useState<PaintByNumbersState | null>(null);
+  const emitPaintState = useSocketEmit(socket, 'paint-state');
 
   // Initialize paint-by-numbers (load last template or default to heart)
   useEffect(() => {
@@ -38,13 +40,13 @@ export function usePaintByNumbers({
 
           if (loadedState) {
             setPaintByNumbersState(loadedState);
-            socket.emit('paint-state', loadedState);
+            emitPaintState(loadedState);
           } else {
             // No saved state found, initialize with heart template
             const heartState = await createFreshTemplate('heart');
             if (heartState) {
               setPaintByNumbersState(heartState);
-              socket.emit('paint-state', heartState);
+              emitPaintState(heartState);
             }
           }
         } catch (error) {
@@ -54,7 +56,7 @@ export function usePaintByNumbers({
 
       initializeTemplate();
     }
-  }, [socket, isConnected, paintByNumbersState, session, sessionId]);
+  }, [socket, isConnected, paintByNumbersState, session, sessionId, emitPaintState]);
 
   // Handle template selection
   const handleTemplateSelect = useCallback(
@@ -64,22 +66,22 @@ export function usePaintByNumbers({
       const state = await loadTemplateState(templateId, sessionId);
       if (state) {
         setPaintByNumbersState(state);
-        socket.emit('paint-state', state);
+        emitPaintState(state);
       }
     },
-    [sessionId, socket]
+    [sessionId, emitPaintState]
   );
 
   // Handle template reset
   const handleReset = useCallback(async () => {
-    if (!paintByNumbersState || !socket) return;
+    if (!paintByNumbersState) return;
 
     const resetState = await resetTemplate(paintByNumbersState);
     if (resetState) {
       setPaintByNumbersState(resetState);
-      socket.emit('paint-state', resetState);
+      emitPaintState(resetState);
     }
-  }, [paintByNumbersState, socket]);
+  }, [paintByNumbersState, emitPaintState]);
 
   // Handle paint commands from chat
   useEffect(() => {
@@ -103,7 +105,7 @@ export function usePaintByNumbers({
 
       if (updatedState) {
         setPaintByNumbersState(updatedState);
-        socket.emit('paint-state', updatedState);
+        emitPaintState(updatedState);
       }
     };
 
@@ -119,7 +121,7 @@ export function usePaintByNumbers({
         data.timestamp
       );
       setPaintByNumbersState(updatedState);
-      socket.emit('paint-state', updatedState);
+      emitPaintState(updatedState);
     };
 
     const handlePaintRandomCommandEvent = (data: {
@@ -134,7 +136,7 @@ export function usePaintByNumbers({
         data.timestamp
       );
       setPaintByNumbersState(updatedState);
-      socket.emit('paint-state', updatedState);
+      emitPaintState(updatedState);
     };
 
     socket.on('paint-command', handlePaintCommandEvent);
@@ -146,7 +148,7 @@ export function usePaintByNumbers({
       socket.off('paint-all-command', handlePaintAllCommandEvent);
       socket.off('paint-random-command', handlePaintRandomCommandEvent);
     };
-  }, [socket, paintByNumbersState]);
+  }, [socket, paintByNumbersState, emitPaintState]);
 
   // Handle layout changes
   const handlePositionChange = useCallback(

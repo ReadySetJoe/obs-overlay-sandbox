@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { WheelConfig, ComponentLayouts } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
+import { useSocketEmit } from './useSocketEmit';
 
 interface UseWheelsProps {
   sessionId: string | undefined;
@@ -17,6 +18,8 @@ export function useWheels({
   setComponentLayouts,
 }: UseWheelsProps) {
   const [wheels, setWheels] = useState<WheelConfig[]>([]);
+  const emitWheelListUpdate = useSocketEmit(socket, 'wheel-list-update');
+  const emitWheelConfigUpdate = useSocketEmit(socket, 'wheel-config-update');
 
   // Load wheels
   useEffect(() => {
@@ -48,12 +51,11 @@ export function useWheels({
 
         if (response.ok) {
           const { wheel: newWheel } = await response.json();
-          setWheels(prev => [...prev, newWheel]);
+          const updatedWheels = [...wheels, newWheel];
+          setWheels(updatedWheels);
 
           // Broadcast update to overlay
-          if (socket) {
-            socket.emit('wheel-list-update', { wheels: [...wheels, newWheel] });
-          }
+          emitWheelListUpdate({ wheels: updatedWheels });
         }
       } catch (error) {
         console.error('Error creating wheel:', error);
@@ -85,9 +87,7 @@ export function useWheels({
               setWheels(refreshedWheels);
 
               // Broadcast full list update to overlay
-              if (socket) {
-                socket.emit('wheel-list-update', { wheels: refreshedWheels });
-              }
+              emitWheelListUpdate({ wheels: refreshedWheels });
               return;
             }
           }
@@ -99,10 +99,8 @@ export function useWheels({
           setWheels(newWheels);
 
           // Broadcast update to overlay
-          if (socket) {
-            socket.emit('wheel-config-update', { wheel: updatedWheel });
-            socket.emit('wheel-list-update', { wheels: newWheels });
-          }
+          emitWheelConfigUpdate({ wheel: updatedWheel });
+          emitWheelListUpdate({ wheels: newWheels });
         }
       } catch (error) {
         console.error('Error updating wheel:', error);
@@ -123,9 +121,7 @@ export function useWheels({
           setWheels(newWheels);
 
           // Broadcast update to overlay
-          if (socket) {
-            socket.emit('wheel-list-update', { wheels: newWheels });
-          }
+          emitWheelListUpdate({ wheels: newWheels });
         }
       } catch (error) {
         console.error('Error deleting wheel:', error);

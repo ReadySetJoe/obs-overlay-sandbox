@@ -148,6 +148,16 @@ export function useLayoutPersistence({
               name: 'Wheel Spinner',
               visible: layout.wheelVisible ?? true,
             },
+            {
+              id: 'alerts',
+              name: 'Alerts',
+              visible: layout.alertsVisible ?? true,
+            },
+            {
+              id: 'tts',
+              name: 'Text to Speech',
+              visible: layout.ttsVisible ?? true,
+            },
           ]);
 
           if (layout.componentLayouts) {

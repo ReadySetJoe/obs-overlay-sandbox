@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChatMessage, ChatHighlight, ComponentLayouts } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
 import { Session } from 'next-auth';
+import { useSocketEmit } from './useSocketEmit';
 
 interface UseTwitchChatProps {
   sessionId: string | undefined;
@@ -19,6 +20,9 @@ export function useTwitchChat({
   const [chatHighlight, setChatHighlight] = useState<ChatHighlight | null>(
     null
   );
+
+  const emitComponentLayouts = useSocketEmit(socket, 'component-layouts');
+  const emitChatHighlight = useSocketEmit(socket, 'chat-highlight');
 
   // Auto-connect to Twitch chat when authenticated
   useEffect(() => {
@@ -84,8 +88,6 @@ export function useTwitchChat({
   // Highlight a chat message
   const highlightChatMessage = useCallback(
     (message: ChatMessage, componentLayouts: ComponentLayouts) => {
-      if (!socket) return;
-
       const highlight: ChatHighlight = {
         message,
         timestamp: Date.now(),
@@ -94,31 +96,29 @@ export function useTwitchChat({
       setChatHighlight(highlight);
 
       // Ensure layouts are synced BEFORE sending the highlight
-      socket.emit('component-layouts', componentLayouts);
+      emitComponentLayouts(componentLayouts);
 
       // Small delay to ensure layout is received first
       setTimeout(() => {
-        socket.emit('chat-highlight', highlight);
+        emitChatHighlight(highlight);
       }, 50);
     },
-    [socket]
+    [emitComponentLayouts, emitChatHighlight]
   );
 
   // Clear chat highlight
   const clearChatHighlight = useCallback(
     (componentLayouts: ComponentLayouts) => {
-      if (!socket) return;
-
       setChatHighlight(null);
 
       // Ensure layouts are synced before clearing
-      socket.emit('component-layouts', componentLayouts);
+      emitComponentLayouts(componentLayouts);
 
       setTimeout(() => {
-        socket.emit('chat-highlight', null);
+        emitChatHighlight(null);
       }, 50);
     },
-    [socket]
+    [emitComponentLayouts, emitChatHighlight]
   );
 
   return {

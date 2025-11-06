@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { EmoteWallConfig } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
+import { useSocketEmit } from './useSocketEmit';
 
 interface UseEmoteWallProps {
   socket: Socket | null;
@@ -13,9 +14,9 @@ export function useEmoteWall({ socket }: UseEmoteWallProps) {
     'light' | 'medium' | 'heavy'
   >('medium');
 
-  const triggerEmoteWall = useCallback(() => {
-    if (!socket) return;
+  const emitEmoteWall = useSocketEmit(socket, 'emote-wall');
 
+  const triggerEmoteWall = useCallback(() => {
     const emotes = emoteInput.split(/\s+/).filter(e => e.trim());
     const config: EmoteWallConfig = {
       emotes,
@@ -23,8 +24,8 @@ export function useEmoteWall({ socket }: UseEmoteWallProps) {
       intensity: emoteIntensity,
     };
 
-    socket.emit('emote-wall', config);
-  }, [socket, emoteInput, emoteIntensity]);
+    emitEmoteWall(config);
+  }, [emitEmoteWall, emoteInput, emoteIntensity]);
 
   return {
     emoteInput,

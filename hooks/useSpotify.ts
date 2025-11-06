@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { NowPlaying } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
+import { useSocketEmit } from './useSocketEmit';
 
 interface UseSpotifyProps {
   socket: Socket | null;
@@ -22,6 +23,8 @@ export function useSpotify({
   const [trackArtist, setTrackArtist] = useState('');
   const [trackAlbumArt, setTrackAlbumArt] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const emitNowPlaying = useSocketEmit(socket, 'now-playing');
 
   // Handle Spotify callback tokens from URL
   useEffect(() => {
@@ -86,13 +89,13 @@ export function useSpotify({
             duration: data.duration,
             timestamp: Date.now(),
           };
-          socket.emit('now-playing', track);
+          emitNowPlaying(track);
           setTrackTitle(data.title);
           setTrackArtist(data.artist);
           setTrackAlbumArt(data.albumArt);
           setIsPlaying(data.isPlaying);
         } else {
-          socket.emit('now-playing', {
+          emitNowPlaying({
             title: trackTitle,
             artist: trackArtist,
             albumArt: trackAlbumArt,
@@ -117,11 +120,10 @@ export function useSpotify({
     trackTitle,
     trackArtist,
     trackAlbumArt,
+    emitNowPlaying,
   ]);
 
   const updateNowPlaying = () => {
-    if (!socket) return;
-
     const track: NowPlaying = {
       title: trackTitle,
       artist: trackArtist,
@@ -129,7 +131,7 @@ export function useSpotify({
       isPlaying,
     };
 
-    socket.emit('now-playing', track);
+    emitNowPlaying(track);
   };
 
   const disconnect = () => {

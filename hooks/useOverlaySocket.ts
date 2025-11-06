@@ -94,6 +94,8 @@ export function useOverlaySocket(sessionId: string) {
       visible: true,
       zIndex: 100,
     },
+    { id: 'alerts', name: 'Alerts', visible: true, zIndex: 50 },
+    { id: 'tts', name: 'Text to Speech', visible: true, zIndex: 18 },
   ]);
   const [chatHighlight, setChatHighlight] = useState<ChatHighlightType | null>(
     null
@@ -250,6 +252,11 @@ export function useOverlaySocket(sessionId: string) {
                 return {
                   ...layer,
                   visible: layout.ttsVisible === false ? false : true,
+                };
+              if (layer.id === 'alerts')
+                return {
+                  ...layer,
+                  visible: layout.alertsVisible === false ? false : true,
                 };
               return layer;
             })

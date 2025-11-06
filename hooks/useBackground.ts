@@ -1,12 +1,14 @@
 // hooks/useBackground.ts
 import { useState, useEffect, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
+import { useSocketEmit } from './useSocketEmit';
 
 interface UseBackgroundProps {
   socket: Socket | null;
 }
 
 export function useBackground({ socket }: UseBackgroundProps) {
+  const emitBackgroundChange = useSocketEmit(socket, 'background-change');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
     null
   );
@@ -23,12 +25,11 @@ export function useBackground({ socket }: UseBackgroundProps) {
       backgroundOpacity: number;
       backgroundBlur: number;
     }) => {
-      if (!socket) return;
       setBackgroundOpacity(data.backgroundOpacity);
       setBackgroundBlur(data.backgroundBlur);
-      socket.emit('background-change', data);
+      emitBackgroundChange(data);
     },
-    [socket]
+    [emitBackgroundChange]
   );
 
   // Listen for background changes from upload/delete API

@@ -1,35 +1,34 @@
 // hooks/useEventLabels.ts
-import { useState, useCallback } from 'react';
 import { EventLabelsConfig } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
+import { useSocketState } from './useSocketState';
 
 interface UseEventLabelsProps {
   socket: Socket | null;
 }
 
-export function useEventLabels({ socket }: UseEventLabelsProps) {
-  const [eventLabelsConfig, setEventLabelsConfig] = useState<EventLabelsConfig>(
-    {
-      showFollower: false,
-      showSub: false,
-      showBits: false,
-      showRaid: false,
-      showGiftSub: false,
-      followerLabel: 'Latest Follower',
-      subLabel: 'Latest Subscriber',
-      bitsLabel: 'Latest Bits',
-      raidLabel: 'Latest Raid',
-      giftSubLabel: 'Latest Gift Sub',
-    }
-  );
+const DEFAULT_EVENT_LABELS_CONFIG: EventLabelsConfig = {
+  showFollower: false,
+  showSub: false,
+  showBits: false,
+  showRaid: false,
+  showGiftSub: false,
+  followerLabel: 'Latest Follower',
+  subLabel: 'Latest Subscriber',
+  bitsLabel: 'Latest Bits',
+  raidLabel: 'Latest Raid',
+  giftSubLabel: 'Latest Gift Sub',
+};
 
-  const handleEventLabelsConfigChange = useCallback(
-    (config: EventLabelsConfig) => {
-      if (!socket) return;
-      setEventLabelsConfig(config);
-      socket.emit('event-labels-config', config);
-    },
-    [socket]
+export function useEventLabels({ socket }: UseEventLabelsProps) {
+  const {
+    value: eventLabelsConfig,
+    setValue: setEventLabelsConfig,
+    emitValue: handleEventLabelsConfigChange,
+  } = useSocketState<EventLabelsConfig>(
+    socket,
+    'event-labels-config',
+    DEFAULT_EVENT_LABELS_CONFIG
   );
 
   return {
