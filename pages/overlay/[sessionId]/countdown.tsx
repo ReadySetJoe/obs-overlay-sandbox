@@ -36,14 +36,14 @@ export default function CountdownOverlay() {
       )}
 
       {/* Countdown Timers */}
-      {getLayerVisible('countdown') && (
+      {
         <CountdownTimer
           timers={countdownTimers}
           layout={componentLayouts.countdown}
           colorScheme={colorScheme}
           customColors={customColors}
         />
-      )}
+      }
     </div>
   );
 }
