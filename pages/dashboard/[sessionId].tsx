@@ -405,9 +405,7 @@ export default function DashboardPage() {
                 <SummaryTile
                   title='Now Playing'
                   subtitle={
-                    spotify.spotifyToken
-                      ? spotify.trackTitle || 'Connected'
-                      : 'Not connected'
+                    spotify.isPlaying ? spotify.trackTitle : 'Not playing'
                   }
                   icon={<NowPlayingIcon />}
                   color='green'
