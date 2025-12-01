@@ -6,6 +6,7 @@ import { EventLabelsConfig, ComponentLayouts } from '@/types/overlay';
 import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { EventLabelsIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 
 interface EventLabelsExpandedProps {
   sessionId: string;
@@ -407,7 +408,7 @@ export default function EventLabelsExpanded({
       {/* Copy URL */}
       <div className='mb-6 space-y-3'>
         <CopyURLButton
-          url={`${window.location.origin}/overlay/${sessionId}/event-labels`}
+          url={useOverlayUrl(sessionId, 'event-labels')}
           label='Event Labels Overlay URL'
         />
         <p className='text-xs text-gray-400 mt-2'>

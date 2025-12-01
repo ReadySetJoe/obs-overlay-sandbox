@@ -3,6 +3,7 @@
 
 import CopyURLButton from '../CopyURLButton';
 import { EmoteWallIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 
 interface EmoteWallExpandedProps {
   sessionId: string;
@@ -97,9 +98,7 @@ export default function EmoteWallExpanded({
       </div>
 
       {/* Copy URL for OBS */}
-      <CopyURLButton
-        url={`${window.location.origin}/overlay/${sessionId}/emote-wall`}
-      />
+      <CopyURLButton url={useOverlayUrl(sessionId, 'emote-wall')} />
     </div>
   );
 }

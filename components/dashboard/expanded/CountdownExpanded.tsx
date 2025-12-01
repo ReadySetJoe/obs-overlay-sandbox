@@ -6,6 +6,7 @@ import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { Pencil } from 'lucide-react';
 import { CountdownIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 
 interface CountdownExpandedProps {
   sessionId: string;
@@ -295,9 +296,7 @@ export default function CountdownExpanded({
       )}
 
       {/* Copy URL for OBS */}
-      <CopyURLButton
-        url={`${window.location.origin}/overlay/${sessionId}/countdown`}
-      />
+      <CopyURLButton url={useOverlayUrl(sessionId, 'countdown')} />
     </div>
   );
 }

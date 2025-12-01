@@ -6,6 +6,7 @@ import { ChatMessage, ComponentLayouts, ChatHighlight } from '@/types/overlay';
 import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { ChatHighlightIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 
 interface ChatHighlightExpandedProps {
   sessionId: string;
@@ -315,9 +316,7 @@ export default function ChatHighlightExpanded({
           </div>
 
           {/* Copy URL for OBS */}
-          <CopyURLButton
-            url={`${window.location.origin}/overlay/${sessionId}/chat-highlight`}
-          />
+          <CopyURLButton url={useOverlayUrl(sessionId, 'chat-highlight')} />
         </>
       )}
 

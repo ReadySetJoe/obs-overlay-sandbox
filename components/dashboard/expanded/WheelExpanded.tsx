@@ -6,6 +6,7 @@ import { WheelConfig, WheelSegment, ComponentLayouts } from '@/types/overlay';
 import CopyURLButton from '../CopyURLButton';
 import { Plus, Trash2, Play, CircleDot } from 'lucide-react';
 import { WheelIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 
 interface WheelExpandedProps {
   sessionId: string;
@@ -511,7 +512,7 @@ export default function WheelExpanded({
 
       {/* Copy URL */}
       <CopyURLButton
-        url={`${typeof window !== 'undefined' ? window.location.origin : ''}/overlay/${sessionId}/wheel`}
+        url={useOverlayUrl(sessionId, 'wheel')}
         label='Wheel Overlay URL'
       />
     </div>

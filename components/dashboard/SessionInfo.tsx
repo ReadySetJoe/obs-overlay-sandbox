@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 
 interface SessionInfoProps {
   sessionId: string;
@@ -13,12 +14,11 @@ export default function SessionInfo({
   isAuthenticated,
 }: SessionInfoProps) {
   const [copied, setCopied] = useState(false);
+  const overlayUrl = useOverlayUrl(sessionId);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}/overlay/${sessionId}`
-      );
+      await navigator.clipboard.writeText(overlayUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -47,7 +47,7 @@ export default function SessionInfo({
           <div className='flex gap-2'>
             <input
               type='text'
-              value={`${window.location.origin}/overlay/${sessionId}`}
+              value={overlayUrl}
               readOnly
               className='flex-1 bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none'
             />

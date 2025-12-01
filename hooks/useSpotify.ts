@@ -17,6 +17,11 @@ export function useSpotify({
 }: UseSpotifyProps) {
   // Initialize tokens from URL params or localStorage
   const getInitialTokens = () => {
+    // Return null tokens during SSR (window is not defined on server)
+    if (typeof window === 'undefined') {
+      return { accessToken: null, refreshToken: null };
+    }
+
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');

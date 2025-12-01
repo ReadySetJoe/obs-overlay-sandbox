@@ -12,6 +12,7 @@ import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { Socket } from 'socket.io-client';
 import { TTSIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 
 interface TextToSpeechExpandedProps {
   sessionId: string;
@@ -692,7 +693,7 @@ export default function TextToSpeechExpanded({
 
       {/* Copy URL */}
       <CopyURLButton
-        url={`${window.location.origin}/overlay/${sessionId}/tts`}
+        url={useOverlayUrl(sessionId, 'tts')}
         label='Copy TTS Overlay URL'
       />
     </div>

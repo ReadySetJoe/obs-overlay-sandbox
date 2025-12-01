@@ -5,6 +5,7 @@ import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
 import { ComponentLayouts } from '@/types/overlay';
 import { NowPlayingIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 import Image from 'next/image';
 
 interface NowPlayingExpandedProps {
@@ -274,9 +275,7 @@ export default function NowPlayingExpanded({
       )}
 
       {/* Copy URL for OBS */}
-      <CopyURLButton
-        url={`${window.location.origin}/overlay/${sessionId}/now-playing`}
-      />
+      <CopyURLButton url={useOverlayUrl(sessionId, 'now-playing')} />
     </div>
   );
 }

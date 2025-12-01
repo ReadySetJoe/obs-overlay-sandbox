@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from 'react';
 import CopyURLButton from '../CopyURLButton';
 import { BackgroundIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 import Image from 'next/image';
 
 interface BackgroundExpandedProps {
@@ -475,9 +476,7 @@ export default function BackgroundExpanded({
         </div>
       )}
 
-      <CopyURLButton
-        url={`${window.location.origin}/overlay/${sessionId}/background`}
-      />
+      <CopyURLButton url={useOverlayUrl(sessionId, 'background')} />
     </div>
   );
 }

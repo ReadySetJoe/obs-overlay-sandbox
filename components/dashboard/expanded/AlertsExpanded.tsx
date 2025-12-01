@@ -10,6 +10,7 @@ import {
 } from '@/types/overlay';
 import CopyURLButton from '../CopyURLButton';
 import { AlertsIcon } from '../tiles/TileIcons';
+import { useOverlayUrl } from '@/hooks/useOriginUrl';
 import Image from 'next/image';
 
 interface AlertsExpandedProps {
@@ -843,7 +844,7 @@ export default function AlertsExpanded({
       {/* Copy URL */}
       <div className='mb-6 space-y-3'>
         <CopyURLButton
-          url={`${window.location.origin}/overlay/${sessionId}/alerts`}
+          url={useOverlayUrl(sessionId, 'alerts')}
           label='Alerts Overlay URL'
         />
         <p className='text-xs text-gray-400 mt-2'>
