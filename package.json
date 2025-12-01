@@ -59,6 +59,7 @@
     "@types/sentiment": "^5.0.4",
     "@types/spotify-web-api-node": "^5.0.11",
     "@types/tmi.js": "^1.8.6",
+    "baseline-browser-mapping": "^2.8.32",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
