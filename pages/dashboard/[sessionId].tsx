@@ -38,6 +38,7 @@ import {
   StreamStatsIcon,
   WheelIcon,
   TTSIcon,
+  TextStyleIcon,
 } from '@/components/dashboard/tiles/TileIcons';
 import ColorSchemeExpanded from '@/components/dashboard/expanded/ColorSchemeExpanded';
 import WeatherExpanded from '@/components/dashboard/expanded/WeatherExpanded';
@@ -53,6 +54,8 @@ import StreamStatsExpanded from '@/components/dashboard/expanded/StreamStatsExpa
 import WheelExpanded from '@/components/dashboard/expanded/WheelExpanded';
 import TextToSpeechExpanded from '@/components/dashboard/expanded/TextToSpeechExpanded';
 import Footer from '@/components/Footer';
+import { useTextStyle } from '@/hooks/useTextStyle';
+import TextStyleExpanded from '@/components/dashboard/expanded/TextStyleExpanded';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -95,6 +98,7 @@ export default function DashboardPage() {
   // Initialize all custom hooks
   const colorSchemeHook = useColorScheme({ socket });
   const backgroundHook = useBackground({ socket });
+  const textStyleHook = useTextStyle({ socket });
   const weatherHook = useWeatherEffect({ socket });
   const emoteWallHook = useEmoteWall({ socket });
   const layersHook = useLayers({ socket });
@@ -135,7 +139,7 @@ export default function DashboardPage() {
     session,
     setColorScheme: colorSchemeHook.setColorScheme,
     setCustomColors: colorSchemeHook.setCustomColors,
-    setFontFamily: colorSchemeHook.setFontFamily,
+    setFontFamily: textStyleHook.setFontFamily,
     setWeatherEffect: weatherHook.setWeatherEffect,
     setLayers: layersHook.setLayers,
     setComponentLayouts,
@@ -148,7 +152,7 @@ export default function DashboardPage() {
     setStreamStatsData: streamStatsHook.setStreamStatsData,
     colorScheme: colorSchemeHook.colorScheme,
     customColors: colorSchemeHook.customColors,
-    fontFamily: colorSchemeHook.fontFamily,
+    fontFamily: textStyleHook.fontFamily,
     weatherEffect: weatherHook.weatherEffect,
     layers: layersHook.layers,
     componentLayouts,
@@ -193,6 +197,15 @@ export default function DashboardPage() {
             >
               {/* Full Screen Effects */}
 
+              {/* Color Scheme Tile */}
+              <SummaryTile
+                title='Color Scheme'
+                subtitle={colorSchemeHook.colorScheme}
+                icon={<ColorSchemeIcon />}
+                color='purple'
+                onClick={() => expandedViewHook.handleExpandElement('color')}
+              />
+
               {/* Custom Background Tile */}
               <SummaryTile
                 title='Custom Background'
@@ -208,13 +221,15 @@ export default function DashboardPage() {
                 }
               />
 
-              {/* Color Scheme Tile */}
+              {/* Text Style Tile */}
               <SummaryTile
-                title='Color Scheme'
-                subtitle={colorSchemeHook.colorScheme}
-                icon={<ColorSchemeIcon />}
-                color='purple'
-                onClick={() => expandedViewHook.handleExpandElement('color')}
+                title='Text Style'
+                subtitle={textStyleHook.fontFamily}
+                icon={<TextStyleIcon />}
+                color='orange'
+                onClick={() =>
+                  expandedViewHook.handleExpandElement('textstyle')
+                }
               />
 
               {/* Weather Effects Tile */}
@@ -408,12 +423,19 @@ export default function DashboardPage() {
                   <ColorSchemeExpanded
                     colorScheme={colorSchemeHook.colorScheme}
                     customColors={colorSchemeHook.customColors}
-                    fontFamily={colorSchemeHook.fontFamily}
                     onColorSchemeChange={colorSchemeHook.changeColorScheme}
                     onCustomColorsChange={
                       colorSchemeHook.handleCustomColorsChange
                     }
-                    onFontFamilyChange={colorSchemeHook.handleFontFamilyChange}
+                    onClose={expandedViewHook.handleCloseExpanded}
+                  />
+                )}
+
+              {!expandedViewHook.isExpanding &&
+                expandedViewHook.expandedElement === 'textstyle' && (
+                  <TextStyleExpanded
+                    fontFamily={textStyleHook.fontFamily}
+                    onFontFamilyChange={textStyleHook.handleFontFamilyChange}
                     onClose={expandedViewHook.handleCloseExpanded}
                   />
                 )}
@@ -716,6 +738,13 @@ export default function DashboardPage() {
                         },
                       })
                     }
+                    onToggleVisibility={() =>
+                      layersHook.toggleLayer('eventlabels')
+                    }
+                    isVisible={
+                      layersHook.layers.find(l => l.id === 'eventlabels')
+                        ?.visible || false
+                    }
                     onClose={expandedViewHook.handleCloseExpanded}
                   />
                 )}
@@ -774,6 +803,13 @@ export default function DashboardPage() {
                       })
                     }
                     onClose={expandedViewHook.handleCloseExpanded}
+                    isVisible={
+                      layersHook.layers.find(l => l.id === 'streamstats')
+                        ?.visible || false
+                    }
+                    onToggleVisibility={() =>
+                      layersHook.toggleLayer('streamstats')
+                    }
                   />
                 )}
 

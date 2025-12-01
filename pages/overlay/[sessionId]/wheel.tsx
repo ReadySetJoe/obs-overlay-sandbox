@@ -59,10 +59,16 @@ export default function WheelOverlay() {
 
   // Socket event listeners
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('[Wheel Overlay] Socket not available');
+      return;
+    }
+
+    console.log('[Wheel Overlay] Setting up socket event listeners');
 
     // Listen for wheel updates
     const handleWheelConfigUpdate = (data: { wheel: WheelConfig }) => {
+      console.log('[Wheel Overlay] Received wheel-config-update:', data);
       if (data.wheel.isActive) {
         setActiveWheel(data.wheel);
       } else if (activeWheel?.id === data.wheel.id) {
@@ -72,12 +78,15 @@ export default function WheelOverlay() {
 
     // Listen for wheel list updates
     const handleWheelListUpdate = (data: { wheels: WheelConfig[] }) => {
+      console.log('[Wheel Overlay] Received wheel-list-update:', data);
       const active = data.wheels.find(w => w.isActive);
       setActiveWheel(active || null);
     };
 
     // Listen for spin events
     const handleWheelSpin = (data: WheelSpinEvent) => {
+      console.log('[Wheel Overlay] Received wheel-spin event:', data);
+      console.log('[Wheel Overlay] Current activeWheel:', activeWheel);
       setSpinEvent(data);
     };
 

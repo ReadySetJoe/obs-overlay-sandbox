@@ -187,7 +187,7 @@ export default function ProfilePage() {
       </Head>
       <div className='min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-gray-900 text-white'>
         {/* Navigation Header */}
-        <div className='sticky top-0 z-50'>
+        <div className='top-0 z-50'>
           <div className='max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8'>
             <div className='flex items-center justify-between h-16'>
               <div className='flex items-center gap-4'>
@@ -245,7 +245,7 @@ export default function ProfilePage() {
               </div>
 
               <div className='flex-1 sm:text-right'>
-                <div className='bg-gray-800/50 backdrop-blur-sm rounded-2xl px-6 py-4 border border-gray-700/50'>
+                <div className='px-6 py-4'>
                   <div className='text-2xl font-bold text-purple-400'>
                     {layouts.length}
                   </div>

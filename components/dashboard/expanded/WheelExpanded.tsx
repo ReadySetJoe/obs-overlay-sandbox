@@ -195,20 +195,16 @@ export default function WheelExpanded({
           <WheelIcon />
           <h2 className='text-xl font-bold'>Wheel Spinner</h2>
         </div>
-        <div className='flex items-center gap-4'>
-          <label className='flex items-center gap-2 cursor-pointer'>
-            <div className='relative'>
-              <input
-                type='checkbox'
-                checked={isVisible}
-                onChange={onToggleVisibility}
-                className='sr-only peer'
-              />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-            </div>
-            <span className='text-sm font-medium'>Visible</span>
-          </label>
-        </div>
+        <button
+          onClick={onToggleVisibility}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+            isVisible
+              ? 'bg-cyan-600 hover:bg-cyan-500'
+              : 'bg-gray-700 hover:bg-gray-600'
+          }`}
+        >
+          {isVisible ? '👁️ Visible' : '🚫 Hidden'}
+        </button>
       </div>
 
       {/* Wheel list */}

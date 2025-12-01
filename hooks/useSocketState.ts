@@ -6,7 +6,7 @@ interface UseSocketStateOptions<T> {
   /**
    * Optional transformation function to modify the value before emitting
    */
-  transform?: (value: T) => any;
+  transform?: (value: T) => unknown;
   /**
    * Optional callback to execute after emitting (e.g., API calls)
    */

@@ -65,8 +65,14 @@ export const BackgroundIcon = GenericTileIcon.bind(null, {
   icon: Image,
 });
 
+export const TextStyleIcon = GenericTileIcon.bind(null, {
+  gradientFrom: 'from-orange-500',
+  gradientTo: 'to-yellow-500',
+  icon: Palette,
+});
+
 export const WeatherIcon = GenericTileIcon.bind(null, {
-  gradientFrom: 'from-sky-400',
+  gradientFrom: 'from-cyan-500',
   gradientTo: 'to-blue-500',
   icon: Cloud,
 });

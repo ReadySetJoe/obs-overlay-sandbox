@@ -21,16 +21,20 @@ export default function Wheel({
   customColors,
 }: WheelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [currentRotation, setCurrentRotation] = useState(0);
   const [showWinner, setShowWinner] = useState(false);
   const [winnerLabel, setWinnerLabel] = useState('');
+
+  // Use refs for animation values to avoid re-renders during animation
+  const currentRotationRef = useRef(0);
+  const isSpinningRef = useRef(false);
   const animationFrameRef = useRef<number | undefined>(undefined);
+  const lastProcessedTimestampRef = useRef<number | null>(null);
+
   const theme = useThemeColors(colorScheme, customColors || null);
 
-  // Draw the wheel
+  // Draw the wheel - using ref for rotation to avoid dependency issues
   const drawWheel = useCallback(
-    (rotation: number = 0) => {
+    (rotation: number = currentRotationRef.current) => {
       const canvas = canvasRef.current;
       if (!canvas || !config) return;
 
@@ -115,17 +119,40 @@ export default function Wheel({
     [config, theme]
   );
 
-  // Spin animation
+  // Spin animation effect - only depends on spinEvent and config
   useEffect(() => {
-    if (!spinEvent || !config) return;
-    if (spinEvent.wheelId !== config.id) return;
+    if (!spinEvent || !config) {
+      console.log('[Wheel Component] Missing spinEvent or config');
+      return;
+    }
 
-    setIsSpinning(true);
+    if (spinEvent.wheelId !== config.id) {
+      console.log('[Wheel Component] Wheel ID mismatch');
+      return;
+    }
+
+    // Check if we've already processed this spin event
+    if (lastProcessedTimestampRef.current === spinEvent.timestamp) {
+      console.log('[Wheel Component] Already processed this spin event');
+      return;
+    }
+
+    // Check if already spinning
+    if (isSpinningRef.current) {
+      console.log('[Wheel Component] Already spinning, ignoring new spin event');
+      return;
+    }
+
+    console.log('[Wheel Component] Starting new spin animation');
+
+    // Mark this event as processed
+    lastProcessedTimestampRef.current = spinEvent.timestamp;
+    isSpinningRef.current = true;
     setShowWinner(false);
 
     const startTime = Date.now();
-    const duration = config.spinDuration * 1000; // Convert to milliseconds
-    const startRotation = currentRotation;
+    const duration = config.spinDuration * 1000;
+    const startRotation = currentRotationRef.current;
 
     // Calculate target rotation
     const segments = config.segments;
@@ -134,7 +161,7 @@ export default function Wheel({
       0
     );
 
-    // Calculate the center angle of the winning segment (from 0 radians, going clockwise)
+    // Calculate the center angle of the winning segment
     let centerAngleOfWinner = 0;
     for (let i = 0; i < spinEvent.winningIndex; i++) {
       const weight = segments[i].weight || 1;
@@ -144,16 +171,14 @@ export default function Wheel({
     const winningWeight = segments[spinEvent.winningIndex].weight || 1;
     centerAngleOfWinner += (winningWeight / 2 / totalWeight) * Math.PI * 2;
 
-    // The pointer is at the top (-π/2 or 3π/2 radians)
-    // Calculate how much to rotate to align the winning segment with the pointer
+    // The pointer is at the top
     const extraSpins = 5; // Number of full rotations
     const pointerAngle = -Math.PI / 2; // Top of circle (12 o'clock)
 
-    // Current position of winning segment's center: startRotation + centerAngleOfWinner
-    // We want it to land at: pointerAngle (or equivalent angle after full rotations)
+    // Calculate rotation needed
     let rotationNeeded = pointerAngle - startRotation - centerAngleOfWinner;
 
-    // Normalize to positive rotation (0 to 2π)
+    // Normalize to positive rotation
     while (rotationNeeded < 0) {
       rotationNeeded += Math.PI * 2;
     }
@@ -172,13 +197,17 @@ export default function Wheel({
 
       const newRotation =
         startRotation + (totalRotation - startRotation) * easeOut;
-      setCurrentRotation(newRotation);
+
+      // Update ref and draw (no state update to avoid re-renders)
+      currentRotationRef.current = newRotation;
       drawWheel(newRotation);
 
       if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        setIsSpinning(false);
+        // Animation complete
+        console.log('[Wheel Component] Spin animation complete');
+        isSpinningRef.current = false;
         setWinnerLabel(spinEvent.winningLabel);
         setShowWinner(true);
 
@@ -205,33 +234,26 @@ export default function Wheel({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [spinEvent, config, currentRotation, drawWheel]);
+  }, [spinEvent, config, drawWheel]); // Only depend on spinEvent and config
 
-  // Initial draw
+  // Initial draw and redraw when config/theme changes
   useEffect(() => {
-    if (!isSpinning) {
-      drawWheel(currentRotation);
+    if (!isSpinningRef.current) {
+      drawWheel(currentRotationRef.current);
     }
-  }, [
-    config,
-    currentRotation,
-    isSpinning,
-    colorScheme,
-    customColors,
-    drawWheel,
-  ]);
+  }, [config, colorScheme, customColors, drawWheel]);
 
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      if (!isSpinning) {
-        drawWheel(currentRotation);
+      if (!isSpinningRef.current) {
+        drawWheel(currentRotationRef.current);
       }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [currentRotation, isSpinning, drawWheel]);
+  }, [drawWheel]);
 
   if (!config || !config.isActive) {
     return null;

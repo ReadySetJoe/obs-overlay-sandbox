@@ -11,9 +11,11 @@ interface StreamStatsExpandedProps {
   sessionId: string;
   config: StreamStatsConfig;
   componentLayouts: ComponentLayouts;
+  isVisible: boolean;
   onConfigChange: (config: StreamStatsConfig) => void;
   onPositionChange: (x: number, y: number) => void;
   onScaleChange: (scale: number) => void;
+  onToggleVisibility: () => void;
   onDisplayModeChange: (
     mode: 'compact' | 'full' | 'goals-only' | 'metrics-only'
   ) => void;
@@ -29,6 +31,8 @@ export default function StreamStatsExpanded({
   onScaleChange,
   onDisplayModeChange,
   onClose,
+  isVisible,
+  onToggleVisibility,
 }: StreamStatsExpandedProps) {
   const [localConfig, setLocalConfig] = useState<StreamStatsConfig>(config);
   const [resetting, setResetting] = useState(false);
@@ -98,7 +102,7 @@ export default function StreamStatsExpanded({
   return (
     <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
       {/* Header */}
-      <div className='flex items-center gap-3 mb-6'>
+      <div className='flex items-center justify-between mb-6'>
         <button
           onClick={onClose}
           className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
@@ -125,6 +129,16 @@ export default function StreamStatsExpanded({
             Track goals, chat metrics, and positivity
           </p>
         </div>
+        <button
+          onClick={onToggleVisibility}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+            isVisible
+              ? 'bg-cyan-600 hover:bg-cyan-500'
+              : 'bg-gray-700 hover:bg-gray-600'
+          }`}
+        >
+          {isVisible ? '👁️ Visible' : '🚫 Hidden'}
+        </button>
       </div>
 
       {/* Position & Scale */}

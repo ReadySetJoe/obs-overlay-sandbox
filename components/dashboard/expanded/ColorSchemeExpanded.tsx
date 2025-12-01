@@ -15,66 +15,16 @@ import { ColorSchemeIcon } from '../tiles/TileIcons';
 interface ColorSchemeExpandedProps {
   colorScheme: ColorScheme;
   customColors: CustomColors | null;
-  fontFamily: string;
   onColorSchemeChange: (scheme: ColorScheme) => void;
   onCustomColorsChange: (colors: CustomColors) => void;
-  onFontFamilyChange: (font: string) => void;
   onClose: () => void;
 }
-
-const AVAILABLE_FONTS = [
-  { name: 'Inter', category: 'Modern', description: 'Clean and professional' },
-  {
-    name: 'Poppins',
-    category: 'Modern',
-    description: 'Playful and rounded',
-  },
-  { name: 'Roboto', category: 'Modern', description: 'Classic and readable' },
-  {
-    name: 'Montserrat',
-    category: 'Modern',
-    description: 'Strong and bold',
-  },
-  {
-    name: 'Bebas Neue',
-    category: 'Display',
-    description: 'Bold uppercase',
-  },
-  {
-    name: 'Orbitron',
-    category: 'Gaming',
-    description: 'Futuristic sci-fi',
-  },
-  {
-    name: 'Press Start 2P',
-    category: 'Gaming',
-    description: 'Retro pixel',
-  },
-  { name: 'Righteous', category: 'Display', description: 'Bold and fun' },
-  { name: 'Bangers', category: 'Display', description: 'Comic book style' },
-  {
-    name: 'Permanent Marker',
-    category: 'Casual',
-    description: 'Handwritten',
-  },
-  { name: 'Pacifico', category: 'Casual', description: 'Surf and casual' },
-  { name: 'Anton', category: 'Display', description: 'Impact display' },
-  {
-    name: 'Archivo Black',
-    category: 'Display',
-    description: 'Heavy and modern',
-  },
-  { name: 'Fredoka', category: 'Modern', description: 'Friendly rounded' },
-  { name: 'Titan One', category: 'Display', description: 'Playful thick' },
-];
 
 export default function ColorSchemeExpanded({
   colorScheme,
   customColors,
-  fontFamily,
   onColorSchemeChange,
   onCustomColorsChange,
-  onFontFamilyChange,
   onClose,
 }: ColorSchemeExpandedProps) {
   const [selectedCategory, setSelectedCategory] =
@@ -180,62 +130,6 @@ export default function ColorSchemeExpanded({
         <p className='text-xs text-gray-500 mt-2'>
           {categoryInfo[selectedCategory].description}
         </p>
-      </div>
-
-      {/* Font Family Picker */}
-      <div className='mb-6'>
-        <h3 className='text-sm font-semibold text-gray-400 mb-3'>
-          OVERLAY FONT
-        </h3>
-        <div className='grid grid-cols-1 gap-2 max-h-64 overflow-y-auto'>
-          {AVAILABLE_FONTS.map(font => (
-            <button
-              key={font.name}
-              onClick={() => onFontFamilyChange(font.name)}
-              className={`text-left p-3 rounded-lg border transition-all ${
-                fontFamily === font.name
-                  ? 'bg-purple-600/20 border-purple-500 ring-2 ring-purple-500/50'
-                  : 'bg-gray-700/30 border-gray-600 hover:bg-gray-700/50 hover:border-gray-500'
-              }`}
-            >
-              <div className='flex items-center justify-between mb-1'>
-                <span
-                  className='text-lg font-semibold'
-                  style={{ fontFamily: font.name }}
-                >
-                  {font.name}
-                </span>
-                <span className='text-xs px-2 py-1 rounded bg-gray-600 text-gray-300'>
-                  {font.category}
-                </span>
-              </div>
-              <div className='flex items-center justify-between'>
-                <p className='text-xs text-gray-400'>{font.description}</p>
-                {fontFamily === font.name && (
-                  <svg
-                    className='w-4 h-4 text-purple-400'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={3}
-                      d='M5 13l4 4L19 7'
-                    />
-                  </svg>
-                )}
-              </div>
-              <div
-                className='text-sm text-gray-200 mt-2'
-                style={{ fontFamily: font.name }}
-              >
-                The quick brown fox jumps over the lazy dog
-              </div>
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Custom Color Builder */}

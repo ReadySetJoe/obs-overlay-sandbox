@@ -11,9 +11,11 @@ interface EventLabelsExpandedProps {
   sessionId: string;
   config: EventLabelsConfig;
   componentLayouts: ComponentLayouts;
+  isVisible: boolean;
   onConfigChange: (config: EventLabelsConfig) => void;
   onPositionChange: (x: number, y: number) => void;
   onScaleChange: (scale: number) => void;
+  onToggleVisibility: () => void;
   onClose: () => void;
 }
 
@@ -21,9 +23,11 @@ export default function EventLabelsExpanded({
   sessionId,
   config,
   componentLayouts,
+  isVisible,
   onConfigChange,
   onPositionChange,
   onScaleChange,
+  onToggleVisibility,
   onClose,
 }: EventLabelsExpandedProps) {
   const [localConfig, setLocalConfig] = useState<EventLabelsConfig>(config);
@@ -89,33 +93,45 @@ export default function EventLabelsExpanded({
   return (
     <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl max-h-[90vh] overflow-y-auto'>
       {/* Header */}
-      <div className='flex items-center gap-3 mb-6'>
-        <button
-          onClick={onClose}
-          className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
-          aria-label='Back'
-        >
-          <svg
-            className='w-5 h-5'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
+      <div className='flex items-center justify-between mb-6'>
+        <div className='flex items-center gap-3'>
+          <button
+            onClick={onClose}
+            className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white'
+            aria-label='Back'
           >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M15 19l-7-7 7-7'
-            />
-          </svg>
-        </button>
-        <EventLabelsIcon />
-        <div>
-          <h2 className='text-xl font-bold'>Recent Events</h2>
-          <p className='text-sm text-gray-400'>
-            Display latest follower, sub, bits, etc.
-          </p>
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M15 19l-7-7 7-7'
+              />
+            </svg>
+          </button>
+          <EventLabelsIcon />
+          <div>
+            <h2 className='text-xl font-bold'>Recent Events</h2>
+            <p className='text-sm text-gray-400'>
+              Display latest follower, sub, bits, etc.
+            </p>
+          </div>
         </div>
+        <button
+          onClick={onToggleVisibility}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+            isVisible
+              ? 'bg-cyan-600 hover:bg-cyan-500'
+              : 'bg-gray-700 hover:bg-gray-600'
+          }`}
+        >
+          {isVisible ? '👁️ Visible' : '🚫 Hidden'}
+        </button>
       </div>
 
       {/* Position & Scale */}

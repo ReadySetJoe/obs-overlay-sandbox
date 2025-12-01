@@ -103,7 +103,6 @@ export default function AlertsExpanded({
     giftsub: {},
   });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState<AlertEventType | null>(
     null
   );
@@ -291,61 +290,6 @@ export default function AlertsExpanded({
       alert('Failed to upload sound');
     } finally {
       setUploadingSound(null);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const savePromises = Object.entries(alertConfigs).map(
-        async ([eventType, config]) => {
-          // Only save if config has been modified (has at least one property)
-          if (Object.keys(config).length === 0) return;
-
-          const payload = {
-            sessionId,
-            eventType,
-            enabled: config.enabled ?? false,
-            imageUrl: config.imageUrl || null,
-            imagePublicId: config.imagePublicId || null,
-            animationType: config.animationType || 'slide-down',
-            duration: config.duration ?? 5,
-            position: config.position || 'top-center',
-            soundUrl: config.soundUrl || null,
-            soundPublicId: config.soundPublicId || null,
-            volume: config.volume ?? 0.7,
-            messageTemplate:
-              config.messageTemplate ||
-              DEFAULT_MESSAGES[eventType as AlertEventType],
-            fontSize: config.fontSize ?? 32,
-            textColor: config.textColor || '#FFFFFF',
-            textShadow: config.textShadow ?? true,
-            showBackground: config.showBackground ?? true,
-          };
-
-          const response = await fetch('/api/alerts/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to save ${eventType} alert`);
-          }
-        }
-      );
-
-      await Promise.all(savePromises);
-
-      // Notify parent to refresh counts
-      onAlertsSaved?.();
-
-      alert('Alert configurations saved successfully!');
-    } catch (error) {
-      console.error('Error saving alerts:', error);
-      alert('Failed to save alert configurations');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -877,31 +821,6 @@ export default function AlertsExpanded({
             </div>
           );
         })}
-      </div>
-
-      {/* Manual Save Button (optional - auto-save is enabled) */}
-      <div className='flex justify-end gap-4'>
-        <button
-          onClick={onClose}
-          className='px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors font-semibold'
-        >
-          Close
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={saving || autoSaving}
-          className='px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
-          title='Changes are auto-saved. Use this to force save all configurations.'
-        >
-          {saving ? (
-            <div className='flex items-center gap-2'>
-              <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-              <span>Saving...</span>
-            </div>
-          ) : (
-            'Save Now'
-          )}
-        </button>
       </div>
 
       {/* Info Box */}

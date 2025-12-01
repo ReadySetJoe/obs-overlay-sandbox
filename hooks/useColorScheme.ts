@@ -1,5 +1,5 @@
 // hooks/useColorScheme.ts
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { ColorScheme, CustomColors } from '@/types/overlay';
 import { Socket } from 'socket.io-client';
 import { useSocketState } from './useSocketState';
@@ -19,17 +19,7 @@ export function useColorScheme({ socket }: UseColorSchemeProps) {
     value: customColors,
     setValue: setCustomColors,
     emitValue: emitCustomColors,
-  } = useSocketState<CustomColors | null>(
-    socket,
-    'custom-colors-change',
-    null
-  );
-
-  const {
-    value: fontFamily,
-    setValue: setFontFamily,
-    emitValue: handleFontFamilyChange,
-  } = useSocketState<string>(socket, 'font-family-change', 'Inter');
+  } = useSocketState<CustomColors | null>(socket, 'custom-colors-change', null);
 
   const changeColorScheme = useCallback(
     (scheme: ColorScheme) => {
@@ -58,12 +48,9 @@ export function useColorScheme({ socket }: UseColorSchemeProps) {
   return {
     colorScheme,
     customColors,
-    fontFamily,
     setColorScheme,
     setCustomColors,
-    setFontFamily,
     changeColorScheme,
     handleCustomColorsChange,
-    handleFontFamilyChange,
   };
 }
