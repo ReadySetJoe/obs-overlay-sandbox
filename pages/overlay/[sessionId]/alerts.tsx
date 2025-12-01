@@ -117,17 +117,24 @@ export default function AlertsOverlay() {
   useEffect(() => {
     if (currentAlert || alertQueue.length === 0) return;
 
-    const nextEvent = alertQueue[0];
-    const config = alertConfigs.find(
-      c => c.eventType === nextEvent.eventType && c.enabled
-    );
+    const processNext = () => {
+      const nextEvent = alertQueue[0];
+      const config = alertConfigs.find(
+        c => c.eventType === nextEvent.eventType && c.enabled
+      );
 
-    if (config) {
-      setCurrentAlert({ config, event: nextEvent });
-    }
+      if (config) {
+        setCurrentAlert({ config, event: nextEvent });
+      }
 
-    // Remove from queue regardless of whether we found a config
-    setAlertQueue(prev => prev.slice(1));
+      // Remove from queue regardless of whether we found a config
+      setAlertQueue(prev => prev.slice(1));
+    };
+
+    // Use setTimeout to defer the state updates
+    const timeoutId = setTimeout(processNext, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [alertQueue, currentAlert, alertConfigs]);
 
   const handleAlertComplete = () => {

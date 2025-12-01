@@ -23,7 +23,7 @@ export const TEST_SESSION_ID = 'test-session-e2e';
  */
 export async function setupAuthenticatedSession(page: Page) {
   // Mock the session API endpoint
-  await page.route('**/api/auth/session', async (route) => {
+  await page.route('**/api/auth/session', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -35,7 +35,7 @@ export async function setupAuthenticatedSession(page: Page) {
   });
 
   // Mock the providers endpoint
-  await page.route('**/api/auth/providers', async (route) => {
+  await page.route('**/api/auth/providers', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -75,12 +75,14 @@ export async function navigateToDashboard(
 
   // Wait for the dashboard to load - check for a known element
   // The dashboard should have the "Visual & Theming" section header
-  await page.waitForSelector('text=Visual & Theming', {
-    timeout: 15000,
-  }).catch(() => {
-    // Fallback: just wait for body to be visible
-    return page.waitForSelector('body');
-  });
+  await page
+    .waitForSelector('text=Visual & Theming', {
+      timeout: 15000,
+    })
+    .catch(() => {
+      // Fallback: just wait for body to be visible
+      return page.waitForSelector('body');
+    });
 
   // Give socket time to connect
   await page.waitForTimeout(2000);

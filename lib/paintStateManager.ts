@@ -303,7 +303,7 @@ export function handlePaintRandomCommand(
  */
 export function serializePaintState(
   paintState: PaintByNumbersState,
-  existingStates: Record<string, any> = {}
+  existingStates: Record<string, Partial<PaintByNumbersState>> = {}
 ): string {
   const filledRegions: Record<
     number,

@@ -261,9 +261,7 @@ export default function OverlayPage() {
         }
 
         // Load TTS config
-        const ttsResponse = await fetch(
-          `/api/tts/load?sessionId=${sessionId}`
-        );
+        const ttsResponse = await fetch(`/api/tts/load?sessionId=${sessionId}`);
         if (ttsResponse.ok) {
           const { ttsConfig: loadedTtsConfig } = await ttsResponse.json();
           setTtsConfig(loadedTtsConfig);
@@ -754,7 +752,9 @@ export default function OverlayPage() {
       {getLayerVisible('tts') && ttsConfig && (
         <TextToSpeech
           config={ttsConfig}
-          layout={componentLayouts.tts || { position: 'bottom-right', scale: 1 }}
+          layout={
+            componentLayouts.tts || { position: 'bottom-right', scale: 1 }
+          }
           colorScheme={colorScheme}
           customColors={customColors}
           socket={socket}

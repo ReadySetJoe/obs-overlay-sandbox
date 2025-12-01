@@ -12,7 +12,6 @@ export default function CountdownOverlay() {
     isConnected,
     countdownTimers,
     componentLayouts,
-    getLayerVisible,
     colorScheme,
     customColors,
     colorSchemeStyles,

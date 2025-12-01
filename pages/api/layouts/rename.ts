@@ -31,7 +31,9 @@ export default async function handler(
   }
 
   if (name.length > 100) {
-    return res.status(400).json({ error: 'Name must be 100 characters or less' });
+    return res
+      .status(400)
+      .json({ error: 'Name must be 100 characters or less' });
   }
 
   try {

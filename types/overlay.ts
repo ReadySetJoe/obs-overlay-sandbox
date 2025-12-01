@@ -182,12 +182,19 @@ export interface PaintTemplate {
   icon?: string; // e.g., emoji or icon name
 }
 
+export interface PaintFilledRegion {
+  filledBy: string;
+  filledAt: number;
+  customColor?: string;
+}
+
 export interface PaintByNumbersState {
   templateId: string;
   regions: PaintRegion[];
   startedAt: number;
   completedAt?: number;
   lastFilledBy?: string;
+  filledRegions?: Record<number, PaintFilledRegion>;
 }
 
 export interface PaintByNumbersLayout {

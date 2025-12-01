@@ -20,6 +20,31 @@ interface TextToSpeechProps {
   socket: Socket | null;
 }
 
+// Simple profanity filter (can be expanded)
+const filterProfanity = (text: string): string => {
+  const profanityList = [
+    'fuck',
+    'shit',
+    'bitch',
+    'ass',
+    'damn',
+    'crap',
+    'piss',
+    'dick',
+    'cock',
+    'pussy',
+    'bastard',
+  ];
+
+  let filtered = text;
+  profanityList.forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    filtered = filtered.replace(regex, '*'.repeat(word.length));
+  });
+
+  return filtered;
+};
+
 export default function TextToSpeech({
   config,
   layout,
@@ -120,6 +145,7 @@ export default function TextToSpeech({
         synthRef.current.speak(utterance);
       } catch (error) {
         // Silently fail - overlay doesn't need to speak
+        console.error('TTS speak error:', error);
       }
     }
 
@@ -131,32 +157,7 @@ export default function TextToSpeech({
     }, durationMs);
 
     return () => clearTimeout(timer);
-  }, [queue]);
-
-  // Simple profanity filter (can be expanded)
-  const filterProfanity = (text: string): string => {
-    const profanityList = [
-      'fuck',
-      'shit',
-      'bitch',
-      'ass',
-      'damn',
-      'crap',
-      'piss',
-      'dick',
-      'cock',
-      'pussy',
-      'bastard',
-    ];
-
-    let filtered = text;
-    profanityList.forEach(word => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi');
-      filtered = filtered.replace(regex, '*'.repeat(word.length));
-    });
-
-    return filtered;
-  };
+  }, [queue, isSpeaking, config, availableVoices]);
 
   if (!config.showVisualizer || !isSpeaking) {
     return null;

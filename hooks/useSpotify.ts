@@ -15,9 +15,36 @@ export function useSpotify({
   isConnected,
   nowPlayingVisible,
 }: UseSpotifyProps) {
-  const [spotifyToken, setSpotifyToken] = useState<string | null>(null);
+  // Initialize tokens from URL params or localStorage
+  const getInitialTokens = () => {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+
+    if (accessToken && refreshToken) {
+      localStorage.setItem('spotify_access_token', accessToken);
+      localStorage.setItem('spotify_refresh_token', refreshToken);
+
+      // Clean URL
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+
+      return { accessToken, refreshToken };
+    } else {
+      const storedToken = localStorage.getItem('spotify_access_token');
+      const storedRefresh = localStorage.getItem('spotify_refresh_token');
+      return {
+        accessToken: storedToken,
+        refreshToken: storedRefresh,
+      };
+    }
+  };
+
+  const [spotifyToken, setSpotifyToken] = useState<string | null>(
+    () => getInitialTokens().accessToken
+  );
   const [spotifyRefreshToken, setSpotifyRefreshToken] = useState<string | null>(
-    null
+    () => getInitialTokens().refreshToken
   );
   const [trackTitle, setTrackTitle] = useState('');
   const [trackArtist, setTrackArtist] = useState('');
@@ -25,31 +52,6 @@ export function useSpotify({
   const [isPlaying, setIsPlaying] = useState(false);
 
   const emitNowPlaying = useSocketEmit(socket, 'now-playing');
-
-  // Handle Spotify callback tokens from URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-
-    if (accessToken && refreshToken) {
-      setSpotifyToken(accessToken);
-      setSpotifyRefreshToken(refreshToken);
-      localStorage.setItem('spotify_access_token', accessToken);
-      localStorage.setItem('spotify_refresh_token', refreshToken);
-
-      // Clean URL
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, '', cleanUrl);
-    } else {
-      const storedToken = localStorage.getItem('spotify_access_token');
-      const storedRefresh = localStorage.getItem('spotify_refresh_token');
-      if (storedToken && storedRefresh) {
-        setSpotifyToken(storedToken);
-        setSpotifyRefreshToken(storedRefresh);
-      }
-    }
-  }, []);
 
   // Poll Spotify API for now playing
   useEffect(() => {

@@ -14,9 +14,12 @@ import { Socket } from 'socket.io-client';
  * const emitWeatherChange = useSocketEmit(socket, 'weather-change');
  * emitWeatherChange({ type: 'rain', intensity: 0.5 });
  */
-export function useSocketEmit(socket: Socket | null, eventName: string) {
+export function useSocketEmit<T = unknown>(
+  socket: Socket | null,
+  eventName: string
+) {
   const emit = useCallback(
-    (data: any) => {
+    (data: T) => {
       if (!socket) return;
       socket.emit(eventName, data);
     },

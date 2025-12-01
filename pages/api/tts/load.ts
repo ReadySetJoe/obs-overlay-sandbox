@@ -29,7 +29,7 @@ export default async function handler(
 
     return res.status(200).json({
       ttsConfig: layout.ttsConfig,
-      ttsVisible: layout.ttsVisible
+      ttsVisible: layout.ttsVisible,
     });
   } catch (error) {
     console.error('Error loading TTS config:', error);

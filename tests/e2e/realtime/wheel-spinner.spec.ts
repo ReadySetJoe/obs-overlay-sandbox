@@ -1,7 +1,13 @@
-import { test, expect, Page } from '@playwright/test';
-import { setupTestDatabase, teardownTestDatabase } from '../../fixtures/database';
-import { navigateToDashboard, navigateToOverlay, TEST_SESSION_ID } from '../../fixtures/auth';
-import { waitForSocketEvent, waitForCanvasChange, exposeSocketStatus } from '../../utils/test-helpers';
+import { test, expect } from '@playwright/test';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+} from '../../fixtures/database';
+import { navigateToDashboard, navigateToOverlay } from '../../fixtures/auth';
+import {
+  waitForCanvasChange,
+  exposeSocketStatus,
+} from '../../utils/test-helpers';
 
 test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
   // Setup database before all tests
@@ -14,7 +20,10 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await teardownTestDatabase();
   });
 
-  test('should create wheel in dashboard and spin it in overlay', async ({ page, context }) => {
+  test('should create wheel in dashboard and spin it in overlay', async ({
+    page,
+    context,
+  }) => {
     // Setup socket status tracking
     await exposeSocketStatus(page);
 
@@ -30,7 +39,9 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await page.click('text=Wheel Spinner');
 
     // Wait for expanded view to load
-    await expect(page.locator('text=Create Wheel')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Create Wheel')).toBeVisible({
+      timeout: 5000,
+    });
 
     // 4. Create a new wheel
     await page.click('text=Create Wheel');
@@ -43,13 +54,17 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await page.click('button:has-text("Create Wheel")');
 
     // Wait for wheel to be created
-    await expect(page.locator('text=Test E2E Wheel')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Test E2E Wheel')).toBeVisible({
+      timeout: 5000,
+    });
 
     // 5. Activate the wheel
     await page.click('button:has-text("Activate")');
 
     // Wait for activation - look for the "Active" badge (more specific)
-    await expect(page.locator('span.bg-purple-600:has-text("Active")')).toBeVisible({ timeout: 3000 });
+    await expect(
+      page.locator('span.bg-purple-600:has-text("Active")')
+    ).toBeVisible({ timeout: 3000 });
 
     // 6. Verify overlay shows the wheel (canvas should be visible)
     await expect(overlayPage.locator('canvas')).toBeVisible({ timeout: 5000 });
@@ -67,7 +82,9 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await overlayPage.waitForTimeout(6000);
 
     // 10. Verify winner announcement appears
-    await expect(overlayPage.locator('text=Winner!')).toBeVisible({ timeout: 2000 });
+    await expect(overlayPage.locator('text=Winner!')).toBeVisible({
+      timeout: 2000,
+    });
 
     // Verify one of the options is shown as winner
     const winnerText = overlayPage.locator('text=/Option [12]/');
@@ -94,7 +111,10 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await overlayPage.close();
   });
 
-  test.skip('should sync wheel updates from dashboard to overlay', async ({ page, context }) => {
+  test.skip('should sync wheel updates from dashboard to overlay', async ({
+    page,
+    context,
+  }) => {
     await exposeSocketStatus(page);
 
     // Navigate to dashboard
@@ -114,7 +134,9 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await page.click('button:has-text("Create Wheel")');
 
     // Wait for wheel to be created
-    await expect(page.locator('text=Sync Test Wheel')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Sync Test Wheel')).toBeVisible({
+      timeout: 5000,
+    });
 
     // Activate the wheel
     await page.click('button:has-text("Activate")');

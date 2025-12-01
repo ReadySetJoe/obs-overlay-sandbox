@@ -139,7 +139,9 @@ export default function Wheel({
 
     // Check if already spinning
     if (isSpinningRef.current) {
-      console.log('[Wheel Component] Already spinning, ignoring new spin event');
+      console.log(
+        '[Wheel Component] Already spinning, ignoring new spin event'
+      );
       return;
     }
 

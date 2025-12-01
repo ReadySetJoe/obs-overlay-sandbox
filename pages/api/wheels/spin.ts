@@ -19,10 +19,15 @@ export default async function handler(
         await new Promise(resolve => setTimeout(resolve, 100));
         io = getSocketServer();
         if (io) {
-          console.log('[Wheel Spin API] Socket server initialized successfully');
+          console.log(
+            '[Wheel Spin API] Socket server initialized successfully'
+          );
         }
       } catch (error) {
-        console.error('[Wheel Spin API] Failed to initialize socket server:', error);
+        console.error(
+          '[Wheel Spin API] Failed to initialize socket server:',
+          error
+        );
       }
     }
     return io;
@@ -115,7 +120,8 @@ export default async function handler(
       console.error('[Wheel Spin API] Socket.io server not available');
       console.error('[Wheel Spin API] Could not initialize socket server');
       return res.status(500).json({
-        error: 'Socket server not available. Please refresh the page and try again.'
+        error:
+          'Socket server not available. Please refresh the page and try again.',
       });
     }
 

@@ -172,6 +172,10 @@ export default function DashboardPage() {
     socket.emit('component-layouts', componentLayouts);
   }, [socket, isConnected, componentLayouts]);
 
+  const getIsVisible = (layerId: string) => {
+    return layersHook.layers.find(l => l.id === layerId)?.visible || false;
+  };
+
   return (
     <>
       <Head>
@@ -245,11 +249,11 @@ export default function DashboardPage() {
                   subtitle={weatherHook.weatherEffect}
                   icon={<WeatherIcon />}
                   color='blue'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'weather')?.visible
-                  }
+                  isVisible={getIsVisible('weather')}
                   onToggleVisibility={() => layersHook.toggleLayer('weather')}
-                  onClick={() => expandedViewHook.handleExpandElement('weather')}
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('weather')
+                  }
                 />
                 <SummaryTile
                   title='Emote Wall'
@@ -273,10 +277,10 @@ export default function DashboardPage() {
                   subtitle='Track goals, metrics, & sentiment'
                   icon={<StreamStatsIcon />}
                   color='purple'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'streamstats')?.visible
+                  isVisible={getIsVisible('streamstats')}
+                  onToggleVisibility={() =>
+                    layersHook.toggleLayer('streamstats')
                   }
-                  onToggleVisibility={() => layersHook.toggleLayer('streamstats')}
                   onClick={() =>
                     expandedViewHook.handleExpandElement('streamstats')
                   }
@@ -286,10 +290,10 @@ export default function DashboardPage() {
                   subtitle='Latest follower, sub, bits, etc.'
                   icon={<EventLabelsIcon />}
                   color='cyan'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'eventlabels')?.visible
+                  isVisible={getIsVisible('eventlabels')}
+                  onToggleVisibility={() =>
+                    layersHook.toggleLayer('eventlabels')
                   }
-                  onToggleVisibility={() => layersHook.toggleLayer('eventlabels')}
                   onClick={() =>
                     expandedViewHook.handleExpandElement('eventlabels')
                   }
@@ -315,9 +319,7 @@ export default function DashboardPage() {
                   }
                   icon={<WheelIcon />}
                   color='yellow'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'wheel')?.visible
-                  }
+                  isVisible={getIsVisible('wheel')}
                   onToggleVisibility={() => layersHook.toggleLayer('wheel')}
                   onClick={() => expandedViewHook.handleExpandElement('wheel')}
                 />
@@ -330,10 +332,7 @@ export default function DashboardPage() {
                   }
                   icon={<PaintByNumbersIcon />}
                   color='pink'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'paintbynumbers')
-                      ?.visible
-                  }
+                  isVisible={getIsVisible('paintbynumbers')}
                   onToggleVisibility={() =>
                     layersHook.toggleLayer('paintbynumbers')
                   }
@@ -344,9 +343,7 @@ export default function DashboardPage() {
                   subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
                   icon={<CountdownIcon />}
                   color='orange'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'countdown')?.visible
-                  }
+                  isVisible={getIsVisible('countdown')}
                   onToggleVisibility={() => layersHook.toggleLayer('countdown')}
                   onClick={() =>
                     expandedViewHook.handleExpandElement('countdown')
@@ -367,9 +364,7 @@ export default function DashboardPage() {
                   subtitle={chatHook.chatHighlight ? 'Selected' : 'Inactive'}
                   icon={<ChatHighlightIcon />}
                   color='purple'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'chathighlight')?.visible
-                  }
+                  isVisible={getIsVisible('chathighlight')}
                   onToggleVisibility={() =>
                     layersHook.toggleLayer('chathighlight')
                   }
@@ -382,7 +377,7 @@ export default function DashboardPage() {
                   subtitle='Voice overlay & TTS'
                   icon={<TTSIcon />}
                   color='blue'
-                  isVisible={layersHook.layers.find(l => l.id === 'tts')?.visible}
+                  isVisible={getIsVisible('tts')}
                   onToggleVisibility={() => layersHook.toggleLayer('tts')}
                   onClick={() => expandedViewHook.handleExpandElement('tts')}
                 />
@@ -416,10 +411,10 @@ export default function DashboardPage() {
                   }
                   icon={<NowPlayingIcon />}
                   color='green'
-                  isVisible={
-                    layersHook.layers.find(l => l.id === 'nowplaying')?.visible
+                  isVisible={getIsVisible('nowplaying')}
+                  onToggleVisibility={() =>
+                    layersHook.toggleLayer('nowplaying')
                   }
-                  onToggleVisibility={() => layersHook.toggleLayer('nowplaying')}
                   onClick={() =>
                     expandedViewHook.handleExpandElement('nowplaying')
                   }

@@ -61,7 +61,7 @@ export function useWheels({
         console.error('Error creating wheel:', error);
       }
     },
-    [sessionId, socket, wheels]
+    [sessionId, wheels, emitWheelListUpdate]
   );
 
   const handleUpdateWheel = useCallback(
@@ -106,7 +106,7 @@ export function useWheels({
         console.error('Error updating wheel:', error);
       }
     },
-    [sessionId, socket, wheels]
+    [sessionId, wheels, emitWheelListUpdate, emitWheelConfigUpdate]
   );
 
   const handleDeleteWheel = useCallback(
@@ -127,7 +127,7 @@ export function useWheels({
         console.error('Error deleting wheel:', error);
       }
     },
-    [socket, wheels]
+    [wheels, emitWheelListUpdate]
   );
 
   const handleSpinWheel = useCallback(

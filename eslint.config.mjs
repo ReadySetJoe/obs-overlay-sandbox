@@ -29,6 +29,7 @@ const eslintConfig = defineConfig([
     // Additional ignores
     'node_modules/**',
     '.git/**',
+    'lib/paint-templates/**',
   ]),
 ]);
 

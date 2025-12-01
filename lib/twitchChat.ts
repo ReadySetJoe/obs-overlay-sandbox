@@ -31,7 +31,8 @@ const ttsCooldowns = new Map<string, Map<string, number>>();
 
 // Helper to detect URLs in text
 function containsURL(text: string): boolean {
-  const urlPattern = /(?:https?:\/\/|www\.)\S+|(?:\w+\.(?:com|net|org|edu|gov|io|co|tv|gg|me|us|uk|ca|de|fr|it|es|jp|cn|ru|br|in)\b)/gi;
+  const urlPattern =
+    /(?:https?:\/\/|www\.)\S+|(?:\w+\.(?:com|net|org|edu|gov|io|co|tv|gg|me|us|uk|ca|de|fr|it|es|jp|cn|ru|br|in)\b)/gi;
   return urlPattern.test(text);
 }
 
@@ -48,7 +49,8 @@ function isSafeForTTS(text: string): { safe: boolean; reason?: string } {
   }
 
   // Check for excessive special characters (potential spam/trolling)
-  const specialCharRatio = (text.match(/[^a-zA-Z0-9\s]/g) || []).length / text.length;
+  const specialCharRatio =
+    (text.match(/[^a-zA-Z0-9\s]/g) || []).length / text.length;
   if (specialCharRatio > 0.5) {
     return { safe: false, reason: 'excessive special characters' };
   }
@@ -374,7 +376,9 @@ async function processTTSFromChat(
     // Check if text is safe for TTS (automatic moderation)
     const safetyCheck = isSafeForTTS(ttsText);
     if (!safetyCheck.safe) {
-      console.log(`[TTS] Blocked message from ${username}: ${safetyCheck.reason}`);
+      console.log(
+        `[TTS] Blocked message from ${username}: ${safetyCheck.reason}`
+      );
       return;
     }
 

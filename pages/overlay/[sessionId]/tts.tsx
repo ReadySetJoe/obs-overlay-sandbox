@@ -40,7 +40,9 @@ export default function TTSOverlay() {
       {getLayerVisible('tts') && ttsConfig && (
         <TextToSpeech
           config={ttsConfig}
-          layout={componentLayouts.tts || { position: 'bottom-right', scale: 1 }}
+          layout={
+            componentLayouts.tts || { position: 'bottom-right', scale: 1 }
+          }
           colorScheme={colorScheme}
           customColors={customColors}
           socket={socket}

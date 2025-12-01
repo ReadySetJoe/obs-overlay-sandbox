@@ -351,8 +351,8 @@ export function useLayoutPersistence({
   useEffect(() => {
     if (!session) return;
 
-    setSaveStatus('unsaved');
     const timer = setTimeout(() => {
+      setSaveStatus('unsaved');
       saveLayout();
     }, 1000);
 
