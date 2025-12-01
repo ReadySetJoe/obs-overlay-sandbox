@@ -818,6 +818,13 @@ Open an issue with the "enhancement" label and describe:
 - Update CLAUDE.md for architectural changes
 - Test in OBS before submitting overlay changes
 
+**Testing:**
+
+- Run E2E tests: `npm test`
+- Write tests for new features (see [tests/GUIDE.md](./tests/GUIDE.md))
+- Verify dashboard → overlay sync works
+- All tests must pass before merging
+
 ## Support
 
 - 📖 **Documentation**: See [CLAUDE.md](./CLAUDE.md) for technical details
