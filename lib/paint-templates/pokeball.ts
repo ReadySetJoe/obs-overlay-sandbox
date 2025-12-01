@@ -1,5 +1,4 @@
 import { PaintTemplate } from '@/types/overlay';
-import { createRegion } from '../paintTemplates';
 
 // Pokeball template
 const pokeballTemplate: PaintTemplate = {
@@ -8,6 +7,7 @@ const pokeballTemplate: PaintTemplate = {
   description: "Gotta catch 'em all!",
   width: 64,
   height: 62,
+  icon: '🔴',
   regions: [
     {
       id: 1,

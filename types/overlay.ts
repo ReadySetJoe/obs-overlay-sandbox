@@ -179,6 +179,7 @@ export interface PaintTemplate {
   regions: PaintRegion[];
   imageUrl?: string; // Optional: for custom templates
   thumbnailUrl?: string | null; // Optional: for custom templates
+  icon?: string; // e.g., emoji or icon name
 }
 
 export interface PaintByNumbersState {

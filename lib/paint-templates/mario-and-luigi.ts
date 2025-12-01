@@ -7,6 +7,7 @@ const marioAndLuigiTemplate: PaintTemplate = {
   description: "It's-a us!",
   width: 300,
   height: 300,
+  icon: '👨‍🍳👨‍🍳',
   regions: [
     {
       id: 1,

@@ -56,7 +56,14 @@ export function usePaintByNumbers({
 
       initializeTemplate();
     }
-  }, [socket, isConnected, paintByNumbersState, session, sessionId, emitPaintState]);
+  }, [
+    socket,
+    isConnected,
+    paintByNumbersState,
+    session,
+    sessionId,
+    emitPaintState,
+  ]);
 
   // Handle template selection
   const handleTemplateSelect = useCallback(
@@ -69,7 +76,7 @@ export function usePaintByNumbers({
         emitPaintState(state);
       }
     },
-    [sessionId, emitPaintState]
+    [sessionId, socket, emitPaintState]
   );
 
   // Handle template reset

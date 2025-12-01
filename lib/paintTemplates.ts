@@ -1,24 +1,10 @@
-import { PaintTemplate, PaintRegion } from '@/types/overlay';
+import { PaintTemplate } from '@/types/overlay';
 import heartTemplate from './paint-templates/heart';
 import pokeballTemplate from './paint-templates/pokeball';
 import marioTemplate from './paint-templates/mario';
 import marioAndLuigiTemplate from './paint-templates/mario-and-luigi';
 import falcoTemplate from './paint-templates/falco';
 import monaLisaTemplate from './paint-templates/mona-lisa';
-
-// Helper function to create pixel coordinates for a region
-export function createRegion(
-  id: number,
-  color: string,
-  pixels: [number, number][]
-): PaintRegion {
-  return {
-    id,
-    color,
-    pixels,
-    filled: false,
-  };
-}
 
 // Export all templates
 export const paintTemplates: PaintTemplate[] = [

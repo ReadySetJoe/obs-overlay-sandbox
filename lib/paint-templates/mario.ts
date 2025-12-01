@@ -7,6 +7,7 @@ const marioTemplate: PaintTemplate = {
   description: "It's-a me!",
   width: 75,
   height: 100,
+  icon: '👨‍🍳',
   regions: [
     {
       id: 1,

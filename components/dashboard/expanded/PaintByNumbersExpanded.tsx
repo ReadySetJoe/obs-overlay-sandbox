@@ -310,7 +310,7 @@ export default function PaintByNumbersExpanded({
           </form>
         )}
 
-        <div className='grid grid-cols-2 gap-3'>
+        <div className='grid grid-cols-2 gap-4'>
           {isLoadingTemplates && (
             <div className='col-span-2 text-center text-gray-400 py-4'>
               Loading templates...
@@ -320,15 +320,14 @@ export default function PaintByNumbersExpanded({
             <div key={template.id} className='relative group'>
               <button
                 onClick={() => onTemplateSelect(template.id)}
-                className={`w-full rounded-xl px-4 py-4 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl overflow-hidden border ${
+                className={`w-full rounded-xl px-4 py-4 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border ${
                   paintState?.templateId === template.id
                     ? 'bg-linear-to-br from-purple-600/80 to-pink-600/80 border-purple-500'
                     : 'bg-linear-to-br from-gray-700/50 to-gray-800/50 hover:from-gray-600/50 hover:to-gray-700/50 border-gray-600 hover:border-gray-500'
                 }`}
                 disabled={paintState?.templateId === template.id}
               >
-                <div className='absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000' />
-                <div className='relative flex flex-col items-center gap-2'>
+                <div className='flex flex-col items-center gap-2'>
                   {/* Show image preview for both custom and built-in templates */}
                   <div className='w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-600 shrink-0'>
                     <Image
@@ -346,19 +345,7 @@ export default function PaintByNumbersExpanded({
                       className='w-full h-full flex items-center justify-center text-2xl'
                       style={{ display: 'none' }}
                     >
-                      {template.id === 'heart'
-                        ? '❤️'
-                        : template.id === 'pokeball'
-                          ? '⚪️'
-                          : template.id === 'mario'
-                            ? '🍄'
-                            : template.id === 'mario-and-luigi'
-                              ? '👨‍🍳👨‍🍳'
-                              : template.id === 'falco'
-                                ? '🦅'
-                                : template.id === 'mona-lisa'
-                                  ? '🖼️'
-                                  : '🎨'}
+                      {template.icon || '🖌️'}
                     </div>
                   </div>
                   <span className='text-md'>{template.name}</span>
@@ -383,10 +370,11 @@ export default function PaintByNumbersExpanded({
                     e.stopPropagation();
                     handleDeleteTemplate(template.id);
                   }}
-                  className='absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'
+                  className='absolute top-2 right-2 w-7 h-7 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10'
                   title='Delete template'
+                  aria-label='Delete template'
                 >
-                  ✕
+                  <span className='text-white text-sm font-bold'>✕</span>
                 </button>
               )}
             </div>

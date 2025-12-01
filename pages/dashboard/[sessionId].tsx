@@ -24,6 +24,7 @@ import { useAlerts } from '@/hooks/useAlerts';
 import { ComponentLayouts } from '@/types/overlay';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
+import CollapsibleSection from '@/components/dashboard/CollapsibleSection';
 import {
   ChatHighlightIcon,
   NowPlayingIcon,
@@ -190,217 +191,240 @@ export default function DashboardPage() {
 
           {/* Main Content */}
           {!expandedViewHook.expandedElement ? (
-            /* Summary Tiles Grid */
-            <div
-              key='summary-grid'
-              className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-zoom-in'
-            >
-              {/* Full Screen Effects */}
+            /* Summary Tiles with Collapsible Sections */
+            <div key='summary-grid' className='animate-zoom-in'>
+              {/* 🎨 Visual & Theming - Always Expanded */}
+              <CollapsibleSection
+                id='visual-theming'
+                title='Visual & Theming'
+                icon='🎨'
+                defaultCollapsed={false}
+                tileCount={3}
+              >
+                <SummaryTile
+                  title='Color Scheme'
+                  subtitle={colorSchemeHook.colorScheme}
+                  icon={<ColorSchemeIcon />}
+                  color='purple'
+                  onClick={() => expandedViewHook.handleExpandElement('color')}
+                />
+                <SummaryTile
+                  title='Custom Background'
+                  subtitle={
+                    backgroundHook.backgroundImageUrl
+                      ? backgroundHook.backgroundImageName || 'Uploaded'
+                      : 'No background'
+                  }
+                  icon={<BackgroundIcon />}
+                  color='pink'
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('background')
+                  }
+                />
+                <SummaryTile
+                  title='Text Style'
+                  subtitle={textStyleHook.fontFamily}
+                  icon={<TextStyleIcon />}
+                  color='orange'
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('textstyle')
+                  }
+                />
+              </CollapsibleSection>
 
-              {/* Color Scheme Tile */}
-              <SummaryTile
-                title='Color Scheme'
-                subtitle={colorSchemeHook.colorScheme}
-                icon={<ColorSchemeIcon />}
-                color='purple'
-                onClick={() => expandedViewHook.handleExpandElement('color')}
-              />
+              {/* 🌦️ Effects & Animations */}
+              <CollapsibleSection
+                id='effects-animations'
+                title='Effects & Animations'
+                icon='🌦️'
+                defaultCollapsed={false}
+                tileCount={2}
+              >
+                <SummaryTile
+                  title='Weather Effects'
+                  subtitle={weatherHook.weatherEffect}
+                  icon={<WeatherIcon />}
+                  color='blue'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'weather')?.visible
+                  }
+                  onToggleVisibility={() => layersHook.toggleLayer('weather')}
+                  onClick={() => expandedViewHook.handleExpandElement('weather')}
+                />
+                <SummaryTile
+                  title='Emote Wall'
+                  subtitle={`${emoteWallHook.emoteIntensity} intensity`}
+                  icon={<EmoteWallIcon />}
+                  color='yellow'
+                  onClick={() => expandedViewHook.handleExpandElement('emote')}
+                />
+              </CollapsibleSection>
 
-              {/* Custom Background Tile */}
-              <SummaryTile
-                title='Custom Background'
-                subtitle={
-                  backgroundHook.backgroundImageUrl
-                    ? backgroundHook.backgroundImageName || 'Uploaded'
-                    : 'No background'
-                }
-                icon={<BackgroundIcon />}
-                color='pink'
-                onClick={() =>
-                  expandedViewHook.handleExpandElement('background')
-                }
-              />
+              {/* 📊 Stream Analytics */}
+              <CollapsibleSection
+                id='stream-analytics'
+                title='Stream Analytics'
+                icon='📊'
+                defaultCollapsed={false}
+                tileCount={2}
+              >
+                <SummaryTile
+                  title='Stream Stats & Goals'
+                  subtitle='Track goals, metrics, & sentiment'
+                  icon={<StreamStatsIcon />}
+                  color='purple'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'streamstats')?.visible
+                  }
+                  onToggleVisibility={() => layersHook.toggleLayer('streamstats')}
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('streamstats')
+                  }
+                />
+                <SummaryTile
+                  title='Recent Events'
+                  subtitle='Latest follower, sub, bits, etc.'
+                  icon={<EventLabelsIcon />}
+                  color='cyan'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'eventlabels')?.visible
+                  }
+                  onToggleVisibility={() => layersHook.toggleLayer('eventlabels')}
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('eventlabels')
+                  }
+                />
+              </CollapsibleSection>
 
-              {/* Text Style Tile */}
-              <SummaryTile
-                title='Text Style'
-                subtitle={textStyleHook.fontFamily}
-                icon={<TextStyleIcon />}
-                color='orange'
-                onClick={() =>
-                  expandedViewHook.handleExpandElement('textstyle')
-                }
-              />
+              {/* 🎭 Interactive Features */}
+              <CollapsibleSection
+                id='interactive-features'
+                title='Interactive Features'
+                icon='🎭'
+                defaultCollapsed={false}
+                tileCount={3}
+              >
+                <SummaryTile
+                  title='Wheel Spinner'
+                  subtitle={
+                    wheelsHook.wheels.find(w => w.isActive)
+                      ? wheelsHook.wheels.find(w => w.isActive)!.name
+                      : wheelsHook.wheels.length > 0
+                        ? `${wheelsHook.wheels.length} wheel${wheelsHook.wheels.length > 1 ? 's' : ''}`
+                        : 'No wheels yet'
+                  }
+                  icon={<WheelIcon />}
+                  color='yellow'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'wheel')?.visible
+                  }
+                  onToggleVisibility={() => layersHook.toggleLayer('wheel')}
+                  onClick={() => expandedViewHook.handleExpandElement('wheel')}
+                />
+                <SummaryTile
+                  title='Paint by Numbers'
+                  subtitle={
+                    paintHook.paintByNumbersState
+                      ? `${paintHook.paintByNumbersState.regions.filter(r => r.filled).length}/${paintHook.paintByNumbersState.regions.length} filled`
+                      : 'Select template'
+                  }
+                  icon={<PaintByNumbersIcon />}
+                  color='pink'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'paintbynumbers')
+                      ?.visible
+                  }
+                  onToggleVisibility={() =>
+                    layersHook.toggleLayer('paintbynumbers')
+                  }
+                  onClick={() => expandedViewHook.handleExpandElement('paint')}
+                />
+                <SummaryTile
+                  title='Countdown Timers'
+                  subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
+                  icon={<CountdownIcon />}
+                  color='orange'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'countdown')?.visible
+                  }
+                  onToggleVisibility={() => layersHook.toggleLayer('countdown')}
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('countdown')
+                  }
+                />
+              </CollapsibleSection>
 
-              {/* Weather Effects Tile */}
-              <SummaryTile
-                title='Weather Effects'
-                subtitle={weatherHook.weatherEffect}
-                icon={<WeatherIcon />}
-                color='blue'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'weather')?.visible
-                }
-                onToggleVisibility={() => layersHook.toggleLayer('weather')}
-                onClick={() => expandedViewHook.handleExpandElement('weather')}
-              />
+              {/* 💬 Chat & Communication */}
+              <CollapsibleSection
+                id='chat-communication'
+                title='Chat & Communication'
+                icon='💬'
+                defaultCollapsed={false}
+                tileCount={3}
+              >
+                <SummaryTile
+                  title='Chat Highlight'
+                  subtitle={chatHook.chatHighlight ? 'Selected' : 'Inactive'}
+                  icon={<ChatHighlightIcon />}
+                  color='purple'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'chathighlight')?.visible
+                  }
+                  onToggleVisibility={() =>
+                    layersHook.toggleLayer('chathighlight')
+                  }
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('chathighlight')
+                  }
+                />
+                <SummaryTile
+                  title='Text to Speech'
+                  subtitle='Voice overlay & TTS'
+                  icon={<TTSIcon />}
+                  color='blue'
+                  isVisible={layersHook.layers.find(l => l.id === 'tts')?.visible}
+                  onToggleVisibility={() => layersHook.toggleLayer('tts')}
+                  onClick={() => expandedViewHook.handleExpandElement('tts')}
+                />
+                <SummaryTile
+                  title='Stream Alerts'
+                  subtitle={
+                    alertsHook.totalConfiguredCount === 0
+                      ? 'Not configured'
+                      : `${alertsHook.totalConfiguredCount} configured, ${alertsHook.enabledAlertsCount} enabled`
+                  }
+                  icon={<AlertsIcon />}
+                  color='red'
+                  onClick={() => expandedViewHook.handleExpandElement('alerts')}
+                />
+              </CollapsibleSection>
 
-              {/* Goals & Analytics */}
-
-              {/* Stream Alerts Tile */}
-              <SummaryTile
-                title='Stream Alerts'
-                subtitle={
-                  alertsHook.totalConfiguredCount === 0
-                    ? 'Not configured'
-                    : `${alertsHook.totalConfiguredCount} configured, ${alertsHook.enabledAlertsCount} enabled`
-                }
-                icon={<AlertsIcon />}
-                color='red'
-                onClick={() => expandedViewHook.handleExpandElement('alerts')}
-              />
-
-              {/* Event Labels Tile */}
-              <SummaryTile
-                title='Recent Events'
-                subtitle='Latest follower, sub, bits, etc.'
-                icon={<EventLabelsIcon />}
-                color='cyan'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'eventlabels')?.visible
-                }
-                onToggleVisibility={() => layersHook.toggleLayer('eventlabels')}
-                onClick={() =>
-                  expandedViewHook.handleExpandElement('eventlabels')
-                }
-              />
-
-              {/* Stream Stats Tile */}
-              <SummaryTile
-                title='Stream Stats & Goals'
-                subtitle='Track goals, metrics, & sentiment'
-                icon={<StreamStatsIcon />}
-                color='purple'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'streamstats')?.visible
-                }
-                onToggleVisibility={() => layersHook.toggleLayer('streamstats')}
-                onClick={() =>
-                  expandedViewHook.handleExpandElement('streamstats')
-                }
-              />
-
-              {/* Widget Components */}
-
-              {/* Now Playing Tile */}
-              <SummaryTile
-                title='Now Playing'
-                subtitle={
-                  spotify.spotifyToken
-                    ? spotify.trackTitle || 'Connected'
-                    : 'Not connected'
-                }
-                icon={<NowPlayingIcon />}
-                color='green'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'nowplaying')?.visible
-                }
-                onToggleVisibility={() => layersHook.toggleLayer('nowplaying')}
-                onClick={() =>
-                  expandedViewHook.handleExpandElement('nowplaying')
-                }
-              />
-
-              {/* Chat Highlight Tile */}
-              <SummaryTile
-                title='Chat Highlight'
-                subtitle={chatHook.chatHighlight ? 'Selected' : 'Inactive'}
-                icon={<ChatHighlightIcon />}
-                color='purple'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'chathighlight')?.visible
-                }
-                onToggleVisibility={() =>
-                  layersHook.toggleLayer('chathighlight')
-                }
-                onClick={() =>
-                  expandedViewHook.handleExpandElement('chathighlight')
-                }
-              />
-
-              {/* Countdown Timers Tile */}
-              <SummaryTile
-                title='Countdown Timers'
-                subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
-                icon={<CountdownIcon />}
-                color='orange'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'countdown')?.visible
-                }
-                onToggleVisibility={() => layersHook.toggleLayer('countdown')}
-                onClick={() =>
-                  expandedViewHook.handleExpandElement('countdown')
-                }
-              />
-
-              {/* Wheel Spinner Tile */}
-              <SummaryTile
-                title='Wheel Spinner'
-                subtitle={
-                  wheelsHook.wheels.find(w => w.isActive)
-                    ? wheelsHook.wheels.find(w => w.isActive)!.name
-                    : wheelsHook.wheels.length > 0
-                      ? `${wheelsHook.wheels.length} wheel${wheelsHook.wheels.length > 1 ? 's' : ''}`
-                      : 'No wheels yet'
-                }
-                icon={<WheelIcon />}
-                color='yellow'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'wheel')?.visible
-                }
-                onToggleVisibility={() => layersHook.toggleLayer('wheel')}
-                onClick={() => expandedViewHook.handleExpandElement('wheel')}
-              />
-
-              {/* Paint by Numbers Tile */}
-              <SummaryTile
-                title='Paint by Numbers'
-                subtitle={
-                  paintHook.paintByNumbersState
-                    ? `${paintHook.paintByNumbersState.regions.filter(r => r.filled).length}/${paintHook.paintByNumbersState.regions.length} filled`
-                    : 'Select template'
-                }
-                icon={<PaintByNumbersIcon />}
-                color='pink'
-                isVisible={
-                  layersHook.layers.find(l => l.id === 'paintbynumbers')
-                    ?.visible
-                }
-                onToggleVisibility={() =>
-                  layersHook.toggleLayer('paintbynumbers')
-                }
-                onClick={() => expandedViewHook.handleExpandElement('paint')}
-              />
-
-              {/* Emote Wall Tile */}
-              <SummaryTile
-                title='Emote Wall'
-                subtitle={`${emoteWallHook.emoteIntensity} intensity`}
-                icon={<EmoteWallIcon />}
-                color='yellow'
-                onClick={() => expandedViewHook.handleExpandElement('emote')}
-              />
-
-              {/* Text to Speech Tile */}
-              <SummaryTile
-                title='Text to Speech'
-                subtitle='Voice overlay & TTS'
-                icon={<TTSIcon />}
-                color='blue'
-                isVisible={layersHook.layers.find(l => l.id === 'tts')?.visible}
-                onToggleVisibility={() => layersHook.toggleLayer('tts')}
-                onClick={() => expandedViewHook.handleExpandElement('tts')}
-              />
+              {/* 🎵 Integrations */}
+              <CollapsibleSection
+                id='integrations'
+                title='Integrations'
+                icon='🎵'
+                defaultCollapsed={false}
+                tileCount={1}
+              >
+                <SummaryTile
+                  title='Now Playing'
+                  subtitle={
+                    spotify.spotifyToken
+                      ? spotify.trackTitle || 'Connected'
+                      : 'Not connected'
+                  }
+                  icon={<NowPlayingIcon />}
+                  color='green'
+                  isVisible={
+                    layersHook.layers.find(l => l.id === 'nowplaying')?.visible
+                  }
+                  onToggleVisibility={() => layersHook.toggleLayer('nowplaying')}
+                  onClick={() =>
+                    expandedViewHook.handleExpandElement('nowplaying')
+                  }
+                />
+              </CollapsibleSection>
             </div>
           ) : (
             /* Expanded Element View */

@@ -6,6 +6,7 @@ const monaLisaTemplate: PaintTemplate = {
   description: "She's defintely smiling, right?",
   width: 134,
   height: 200,
+  icon: '🖼️',
   regions: [
     {
       id: 1,

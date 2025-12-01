@@ -7,6 +7,7 @@ const falcoTemplate: PaintTemplate = {
   description: 'Melee4Lyfe',
   width: 420,
   height: 420,
+  icon: '🦅',
   regions: [
     {
       id: 1,

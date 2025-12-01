@@ -7,6 +7,7 @@ const heartTemplate: PaintTemplate = {
   description: 'How cute',
   width: 100,
   height: 100,
+  icon: '❤️',
   regions: [
     {
       id: 1,
