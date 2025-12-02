@@ -49,9 +49,10 @@ function isSafeForTTS(text: string): { safe: boolean; reason?: string } {
   }
 
   // Check for excessive special characters (potential spam/trolling)
+  // Allow common punctuation: apostrophes, commas, periods, exclamation, question marks, hyphens
   const specialCharRatio =
-    (text.match(/[^a-zA-Z0-9\s]/g) || []).length / text.length;
-  if (specialCharRatio > 0.5) {
+    (text.match(/[^a-zA-Z0-9\s'",.\-!?]/g) || []).length / text.length;
+  if (specialCharRatio > 0.3) {
     return { safe: false, reason: 'excessive special characters' };
   }
 
@@ -338,19 +339,33 @@ function hasPermission(
 async function processTTSFromChat(
   sessionId: string,
   username: string,
-  displayName: string,
   message: string,
   userRole: UserRole,
   io: SocketIOServer
 ) {
   try {
+    // Only process messages that start with !tts (check early to avoid DB queries)
+    if (!message.trim().toLowerCase().startsWith('!tts ')) {
+      return;
+    }
+
+    console.log(`[TTS] Processing !tts command from ${username}: ${message}`);
+
     // Load TTS config
     const layout = await prisma.layout.findUnique({
       where: { sessionId },
       include: { ttsConfig: true },
     });
 
-    if (!layout || !layout.ttsConfig) return;
+    if (!layout) {
+      console.log(`[TTS] No layout found for session ${sessionId}`);
+      return;
+    }
+
+    if (!layout.ttsConfig) {
+      console.log(`[TTS] No TTS config found for session ${sessionId}`);
+      return;
+    }
 
     const ttsConfig = layout.ttsConfig;
 
@@ -358,10 +373,10 @@ async function processTTSFromChat(
     const allowedSources = ttsConfig.allowedSources
       .split(',')
       .map(s => s.trim());
-    if (!allowedSources.includes('chat')) return;
-
-    // Only process messages that start with !tts
-    if (!message.trim().toLowerCase().startsWith('!tts ')) {
+    if (!allowedSources.includes('chat')) {
+      console.log(
+        `[TTS] Chat not in allowed sources: ${ttsConfig.allowedSources}`
+      );
       return;
     }
 
@@ -384,6 +399,9 @@ async function processTTSFromChat(
 
     // Check permissions
     if (!hasPermission(userRole, ttsConfig.chatPermissions)) {
+      console.log(
+        `[TTS] User ${username} with role ${userRole} doesn't have permission (required: ${ttsConfig.chatPermissions})`
+      );
       return;
     }
 
@@ -393,6 +411,9 @@ async function processTTSFromChat(
       messageLength < ttsConfig.minCharLength ||
       messageLength > ttsConfig.maxCharLength
     ) {
+      console.log(
+        `[TTS] Message length ${messageLength} outside range ${ttsConfig.minCharLength}-${ttsConfig.maxCharLength}`
+      );
       return;
     }
 
@@ -406,6 +427,9 @@ async function processTTSFromChat(
     const cooldownMs = ttsConfig.cooldownSeconds * 1000;
 
     if (now - lastTTS < cooldownMs) {
+      console.log(
+        `[TTS] User ${username} is on cooldown (${Math.ceil((cooldownMs - (now - lastTTS)) / 1000)}s remaining)`
+      );
       return; // User is still in cooldown
     }
 
@@ -425,6 +449,7 @@ async function processTTSFromChat(
     };
 
     // Emit to overlay
+    console.log(`[TTS] Emitting tts-speak event:`, ttsMessage);
     io.to(sessionId).emit('tts-speak', ttsMessage);
   } catch (error) {
     console.error('Error processing TTS from chat:', error);
@@ -476,14 +501,7 @@ export async function startTwitchChatMonitoring(
     updateStreamStats(sessionId, username, displayName, message, io);
 
     // Process TTS from chat (if enabled and user has permission)
-    processTTSFromChat(
-      sessionId,
-      username,
-      displayName || username,
-      message,
-      chatMessage.role,
-      io
-    );
+    processTTSFromChat(sessionId, username, message, chatMessage.role, io);
 
     // Check for paint-by-numbers commands
     // Debug command: !paint all (development only)

@@ -1,7 +1,7 @@
 // components/overlay/TextToSpeech.tsx
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   TTSConfig,
   TTSLayout,
@@ -57,9 +57,22 @@ export default function TextToSpeech({
   const [currentMessage, setCurrentMessage] = useState<string>('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [availableVoices, setAvailableVoices] = useState<
     SpeechSynthesisVoice[]
   >([]);
+
+  // Helper to finish speaking and move to next message
+  const finishSpeaking = useCallback(() => {
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    setIsSpeaking(false);
+    setCurrentMessage('');
+    setQueue(prev => prev.slice(1));
+  }, []);
 
   // Initialize speech synthesis
   useEffect(() => {
@@ -106,7 +119,7 @@ export default function TextToSpeech({
     };
   }, [socket, config.maxQueueSize, config.filterProfanity]);
 
-  // Process TTS queue - Show visualizer even if speech fails (overlay doesn't need to speak)
+  // Process TTS queue
   useEffect(() => {
     if (isSpeaking || queue.length === 0) {
       return;
@@ -122,42 +135,83 @@ export default function TextToSpeech({
     const rate = nextMessage.rate || config.rate;
     const baseSeconds = (words / 150) * 60; // seconds at 1x speed
     const adjustedSeconds = baseSeconds / rate;
-    const durationMs = Math.max(adjustedSeconds * 1000, 2000); // minimum 2 seconds
+    const durationMs = Math.max(adjustedSeconds * 1000, 3000); // minimum 3 seconds
 
-    // Try to speak (may fail due to browser restrictions, but that's OK)
-    if (synthRef.current) {
+    // Track if we've already finished to prevent double-calling
+    let hasFinished = false;
+    const safeFinish = () => {
+      if (hasFinished) return;
+      hasFinished = true;
+      finishSpeaking();
+    };
+
+    // Try to speak using Web Speech API
+    if (synthRef.current && availableVoices.length > 0) {
       try {
+        // Cancel any ongoing speech first
+        synthRef.current.cancel();
+
         const utterance = new SpeechSynthesisUtterance(nextMessage.text);
+        utteranceRef.current = utterance;
 
         // Find the configured voice
         const voice = availableVoices.find(v => v.name === config.voice);
         if (voice) {
           utterance.voice = voice;
+        } else if (availableVoices.length > 0) {
+          // Fall back to first available voice
+          utterance.voice = availableVoices[0];
         }
 
         utterance.rate = rate;
         utterance.pitch = nextMessage.pitch || config.pitch;
         utterance.volume = nextMessage.volume || config.volume;
 
-        utterance.onend = () => {};
-        utterance.onerror = () => {};
+        // When speech ends naturally, finish speaking
+        utterance.onend = () => {
+          console.log('[TTS] Speech ended naturally');
+          safeFinish();
+        };
 
+        // On error, also finish (don't leave it stuck)
+        utterance.onerror = event => {
+          console.error('[TTS] Speech error:', event.error);
+          safeFinish();
+        };
+
+        console.log(
+          '[TTS] Starting speech:',
+          nextMessage.text.substring(0, 50)
+        );
         synthRef.current.speak(utterance);
       } catch (error) {
-        // Silently fail - overlay doesn't need to speak
-        console.error('TTS speak error:', error);
+        console.error('[TTS] Failed to speak:', error);
+        // Fall through to fallback timer
       }
     }
 
-    // Hide visualizer after estimated duration (regardless of speech success)
-    const timer = setTimeout(() => {
-      setIsSpeaking(false);
-      setCurrentMessage('');
-      setQueue(prev => prev.slice(1)); // Remove processed message
-    }, durationMs);
+    // Fallback timer in case speech events don't fire (e.g., in OBS browser source)
+    fallbackTimerRef.current = setTimeout(() => {
+      console.log('[TTS] Fallback timer triggered');
+      safeFinish();
+    }, durationMs + 1000); // Add 1 second buffer
 
-    return () => clearTimeout(timer);
-  }, [queue, isSpeaking, config, availableVoices]);
+    return () => {
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+    };
+  }, [
+    queue,
+    isSpeaking,
+    availableVoices,
+    config.rate,
+    config.pitch,
+    config.volume,
+    config.voice,
+    finishSpeaking,
+  ]);
 
   if (!config.showVisualizer || !isSpeaking) {
     return null;

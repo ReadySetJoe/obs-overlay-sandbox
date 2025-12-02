@@ -80,6 +80,7 @@ model Layout {
   paintByNumbersVisible Boolean @default(false)
   eventLabelsVisible    Boolean @default(false)
   wheelVisible          Boolean @default(false)
+  alertsVisible         Boolean @default(true)
   ttsVisible            Boolean @default(false)
 
   // Component layouts (JSON) - stores position, size, styling for each component
@@ -277,9 +278,11 @@ model TTSConfig {
   allowLinks      Boolean @default(false) // Allow URLs in TTS
   requireApproval Boolean @default(false) // Require mod approval before speaking
 
-  // Position/layout (stored in componentLayouts JSON in Layout model, but we can add defaults here too)
-  position String @default("bottom-right") // 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'
+  // Position/layout
+  position String @default("bottom-right") // 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center', 'custom'
   scale    Float  @default(1.0) // Size multiplier (0.5 to 2.0)
+  x        Int    @default(20) // X position in pixels (when position is 'custom')
+  y        Int    @default(20) // Y position in pixels (when position is 'custom')
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

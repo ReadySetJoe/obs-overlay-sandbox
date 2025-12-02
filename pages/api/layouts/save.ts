@@ -31,6 +31,8 @@ interface LayerVisibilityFields {
   eventLabelsVisible?: boolean;
   streamStatsVisible?: boolean;
   wheelVisible?: boolean;
+  alertsVisible?: boolean;
+  ttsVisible?: boolean;
 }
 
 interface LayoutFields {
@@ -71,6 +73,8 @@ const LAYER_VISIBILITY_MAP = {
   eventlabels: 'eventLabelsVisible',
   streamstats: 'streamStatsVisible',
   wheel: 'wheelVisible',
+  alerts: 'alertsVisible',
+  tts: 'ttsVisible',
 } as const;
 
 function buildUpdateData(data: LayoutData): UpdateData {
@@ -142,6 +146,8 @@ function buildCreateData(data: LayoutData, userId: string): CreateData {
     eventLabelsVisible: layerMap.get('eventlabels'),
     streamStatsVisible: layerMap.get('streamstats'),
     wheelVisible: layerMap.get('wheel'),
+    alertsVisible: layerMap.get('alerts'),
+    ttsVisible: layerMap.get('tts'),
   };
 }
 

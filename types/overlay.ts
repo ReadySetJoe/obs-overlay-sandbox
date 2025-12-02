@@ -485,8 +485,10 @@ export interface TTSConfig {
   cooldownSeconds: number;
 
   // Position/layout
-  position: TTSVisualizerPosition | 'center';
+  position: TTSVisualizerPosition | 'center' | 'custom';
   scale: number; // 0.5 to 2.0
+  x?: number; // X position in pixels
+  y?: number; // Y position in pixels
 }
 
 export interface TTSLayout {

@@ -26,6 +26,8 @@ export default async function handler(
     allowedSources,
     position,
     scale,
+    x,
+    y,
   } = req.body;
 
   if (!sessionId) {
@@ -62,6 +64,8 @@ export default async function handler(
         allowedSources,
         position,
         scale,
+        x,
+        y,
       },
       create: {
         layoutId: layout.id,
@@ -79,6 +83,8 @@ export default async function handler(
         allowedSources,
         position,
         scale,
+        x,
+        y,
       },
     });
 

@@ -52,6 +52,7 @@ export default function WheelExpanded({
   onSpinWheel,
   onClose,
 }: WheelExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'wheel');
   const [showWheelForm, setShowWheelForm] = useState(false);
   const [editingWheelId, setEditingWheelId] = useState<string | null>(null);
   const [wheelName, setWheelName] = useState('');
@@ -512,7 +513,7 @@ export default function WheelExpanded({
 
       {/* Copy URL */}
       <CopyURLButton
-        url={useOverlayUrl(sessionId, 'wheel')}
+        url={overlayUrl}
         label='Wheel Overlay URL'
       />
     </div>

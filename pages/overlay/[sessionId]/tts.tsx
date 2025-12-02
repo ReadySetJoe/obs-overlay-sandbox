@@ -4,6 +4,33 @@
 import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import TextToSpeech from '@/components/overlay/TextToSpeech';
+import { TTSConfig } from '@/types/overlay';
+
+// Default config for when no TTS config exists yet
+const DEFAULT_TTS_CONFIG: TTSConfig = {
+  id: 'default',
+  layoutId: 'default',
+  voice: 'Google US English',
+  rate: 1.0,
+  pitch: 1.0,
+  volume: 0.8,
+  maxQueueSize: 5,
+  showVisualizer: true,
+  visualizerPosition: 'bottom-right',
+  visualizerStyle: 'waveform',
+  backgroundColor: '#000000',
+  textColor: '#ffffff',
+  filterProfanity: true,
+  allowedSources: 'chat,alerts,manual',
+  chatPermissions: 'everyone',
+  minCharLength: 5,
+  maxCharLength: 200,
+  cooldownSeconds: 30,
+  position: 'custom',
+  scale: 1.0,
+  x: 20,
+  y: 20,
+};
 
 export default function TTSOverlay() {
   const router = useRouter();
@@ -36,13 +63,16 @@ export default function TTSOverlay() {
         </div>
       )}
 
-      {/* Text to Speech */}
-      {getLayerVisible('tts') && ttsConfig && (
+      {/* Text to Speech - Always render with default config if none exists */}
+      {getLayerVisible('tts') && (
         <TextToSpeech
-          config={ttsConfig}
-          layout={
-            componentLayouts.tts || { position: 'bottom-right', scale: 1 }
-          }
+          config={ttsConfig || DEFAULT_TTS_CONFIG}
+          layout={{
+            position: ttsConfig?.position || 'bottom-right',
+            scale: ttsConfig?.scale || 1,
+            x: ttsConfig?.x || 20,
+            y: ttsConfig?.y || 20,
+          }}
           colorScheme={colorScheme}
           customColors={customColors}
           socket={socket}

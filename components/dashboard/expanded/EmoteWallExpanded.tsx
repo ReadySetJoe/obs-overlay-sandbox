@@ -26,6 +26,8 @@ export default function EmoteWallExpanded({
   onTrigger,
   onClose,
 }: EmoteWallExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'emote-wall');
+
   return (
     <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center gap-3 mb-6'>
@@ -98,7 +100,7 @@ export default function EmoteWallExpanded({
       </div>
 
       {/* Copy URL for OBS */}
-      <CopyURLButton url={useOverlayUrl(sessionId, 'emote-wall')} />
+      <CopyURLButton url={overlayUrl} />
     </div>
   );
 }

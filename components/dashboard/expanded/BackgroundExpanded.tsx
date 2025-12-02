@@ -39,6 +39,7 @@ export default function BackgroundExpanded({
   onBackgroundChange,
   onClose,
 }: BackgroundExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'background');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [extractingColors, setExtractingColors] = useState(false);
@@ -476,7 +477,7 @@ export default function BackgroundExpanded({
         </div>
       )}
 
-      <CopyURLButton url={useOverlayUrl(sessionId, 'background')} />
+      <CopyURLButton url={overlayUrl} />
     </div>
   );
 }

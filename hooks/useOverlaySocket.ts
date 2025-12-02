@@ -189,11 +189,21 @@ export function useOverlaySocket(sessionId: string) {
             setWeatherEffect(layout.weatherEffect);
           }
 
-          // Component layouts
+          // Component layouts - merge with defaults to ensure all keys exist
           if (layout.componentLayouts) {
             try {
               const parsedLayouts = JSON.parse(layout.componentLayouts);
-              setComponentLayouts(parsedLayouts);
+              setComponentLayouts(prev => ({
+                ...prev,
+                ...parsedLayouts,
+                // Ensure tts layout exists with defaults if not in parsed data
+                tts: parsedLayouts.tts || prev.tts || {
+                  position: 'bottom-right',
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                },
+              }));
             } catch (error) {
               console.error('Error parsing component layouts:', error);
             }

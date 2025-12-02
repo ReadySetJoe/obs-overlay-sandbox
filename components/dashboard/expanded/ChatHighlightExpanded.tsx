@@ -59,6 +59,7 @@ export default function ChatHighlightExpanded({
   onScaleChange,
   onClose,
 }: ChatHighlightExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'chat-highlight');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredMessages = messages.filter(
@@ -316,7 +317,7 @@ export default function ChatHighlightExpanded({
           </div>
 
           {/* Copy URL for OBS */}
-          <CopyURLButton url={useOverlayUrl(sessionId, 'chat-highlight')} />
+          <CopyURLButton url={overlayUrl} />
         </>
       )}
 

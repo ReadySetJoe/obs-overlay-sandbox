@@ -216,6 +216,12 @@ export function useLayoutPersistence({
                   position: 'center',
                   scale: 1.0,
                 },
+                tts: parsedLayouts.tts || {
+                  position: 'bottom-right',
+                  x: 20,
+                  y: 20,
+                  scale: 1,
+                },
               });
             } catch (error) {
               console.error('Error parsing component layouts:', error);

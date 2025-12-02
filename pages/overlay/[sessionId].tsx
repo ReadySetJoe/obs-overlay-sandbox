@@ -27,6 +27,32 @@ import {
   TTSConfig,
 } from '@/types/overlay';
 
+// Default config for when no TTS config exists yet
+const DEFAULT_TTS_CONFIG: TTSConfig = {
+  id: 'default',
+  layoutId: 'default',
+  voice: 'Google US English',
+  rate: 1.0,
+  pitch: 1.0,
+  volume: 0.8,
+  maxQueueSize: 5,
+  showVisualizer: true,
+  visualizerPosition: 'bottom-right',
+  visualizerStyle: 'waveform',
+  backgroundColor: '#000000',
+  textColor: '#ffffff',
+  filterProfanity: true,
+  allowedSources: 'chat,alerts,manual',
+  chatPermissions: 'everyone',
+  minCharLength: 5,
+  maxCharLength: 200,
+  cooldownSeconds: 30,
+  position: 'custom',
+  scale: 1.0,
+  x: 20,
+  y: 20,
+};
+
 export default function OverlayPage() {
   const router = useRouter();
   const { sessionId, debug } = router.query;
@@ -477,7 +503,7 @@ export default function OverlayPage() {
 
       {/* Debug Panel - Add ?debug=true to URL to show */}
       {showDebug && (
-        <div className='fixed top-4 right-4 bg-black/90 text-white p-4 rounded-lg shadow-2xl z-9999 max-w-md text-xs font-mono border-2 border-green-500'>
+        <div className='fixed top-4 left-4 bg-black/90 text-white p-4 rounded-lg shadow-2xl z-9999 max-w-md text-xs font-mono border-2 border-green-500'>
           <div className='text-lg font-bold mb-3 text-green-400'>
             🔍 OBS Debug Panel
           </div>
@@ -748,13 +774,16 @@ export default function OverlayPage() {
         />
       )}
 
-      {/* Text to Speech */}
-      {getLayerVisible('tts') && ttsConfig && (
+      {/* Text to Speech - Always render with default config if none exists */}
+      {getLayerVisible('tts') && (
         <TextToSpeech
-          config={ttsConfig}
-          layout={
-            componentLayouts.tts || { position: 'bottom-right', scale: 1 }
-          }
+          config={ttsConfig || DEFAULT_TTS_CONFIG}
+          layout={{
+            position: ttsConfig?.position || 'bottom-right',
+            scale: ttsConfig?.scale || 1,
+            x: ttsConfig?.x || 20,
+            y: ttsConfig?.y || 20,
+          }}
           colorScheme={colorScheme}
           customColors={customColors}
           socket={socket}

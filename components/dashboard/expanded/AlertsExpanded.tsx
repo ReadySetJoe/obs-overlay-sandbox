@@ -94,6 +94,7 @@ export default function AlertsExpanded({
   onClose,
   onAlertsSaved,
 }: AlertsExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'alerts');
   const [alertConfigs, setAlertConfigs] = useState<
     Record<AlertEventType, Partial<AlertConfig>>
   >({
@@ -844,7 +845,7 @@ export default function AlertsExpanded({
       {/* Copy URL */}
       <div className='mb-6 space-y-3'>
         <CopyURLButton
-          url={useOverlayUrl(sessionId, 'alerts')}
+          url={overlayUrl}
           label='Alerts Overlay URL'
         />
         <p className='text-xs text-gray-400 mt-2'>

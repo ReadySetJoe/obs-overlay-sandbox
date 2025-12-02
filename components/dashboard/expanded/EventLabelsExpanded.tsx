@@ -31,6 +31,7 @@ export default function EventLabelsExpanded({
   onToggleVisibility,
   onClose,
 }: EventLabelsExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'event-labels');
   const [localConfig, setLocalConfig] = useState<EventLabelsConfig>(config);
   const [testingEvent, setTestingEvent] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -408,7 +409,7 @@ export default function EventLabelsExpanded({
       {/* Copy URL */}
       <div className='mb-6 space-y-3'>
         <CopyURLButton
-          url={useOverlayUrl(sessionId, 'event-labels')}
+          url={overlayUrl}
           label='Event Labels Overlay URL'
         />
         <p className='text-xs text-gray-400 mt-2'>

@@ -45,8 +45,10 @@ const getDefaultConfig = () => ({
   minCharLength: 5,
   maxCharLength: 200,
   cooldownSeconds: 30,
-  position: 'bottom-right' as TTSVisualizerPosition | 'center',
+  position: 'custom' as TTSVisualizerPosition | 'center' | 'custom',
   scale: 1.0,
+  x: 20,
+  y: 20,
 });
 
 export default function TextToSpeechExpanded({
@@ -61,6 +63,7 @@ export default function TextToSpeechExpanded({
   onClose,
   socket,
 }: TextToSpeechExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'tts');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [testText, setTestText] = useState(
     'Hello! This is a test of the text to speech system.'
@@ -324,26 +327,35 @@ export default function TextToSpeechExpanded({
           Position & Scale
         </h4>
         <PositionControls
-          x={componentLayouts.tts?.x || 20}
-          y={componentLayouts.tts?.y || 20}
-          onPositionChange={onPositionChange}
+          x={localConfig.x || 20}
+          y={localConfig.y || 20}
+          onPositionChange={(x, y) => {
+            handleChange({ x, y, position: 'custom' });
+            // Also update componentLayouts for immediate visual feedback
+            onPositionChange(x, y);
+          }}
           color='blue'
           elementWidth={400}
           elementHeight={100}
-          scale={componentLayouts.tts?.scale || 1}
+          scale={localConfig.scale || 1}
           isDynamicSize={true}
         />
         <div className='mt-3'>
           <label className='block text-xs text-gray-400 mb-1'>
-            Scale: {(componentLayouts.tts?.scale || 1).toFixed(1)}x
+            Scale: {(localConfig.scale || 1).toFixed(1)}x
           </label>
           <input
             type='range'
             min='0.5'
             max='2'
             step='0.1'
-            value={componentLayouts.tts?.scale || 1}
-            onChange={e => onScaleChange(parseFloat(e.target.value))}
+            value={localConfig.scale || 1}
+            onChange={e => {
+              const scale = parseFloat(e.target.value);
+              handleChange({ scale });
+              // Also update componentLayouts for immediate visual feedback
+              onScaleChange(scale);
+            }}
             className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500'
           />
         </div>
@@ -693,7 +705,7 @@ export default function TextToSpeechExpanded({
 
       {/* Copy URL */}
       <CopyURLButton
-        url={useOverlayUrl(sessionId, 'tts')}
+        url={overlayUrl}
         label='Copy TTS Overlay URL'
       />
     </div>

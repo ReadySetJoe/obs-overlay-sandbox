@@ -51,6 +51,8 @@ export default function NowPlayingExpanded({
   onManualUpdate,
   onClose,
 }: NowPlayingExpandedProps) {
+  const overlayUrl = useOverlayUrl(sessionId, 'now-playing');
+
   return (
     <div className='bg-linear-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl'>
       <div className='flex items-center justify-between mb-6'>
@@ -275,7 +277,7 @@ export default function NowPlayingExpanded({
       )}
 
       {/* Copy URL for OBS */}
-      <CopyURLButton url={useOverlayUrl(sessionId, 'now-playing')} />
+      <CopyURLButton url={overlayUrl} />
     </div>
   );
 }
