@@ -16,7 +16,10 @@ export default function ConnectionStatus({
   if (isConnected) return null;
 
   return (
-    <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
+    <div
+      data-testid='connection-status'
+      className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'
+    >
       <div className='font-semibold'>Disconnected</div>
       <div className='text-xs text-red-100 mt-0.5'>
         Try toggling browser source visibility to reconnect

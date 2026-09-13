@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Wheel from '@/components/overlay/Wheel';
+import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import {
   WheelConfig,
@@ -13,7 +14,7 @@ export default function WheelOverlay() {
   const router = useRouter();
   const { sessionId } = router.query;
   const overlayState = useOverlaySocket(sessionId as string);
-  const socket = overlayState.socket;
+  const { isConnected, socket } = overlayState;
 
   const [activeWheel, setActiveWheel] = useState<WheelConfig | null>(null);
   const [spinEvent, setSpinEvent] = useState<WheelSpinEvent | null>(null);
@@ -123,6 +124,9 @@ export default function WheelOverlay() {
         background: 'transparent',
       }}
     >
+      {/* Connection Status */}
+      <ConnectionStatus isConnected={isConnected} />
+
       <Wheel
         config={activeWheel}
         spinEvent={spinEvent}
