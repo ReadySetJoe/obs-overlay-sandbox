@@ -163,10 +163,13 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
   });
 
   // Note: Reset requires a template to be selected and progress to exist
-  test('should reset canvas when reset button is clicked', async ({
-    page,
-    context,
-  }) => {
+  // NOTE: the two tests below are smoke tests, not template-selection tests.
+  // They open the panel and assert the overlay renders; neither clicks a
+  // template card, so neither exercises the dynamic import() that commit
+  // 1374159 introduced for the 6.2MB of built-in templates. They were
+  // previously skipped and named as if they covered that path. Renamed to
+  // match what they actually assert. See the spec doc for the real gap.
+  test('opens the settings panel without errors', async ({ page, context }) => {
     await exposeSocketStatus(page);
 
     // Navigate to dashboard
@@ -193,7 +196,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
 
   // Note: Template selection requires templates to be loaded from the API.
   // This test is skipped because template loading can be slow/unreliable in tests.
-  test('should show progress when template is selected', async ({
+  test('keeps the overlay rendering while the settings panel is open', async ({
     page,
     context,
   }) => {
