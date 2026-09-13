@@ -84,16 +84,15 @@ export async function navigateToDashboard(
   await setupAuthenticatedSession(page);
   await page.goto(`/dashboard/${sessionId}`, { waitUntil: 'networkidle' });
 
-  // Wait for the dashboard to load - check for a known element
-  // The dashboard should have the "Visual & Theming" section header
-  await page
-    .waitForSelector('text=Visual & Theming', {
-      timeout: 15000,
-    })
-    .catch(() => {
-      // Fallback: just wait for body to be visible
-      return page.waitForSelector('body');
-    });
+  // Wait for the tile grid, located by test id rather than by a section
+  // heading. The previous version waited on "Visual & Theming" with a
+  // .catch() fallback, which meant a stale selector cost every dashboard
+  // test a silent 15s timeout instead of failing. No catch here on purpose:
+  // if the grid stops appearing, these tests should say so.
+  await page.getByTestId('dashboard-grid').waitFor({
+    state: 'visible',
+    timeout: 15000,
+  });
 
   // Give socket time to connect
   await page.waitForTimeout(2000);

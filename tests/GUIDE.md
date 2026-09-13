@@ -132,8 +132,10 @@ test('should create wheel in dashboard and spin it in overlay', async ({
   await exposeSocketStatus(overlayPage);
   await navigateToOverlay(overlayPage, 'wheel');
 
-  // STEP 4: Click on Wheel Spinner tile to open settings
-  await page.click('text=Wheel Spinner');
+  // STEP 4: Click on Wheel Spinner tile to open settings.
+  // Locate tiles by test id, never by their displayed label - tile copy
+  // changes and 26 selectors once broke on it.
+  await page.getByTestId('tile-wheel').click();
 
   // STEP 5: Create a new wheel
   await page.click('text=Create Wheel');

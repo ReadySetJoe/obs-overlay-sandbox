@@ -197,7 +197,11 @@ export default function DashboardPage() {
           {/* Main Content */}
           {!expandedViewHook.expandedElement ? (
             /* Summary Tiles with Collapsible Sections */
-            <div key='summary-grid' className='animate-zoom-in'>
+            <div
+              key='summary-grid'
+              data-testid='dashboard-grid'
+              className='animate-zoom-in'
+            >
               {/* 🎨 Visual & Theming - Always Expanded */}
               <CollapsibleSection
                 id='visual-theming'

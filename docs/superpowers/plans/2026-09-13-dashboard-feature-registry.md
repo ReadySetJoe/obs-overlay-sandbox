@@ -589,15 +589,18 @@ export default function FeatureTile({
 
   return (
     <div
-      data-testid={`tile-${feature.id}`}
-      className={`relative rounded-lg border border-gray-700 bg-gray-800/60 p-3 transition-colors ${hoverBorder} ${
+      className={`relative rounded-lg border border-gray-700 bg-gray-800/60 transition-colors ${hoverBorder} ${
         isVisible ? 'border-green-500/60 bg-green-900/20' : ''
       }`}
     >
+      {/* The test id goes on the button that owns onClick, NOT the wrapper.
+          getByTestId(...).click() targets an element’s geometric centre, so a
+          wrapper div with no handler can swallow the click on its padding. */}
       <button
+        data-testid={`tile-${feature.id}`}
         type='button'
         onClick={onClick}
-        className='flex w-full flex-col items-center gap-1 text-center'
+        className='flex w-full flex-col items-center gap-1 p-3 text-center'
       >
         <span className='text-xl'>{Icon ? <Icon /> : null}</span>
         <span className='text-[11px] leading-tight text-gray-200'>
@@ -620,7 +623,12 @@ export default function FeatureTile({
 }
 ```
 
-Note the `data-testid={`tile-${feature.id}`}` matches the ids Task 1 introduced, so the seven migrated e2e selectors keep working across the grid swap. That is the whole reason Task 1 comes first.
+Note the `data-testid={`tile-${feature.id}`}` matches the ids Task 1 introduced, so the 26 migrated e2e selectors keep working across the grid swap. That is the whole reason Task 1 comes first.
+
+**Two constraints from Task 1’s review that this component must respect:**
+
+1. **The test id belongs on the element that owns `onClick`.** `getByTestId(...).click()` clicks an element’s geometric centre. On the old `SummaryTile` the wrapper div owned the handler, so centring was safe. Here the button owns it, so the id goes there — otherwise the centre can land on wrapper padding with no handler and the click does nothing.
+2. **Keep the visibility dot clear of the button’s centre.** The dot is a sibling button with its own handler. If it ever overlapped the main button’s centre point, `getByTestId(`tile-...`).click()` would hit the dot and toggle visibility instead of opening the panel. `absolute right-1.5 top-1.5` on a `w-2.5 h-2.5` dot is comfortably clear, but do not move it toward the middle.
 
 - [ ] **Step 2: Verify it type-checks**
 
@@ -755,6 +763,8 @@ Replace it with:
 ```
 
 Do **not** touch anything below it — the expanded-panel dispatch starting at the `expandedViewHook.expandedElement === 'color'` branch stays exactly as it is, which is why the registry reuses those ids.
+
+**Preserve the ternary.** `pages/dashboard/[sessionId].tsx:198` renders *either* the grid *or* the expanded panel, so the grid is unmounted while a panel is open. That is load-bearing for the test suite, not just a rendering choice: several in-panel selectors are case-insensitive substrings of tile copy. `text=Latest Follower` in `event-labels.spec.ts` also matches the eventlabels tile subtitle "Latest follower, sub, bits, etc." — if both were mounted simultaneously, that assertion would fail strict mode with "resolved to 2 elements". Rendering the grid and the panel together would break the suite in a way that looks unrelated to this change.
 
 - [ ] **Step 3: Add the `layerVisibility` lookup**
 
