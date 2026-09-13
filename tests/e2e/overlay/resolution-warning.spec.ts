@@ -83,18 +83,17 @@ test.describe('Overlay resolution warning', () => {
   test('warns again when the source changes to a different wrong size', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto(`/overlay/${TEST_SESSION_ID}/weather`);
-    await expect(page.locator('div.relative.w-screen')).toBeVisible({
-      timeout: 15000,
-    });
-    await expect(page.getByTestId('resolution-warning')).toHaveCount(0);
+
+    // A key is written for 1280x720 here - that is what makes the second
+    // warning below a real test of the size component of the storage key.
+    await expect(page.getByText(/1280×720/)).toBeVisible({ timeout: 10000 });
 
     await page.setViewportSize({ width: 800, height: 600 });
 
-    await expect(page.getByTestId('resolution-warning')).toBeVisible({
-      timeout: 10000,
-    });
-    await expect(page.getByText(/800×600/)).toBeVisible();
+    // With a pathname-only key this suppresses and the banner still reads
+    // 1280x720, so this assertion is what proves the size is in the key.
+    await expect(page.getByText(/800×600/)).toBeVisible({ timeout: 10000 });
   });
 });

@@ -56,9 +56,12 @@ export default function ResolutionWarning() {
         alreadyWarned = localStorage.getItem(storageKey) !== null;
         localStorage.setItem(storageKey, '1');
       } catch {
-        // Storage unavailable or over quota. Warn anyway rather than throw:
-        // there is no error boundary in pages/_app.tsx, so an exception here
-        // would unmount the overlay and black out a live browser source.
+        // Storage unavailable or over quota. Fall through without a marker so
+        // we warn anyway, rather than throwing: there is no error boundary in
+        // pages/_app.tsx, so an exception here would unmount the overlay and
+        // black out a live browser source. Note that if getItem succeeded and
+        // only setItem threw, alreadyWarned is already set and we still
+        // suppress - we did genuinely read a prior marker.
       }
 
       if (alreadyWarned) return;
