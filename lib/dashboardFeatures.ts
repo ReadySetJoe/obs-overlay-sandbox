@@ -31,13 +31,34 @@ export const CATEGORY_LABELS: Record<FeatureCategory, string> = {
   appearance: 'Appearance',
 };
 
+/**
+ * Every feature id. Exhaustive on purpose: FEATURE_ICONS is keyed by this, so
+ * adding a feature without an icon is a compile error rather than a silently
+ * blank tile.
+ */
+export type FeatureId =
+  | 'alerts'
+  | 'eventlabels'
+  | 'chathighlight'
+  | 'tts'
+  | 'wheel'
+  | 'paint'
+  | 'streamstats'
+  | 'countdown'
+  | 'nowplaying'
+  | 'weather'
+  | 'emote'
+  | 'color'
+  | 'background'
+  | 'textstyle';
+
 export interface DashboardFeature {
   /**
    * Stable key. Deliberately identical to the string passed to
    * useExpandedView's handleExpandElement, so the expanded-panel dispatch in
    * pages/dashboard/[sessionId].tsx needs no changes.
    */
-  id: string;
+  id: FeatureId;
   /** Label shown on the tile. */
   name: string;
   category: FeatureCategory;
@@ -48,9 +69,11 @@ export interface DashboardFeature {
    * global appearance settings rather than overlay layers, and the emote wall
    * is fire-only - it has no persistent visible state to toggle.
    *
-   * Note 'chat' is never used here. hooks/useLayers.ts defines it and it is
-   * persisted as layout.chatVisible, but no overlay page renders anything
-   * gated on it, so a toggle would do nothing.
+   * The test for "does this deserve a toggle" is whether an overlay page
+   * actually calls getLayerVisible(id) - NOT whether hooks/useLayers.ts
+   * defines it. Eleven layers are defined; only nine are gated. Both 'chat'
+   * and 'alerts' are defined and persisted but ungated, so neither appears
+   * here: a dot for them would do nothing while still writing state.
    */
   layerId: string | null;
   color: ThemeColor;
@@ -62,7 +85,14 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     id: 'alerts',
     name: 'Alerts',
     category: 'alerts-events',
-    layerId: 'alerts',
+    // No toggle: neither overlay page gates the Alert component on this
+    // layer - pages/overlay/[sessionId].tsx renders {currentAlert && <Alert/>}
+    // unconditionally, and the dedicated alerts page does the same. The layer
+    // exists in useLayers and persists as alertsVisible, so offering a dot
+    // would do nothing while still writing state - and would read wrong on
+    // load, since useLayers defaults it false while the load path defaults it
+    // true.
+    layerId: null,
     color: 'red',
   },
   {

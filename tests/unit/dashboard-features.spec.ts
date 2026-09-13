@@ -7,21 +7,24 @@ import {
   type FeatureCategory,
 } from '@/lib/dashboardFeatures';
 
-// The 11 layer ids defined in hooks/useLayers.ts. 'chat' is deliberately
-// excluded from the registry: it is persisted but no overlay page renders
-// anything gated on it, so surfacing a toggle for it would do nothing.
-const REAL_LAYER_IDS = [
-  'weather',
-  'chat',
-  'nowplaying',
-  'countdown',
+// Layer ids an overlay page actually gates rendering on, i.e. the result of
+// grep -o "getLayerVisible('[a-z]*')" over pages/overlay/.
+//
+// This deliberately is NOT the eleven ids hooks/useLayers.ts defines. Two of
+// those - 'chat' and 'alerts' - are persisted but ungated, so a visibility
+// toggle for them does nothing while still writing state. An earlier version
+// of this list used the defined ids and therefore accepted a broken
+// layerId: 'alerts' without complaint.
+const GATED_LAYER_IDS = [
   'chathighlight',
-  'paintbynumbers',
+  'countdown',
   'eventlabels',
+  'nowplaying',
+  'paintbynumbers',
   'streamstats',
-  'wheel',
-  'alerts',
   'tts',
+  'weather',
+  'wheel',
 ];
 
 test.describe('dashboard feature registry', () => {
@@ -34,25 +37,27 @@ test.describe('dashboard feature registry', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  test('every layerId that is set is a real layer', () => {
+  test('every layerId that is set is gated by an overlay page', () => {
     for (const feature of DASHBOARD_FEATURES) {
       if (feature.layerId !== null) {
         expect(
-          REAL_LAYER_IDS,
-          `${feature.id} points at layer "${feature.layerId}"`
+          GATED_LAYER_IDS,
+          `${feature.id} offers a toggle for layer "${feature.layerId}", which no overlay page gates on`
         ).toContain(feature.layerId);
       }
     }
   });
 
-  test('never surfaces the dead chat layer', () => {
+  test('never surfaces an ungated layer', () => {
     const ids = DASHBOARD_FEATURES.map(f => f.layerId);
     expect(ids).not.toContain('chat');
+    expect(ids).not.toContain('alerts');
   });
 
-  test('exactly four features have no visibility layer', () => {
+  test('exactly five features have no visibility layer', () => {
     const withoutLayer = DASHBOARD_FEATURES.filter(f => f.layerId === null);
     expect(withoutLayer.map(f => f.id).sort()).toEqual([
+      'alerts',
       'background',
       'color',
       'emote',

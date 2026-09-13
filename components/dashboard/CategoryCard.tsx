@@ -30,28 +30,33 @@ export default function CategoryCard({
       className={`rounded-lg border border-gray-700 p-3 ${dimmed ? 'opacity-75' : ''}`}
     >
       <div className='mb-2 flex items-center gap-2'>
-        <h3 className='text-xs font-bold uppercase tracking-wide text-gray-300'>
+        <h2 className='text-xs font-bold uppercase tracking-wide text-gray-300'>
           {CATEGORY_LABELS[category]}
-        </h3>
-        <span className='text-xs text-gray-500'>{features.length}</span>
+        </h2>
+        {/* Decorative: the tiles themselves convey the count to a screen
+            reader, so announcing "Alerts & Events 2" adds nothing. */}
+        <span aria-hidden='true' className='text-xs text-gray-400'>
+          {features.length}
+        </span>
       </div>
 
       <div className='grid grid-cols-3 gap-2'>
-        {features.map(feature => (
-          <FeatureTile
-            key={feature.id}
-            feature={feature}
-            isVisible={
-              feature.layerId ? visibility[feature.layerId] : undefined
-            }
-            onToggleVisibility={
-              feature.layerId
-                ? () => onToggleLayer(feature.layerId as string)
-                : undefined
-            }
-            onClick={() => onExpand(feature.id)}
-          />
-        ))}
+        {features.map(feature => {
+          // Hoisted so the closure narrows naturally, instead of casting.
+          const layerId = feature.layerId;
+
+          return (
+            <FeatureTile
+              key={feature.id}
+              feature={feature}
+              isVisible={layerId ? visibility[layerId] : undefined}
+              onToggleVisibility={
+                layerId ? () => onToggleLayer(layerId) : undefined
+              }
+              onClick={() => onExpand(feature.id)}
+            />
+          );
+        })}
       </div>
     </div>
   );
