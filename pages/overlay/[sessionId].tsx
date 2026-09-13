@@ -28,6 +28,7 @@ import {
   WheelSpinEvent,
   TTSConfig,
 } from '@/types/overlay';
+import { DEFAULT_PAINT_GRID_SIZE } from '@/lib/paintGrid';
 
 // Default config for when no TTS config exists yet
 const DEFAULT_TTS_CONFIG: TTSConfig = {
@@ -673,7 +674,7 @@ export default function OverlayPage() {
               x: 0,
               y: 0,
               scale: 1,
-              gridSize: 20,
+              gridSize: DEFAULT_PAINT_GRID_SIZE,
             }
           }
           colorScheme={colorScheme}

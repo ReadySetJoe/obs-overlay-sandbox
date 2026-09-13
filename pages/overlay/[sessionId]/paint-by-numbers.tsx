@@ -6,6 +6,7 @@ import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import PaintByNumbers from '@/components/overlay/PaintByNumbers';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 import ResolutionWarning from '@/components/overlay/ResolutionWarning';
+import { DEFAULT_PAINT_GRID_SIZE } from '@/lib/paintGrid';
 
 export default function PaintByNumbersOverlay() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function PaintByNumbersOverlay() {
     x: 0,
     y: 0,
     scale: 1,
-    gridSize: 20,
+    gridSize: DEFAULT_PAINT_GRID_SIZE,
   };
 
   return (

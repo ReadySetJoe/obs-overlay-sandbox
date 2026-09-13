@@ -22,6 +22,7 @@ import { useExpandedView } from '@/hooks/useExpandedView';
 import { useLayoutPersistence } from '@/hooks/useLayoutPersistence';
 import { useAlerts } from '@/hooks/useAlerts';
 import { ComponentLayouts } from '@/types/overlay';
+import { DEFAULT_PAINT_GRID_SIZE } from '@/lib/paintGrid';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SummaryTile from '@/components/dashboard/tiles/SummaryTile';
 import CollapsibleSection from '@/components/dashboard/CollapsibleSection';
@@ -82,7 +83,7 @@ export default function DashboardPage() {
       x: 0,
       y: 0,
       scale: 1,
-      gridSize: 20,
+      gridSize: DEFAULT_PAINT_GRID_SIZE,
     },
     eventLabels: {
       position: 'top-right',
