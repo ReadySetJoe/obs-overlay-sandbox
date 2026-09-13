@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import EmoteWall from '@/components/overlay/EmoteWall';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function EmoteWallOverlay() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function EmoteWallOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Emote Wall */}
       <EmoteWall />

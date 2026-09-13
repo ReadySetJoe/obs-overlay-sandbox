@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import StreamStats from '@/components/overlay/StreamStats';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function StreamStatsOverlay() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function StreamStatsOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Stream Stats */}
       {getLayerVisible('streamstats') &&

@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import WeatherEffect from '@/components/overlay/WeatherEffect';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function WeatherOverlay() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function WeatherOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Weather Effect */}
       {getLayerVisible('weather') && <WeatherEffect effect={weatherEffect} />}

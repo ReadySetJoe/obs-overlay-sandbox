@@ -12,6 +12,7 @@ import {
 } from '@/types/overlay';
 import Alert from '@/components/overlay/Alert';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function AlertsOverlay() {
   const router = useRouter();
@@ -146,6 +147,7 @@ export default function AlertsOverlay() {
     <div className='relative w-screen h-screen overflow-hidden bg-transparent'>
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Current Alert */}
       {currentAlert && (

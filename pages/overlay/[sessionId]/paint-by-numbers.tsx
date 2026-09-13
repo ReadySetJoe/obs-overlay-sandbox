@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import PaintByNumbers from '@/components/overlay/PaintByNumbers';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function PaintByNumbersOverlay() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function PaintByNumbersOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Paint by Numbers */}
       {getLayerVisible('paintbynumbers') && paintByNumbersState && (

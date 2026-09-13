@@ -6,6 +6,7 @@ import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import TextToSpeech from '@/components/overlay/TextToSpeech';
 import { TTSConfig } from '@/types/overlay';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 // Default config for when no TTS config exists yet
 const DEFAULT_TTS_CONFIG: TTSConfig = {
@@ -59,6 +60,7 @@ export default function TTSOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Text to Speech - Always render with default config if none exists */}
       {getLayerVisible('tts') && (

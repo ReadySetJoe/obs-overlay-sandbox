@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import EventLabels from '@/components/overlay/EventLabels';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function EventLabelsOverlay() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function EventLabelsOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Event Labels */}
       {getLayerVisible('eventlabels') &&

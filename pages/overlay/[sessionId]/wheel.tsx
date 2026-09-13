@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Wheel from '@/components/overlay/Wheel';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import {
   WheelConfig,
@@ -126,6 +127,7 @@ export default function WheelOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       <Wheel
         config={activeWheel}

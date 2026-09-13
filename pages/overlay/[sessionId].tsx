@@ -16,6 +16,7 @@ import Alert from '@/components/overlay/Alert';
 import Wheel from '@/components/overlay/Wheel';
 import TextToSpeech from '@/components/overlay/TextToSpeech';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 import {
   AlertConfig,
   AlertEvent,
@@ -497,6 +498,7 @@ export default function OverlayPage() {
       />
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Debug Panel - Add ?debug=true to URL to show */}
       {showDebug && (

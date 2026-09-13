@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import NowPlaying from '@/components/overlay/NowPlaying';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function NowPlayingOverlay() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function NowPlayingOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Now Playing */}
       {getLayerVisible('nowplaying') && (

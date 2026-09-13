@@ -4,6 +4,7 @@
 import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function BackgroundOverlay() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function BackgroundOverlay() {
     <div className='relative w-screen h-screen overflow-hidden bg-black'>
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Custom Background */}
       {backgroundImageUrl ? (

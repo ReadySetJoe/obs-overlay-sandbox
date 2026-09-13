@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import ChatHighlight from '@/components/overlay/ChatHighlight';
 import ConnectionStatus from '@/components/overlay/ConnectionStatus';
+import ResolutionWarning from '@/components/overlay/ResolutionWarning';
 
 export default function ChatHighlightOverlay() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function ChatHighlightOverlay() {
     >
       {/* Connection Status */}
       <ConnectionStatus isConnected={isConnected} />
+      <ResolutionWarning />
 
       {/* Chat Highlight */}
       {getLayerVisible('chathighlight') && (
