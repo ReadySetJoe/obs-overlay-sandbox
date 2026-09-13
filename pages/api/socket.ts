@@ -40,6 +40,41 @@ export function getSocketServer(): SocketIOServer | null {
   return null;
 }
 
+/**
+ * Socket events that are relayed verbatim: rebroadcast to everyone in the
+ * sender's session room under the same event name. Adding a new relayed
+ * event is a one-line change here.
+ *
+ * These are emitted with io.to(sessionId), which INCLUDES the sender - that
+ * matches the hand-written handlers this list replaced. Use socket.to() if a
+ * future event must exclude the sender, and write it out separately.
+ */
+const RELAYED_EVENTS = [
+  'chat-message',
+  'color-scheme-change',
+  'custom-colors-change',
+  'font-family-change',
+  'event-labels-config',
+  'stream-stats-config',
+  'weather-change',
+  'now-playing',
+  'scene-toggle',
+  'countdown-timers',
+  'emote-wall',
+  'component-layouts',
+  'chat-highlight',
+  'paint-state',
+  'paint-command',
+  'paint-all-command',
+  'background-change',
+  'alert-trigger',
+  'wheel-config-update',
+  'wheel-list-update',
+  'wheel-spin',
+  'tts-speak',
+  'tts-config-update',
+] as const;
+
 const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
   if (!res.socket.server.io) {
     console.log('[Socket Server] Initializing Socket.io server...');
@@ -79,168 +114,15 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         );
       });
 
-      // Emit events to the specific session room
-      socket.on('chat-message', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('chat-message', data);
-        }
-      });
-
-      socket.on('color-scheme-change', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('color-scheme-change', data);
-        }
-      });
-
-      socket.on('custom-colors-change', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('custom-colors-change', data);
-        }
-      });
-
-      socket.on('font-family-change', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('font-family-change', data);
-        }
-      });
-
-      socket.on('event-labels-config', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('event-labels-config', data);
-        }
-      });
-
-      socket.on('stream-stats-config', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('stream-stats-config', data);
-        }
-      });
-
-      socket.on('weather-change', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('weather-change', data);
-        }
-      });
-
-      socket.on('now-playing', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('now-playing', data);
-        }
-      });
-
-      socket.on('scene-toggle', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('scene-toggle', data);
-        }
-      });
-
-      socket.on('countdown-timers', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('countdown-timers', data);
-        }
-      });
-
-      socket.on('emote-wall', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('emote-wall', data);
-        }
-      });
-
-      socket.on('component-layouts', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('component-layouts', data);
-        }
-      });
-
-      socket.on('chat-highlight', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('chat-highlight', data);
-        }
-      });
-
-      socket.on('paint-state', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('paint-state', data);
-        }
-      });
-
-      socket.on('paint-command', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('paint-command', data);
-        }
-      });
-
-      socket.on('paint-all-command', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('paint-all-command', data);
-        }
-      });
-
-      socket.on('background-change', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('background-change', data);
-        }
-      });
-
-      socket.on('alert-trigger', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('alert-trigger', data);
-        }
-      });
-
-      socket.on('wheel-config-update', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('wheel-config-update', data);
-        }
-      });
-
-      socket.on('wheel-list-update', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('wheel-list-update', data);
-        }
-      });
-
-      socket.on('wheel-spin', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('wheel-spin', data);
-        }
-      });
-
-      // TTS events
-      socket.on('tts-speak', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('tts-speak', data);
-        }
-      });
-
-      socket.on('tts-config-update', data => {
-        const sessionId = socket.data.sessionId;
-        if (sessionId) {
-          io.to(sessionId).emit('tts-config-update', data);
-        }
-      });
+      // Relay every event in RELAYED_EVENTS to the sender's session room.
+      for (const event of RELAYED_EVENTS) {
+        socket.on(event, (data: unknown) => {
+          const sessionId = socket.data.sessionId;
+          if (sessionId) {
+            io.to(sessionId).emit(event, data);
+          }
+        });
+      }
 
       socket.on('disconnect', reason => {
         console.log(
