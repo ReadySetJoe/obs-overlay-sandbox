@@ -19,14 +19,22 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
   const [dominantColor, setDominantColor] = useState<string>('#16a34a');
   const [accentColor, setAccentColor] = useState<string>('#166534');
 
+  // Visibility follows "do we have a track", not "is it playing". Pausing used
+  // to animate the element off-screen, which meant the widget vanished
+  // mid-stream; the only intended way to hide it is toggling the layer off.
+  //
+  // The title check guards the initial state: useSpotify emits empty strings
+  // before anything has played.
+  const hasTrack = Boolean(track?.title);
+
   useEffect(() => {
-    if (track?.isPlaying) {
+    if (hasTrack) {
       setIsVisible(true);
     } else {
       const timer = setTimeout(() => setIsVisible(false), 500);
       return () => clearTimeout(timer);
     }
-  }, [track?.isPlaying]);
+  }, [hasTrack]);
 
   // Extract colors from album art
   useEffect(() => {
@@ -107,7 +115,13 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
     <div
       className={`
         fixed ${positionClasses[layout.position]} transform transition-all duration-500
-        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
+        ${
+          isVisible
+            ? track.isPlaying
+              ? 'translate-y-0 opacity-100'
+              : 'translate-y-0 opacity-70'
+            : 'translate-y-full opacity-0'
+        }
       `}
       style={{
         zIndex: 10,
@@ -146,6 +160,11 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
               <span className='text-xs text-green-200 uppercase tracking-wider font-semibold'>
                 Now Playing
               </span>
+              {!track.isPlaying && (
+                <span className='ml-2 text-xs font-semibold uppercase tracking-wide opacity-80'>
+                  &#10074;&#10074; Paused
+                </span>
+              )}
             </div>
             <div className='overflow-hidden mb-1'>
               <h3
