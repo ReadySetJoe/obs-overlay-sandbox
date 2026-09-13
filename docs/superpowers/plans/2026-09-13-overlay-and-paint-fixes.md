@@ -44,13 +44,13 @@ Every test command below assumes `DATABASE_URL` is exported in the shell.
 | Create: `tests/e2e/overlay/resolution-warning.spec.ts` | Tests for the resolution warning. |
 | Create: `tests/e2e/overlay/now-playing-paused.spec.ts` | Test that Now Playing survives a pause. |
 | Create: `tests/unit/paint-grid.spec.ts` | Unit tests for `clampGridSize`. |
-| Modify: 12 overlay pages | Replace inlined badge with the two components. |
+| Modify: 13 overlay pages | Replace inlined badge with the two components. `wheel.tsx` has no badge today and gains both. |
 | Modify: `components/overlay/NowPlaying.tsx:17,22-29` | Decouple visibility from `isPlaying`. |
 | Modify: `components/overlay/PaintByNumbers.tsx:167-181` | Drop the title, enlarge the instructions. |
 | Modify: `components/dashboard/expanded/PaintByNumbersExpanded.tsx:84,516-523` | Cap the slider, lower the default. |
 | Modify: `hooks/useOverlaySocket.ts:53` | Clamp persisted `gridSize` on load. |
 
-The 12 overlay pages are:
+The 13 overlay pages are (note: `wheel.tsx` had no badge to replace, so Task 1 covers 12 and Task 2 covers all 13):
 
 ```
 pages/overlay/[sessionId].tsx
@@ -65,6 +65,7 @@ pages/overlay/[sessionId]/paint-by-numbers.tsx
 pages/overlay/[sessionId]/stream-stats.tsx
 pages/overlay/[sessionId]/tts.tsx
 pages/overlay/[sessionId]/weather.tsx
+pages/overlay/[sessionId]/wheel.tsx
 ```
 
 ---
@@ -252,6 +253,8 @@ node scratch/replace-badge.js
 
 Expected: 12 lines of `OK`, exit 0. If any line says `SKIP`, stop and inspect that file — do not proceed with a partial replacement.
 
+> **Known defect in this script, recorded for anyone replaying this plan.** The "insert after the last line starting with `import`" heuristic splices the import *into* a multi-line `import { ... }` block in `pages/overlay/[sessionId].tsx`, producing invalid syntax. The script still reports `OK`, because its guard only validates that the badge matched once - it never validates the output. Only `npm run type-check` catches it. Task 2 anchors on the `ConnectionStatus` import line instead; prefer that approach. Run `npm run type-check` before committing.
+
 - [ ] **Step 5: Verify no inlined badge remains**
 
 ```bash
@@ -295,7 +298,7 @@ would otherwise have to be added twelve times."
 **Files:**
 - Create: `components/overlay/ResolutionWarning.tsx`
 - Create: `tests/e2e/overlay/resolution-warning.spec.ts`
-- Modify: all 12 overlay pages
+- Modify: all 13 overlay pages
 
 The component takes **no props** — it derives its `sessionStorage` key from `window.location.pathname`, which keeps the 12-file wiring to a single self-closing tag.
 
@@ -443,9 +446,9 @@ export default function ResolutionWarning() {
 
 Note the warning copy contains "overlays are designed for 1920×1080", which is what the test's `WARNING` regex matches. The `×` characters are U+00D7 multiplication signs, not the letter x — keep them consistent between component and test.
 
-- [ ] **Step 4: Wire it into all 12 pages**
+- [ ] **Step 4: Wire it into all 13 pages**
 
-The component renders next to `ConnectionStatus`, which Task 1 already placed identically in all 12 files. Write and run:
+The component renders next to `ConnectionStatus`, which Task 1 placed identically in all 13 files. Write and run:
 
 ```js
 // scratch/add-resolution-warning.js
@@ -465,6 +468,7 @@ const FILES = [
   'pages/overlay/[sessionId]/stream-stats.tsx',
   'pages/overlay/[sessionId]/tts.tsx',
   'pages/overlay/[sessionId]/weather.tsx',
+  'pages/overlay/[sessionId]/wheel.tsx',
 ];
 
 const ANCHOR = '      <ConnectionStatus isConnected={isConnected} />';
@@ -515,7 +519,9 @@ process.exit(failed ? 1 : 0);
 node scratch/add-resolution-warning.js
 ```
 
-Expected: 12 × `OK`, exit 0.
+Expected: 13 × `OK`, exit 0.
+
+**Then immediately run `npm run type-check`.** These codemod scripts validate their *input* match but never their *output* - that is exactly how Task 1 silently produced an invalid file while reporting `OK`. Treat a clean type-check as part of this step, not a later one.
 
 - [ ] **Step 5: Run type-check and the test**
 
