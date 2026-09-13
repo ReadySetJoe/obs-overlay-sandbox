@@ -577,7 +577,9 @@ Expected: type-check exits 0; all 3 tests PASS.
 npx playwright test --reporter=line
 ```
 
-Expected: `41 passed, 6 skipped` (38 + 3 new).
+Expected: `44 passed, 6 skipped` (38 + 6 new).
+
+Task 2 contributes **6** tests, not the 3 originally planned: code review required coverage for the auto-hide, the reload-suppression guard and the re-warn-on-new-size behaviour, none of which the first three tests touched.
 
 If anything fails, the likely cause is a locator that is now ambiguous because the warning added matching text, or a strict-mode violation. Fix by making the *existing* spec's locator more specific - do NOT suppress the warning in tests, and do NOT change the tolerance to dodge the problem. Report what you changed and why.
 
@@ -1183,7 +1185,21 @@ npm audit --audit-level=critical
 npx playwright test --reporter=line
 ```
 
-Expected: all exit 0. Suite should be **36 baseline + 6 new = 42 passed**, 6 skipped (or 8 passed and 4 skipped if Task 6 Step 4 enabled the two template specs).
+Expected: all exit 0.
+
+Suite arithmetic, task by task — use this as the running regression gate:
+
+| After | Tests added | Expected |
+|---|---|---|
+| baseline | — | 36 passed, 6 skipped |
+| Task 1 | +2 | 38 passed, 6 skipped |
+| Task 2 | +6 | 44 passed, 6 skipped |
+| Task 3 | +0 (helper only) | 44 passed, 6 skipped |
+| Task 4 | +1 | 45 passed, 6 skipped |
+| Task 5 | +6 (unit) | 51 passed, 6 skipped |
+| Task 6 | +0 | 51 passed, 6 skipped |
+
+If Task 6 Step 4 successfully enables the two skipped template specs, the final figure becomes **53 passed, 4 skipped**.
 
 - [ ] **Push and confirm CI is green**
 
@@ -1208,3 +1224,23 @@ rm -f scratch/replace-badge.js scratch/add-resolution-warning.js
 - **`.env` vs `.env.local`.** The Prisma CLI reads `.env`; Next reads `.env.local`. Pass `DATABASE_URL` explicitly for `prisma` commands, and never point it at the production URL in `.env.local`.
 - **The `×` character** in the resolution warning is U+00D7, not the letter x. The test regex depends on it.
 - **Do not "fix" the vestigial helpers.** `exposeSocketStatus` and `waitForSocketEvent` are unused-by-design here; removing them is out of scope for this plan.
+
+## Mutation-testing protocol
+
+A test that passes for the wrong reason is worse than no test. Task 2 produced two
+concrete examples, so follow this whenever you need to confirm a test has teeth.
+
+1. **Kill any dev server and `rm -rf .next` before both the baseline and the
+   mutated run.** `playwright.config.ts:64` sets `reuseExistingServer:
+   !process.env.CI`, so a surviving dev server will serve already-compiled
+   output and the mutated run can be answered entirely from stale bundles. This
+   produced a real false pass during Task 2.
+2. **Mutate the requirement the test claims to prove, not merely nearby code.**
+   Task 2's cautionary example: test 6 was named "warns again when the source
+   changes to a different wrong size", and was verified by disabling the resize
+   listener. But deleting the *size* from the storage key — the actual
+   requirement — left all six tests passing, because the test started at a
+   correct size and so never wrote a key at all.
+3. **Require the mutated run to fail for the stated reason.** Read the failure
+   message. A failure for an unrelated cause is as uninformative as a pass.
+4. **Restore, clear `.next` again, and re-run green before committing.**

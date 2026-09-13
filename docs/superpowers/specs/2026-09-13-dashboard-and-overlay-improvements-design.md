@@ -183,6 +183,12 @@ one widget). So the warning must be advisory and quiet:
   other. Including the size also makes a *different* wrong size newly
   reportable, which is genuinely new information.
 
+  Note the key includes the pathname, which contains the `sessionId`. So the
+  guarantee is "warned once per source URL per size", not "once ever" — pointing
+  a browser source at a new session will warn again at the same wrong size.
+  That is the desirable behaviour (a new session is a new setup), but it is worth
+  stating so it is not a surprise.
+
   Storage access must be wrapped in `try`/`catch` and warn anyway on failure.
   `localStorage` throws when storage is unavailable or over quota, and there
   is no error boundary in `pages/_app.tsx`, so an uncaught throw would
