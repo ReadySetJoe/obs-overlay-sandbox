@@ -1196,15 +1196,23 @@ Expected: all exit 0.
 
 Suite arithmetic, task by task — use this as the running regression gate:
 
-| After | Tests added | Expected |
-|---|---|---|
-| baseline | — | 36 passed, 6 skipped |
-| Task 1 | +2 | 38 passed, 6 skipped |
-| Task 2 | +6 | 44 passed, 6 skipped |
-| Task 3 | +0 (helper only) | 44 passed, 6 skipped |
-| Task 4 | +1 | 45 passed, 6 skipped |
-| Task 5 | +6 (unit) | 51 passed, 6 skipped |
-| Task 6 | +0 | 51 passed, 6 skipped |
+| After | Tests added | Expected | Actual |
+|---|---|---|---|
+| baseline | — | 36 passed, 6 skipped | 36 passed, 6 skipped |
+| Task 1 | +2 | 38, 6 | 38, 6 |
+| Task 2 | +6 | 44, 6 | 44, 6 |
+| Task 3 | +0 (helper only) | 44, 6 | 44, 6 |
+| Task 4 | +2 | 45, 6 | **46, 6** |
+| Task 5 | +8 | 51, 6 | **54, 6** |
+| Task 6 | +2 (un-skipped) | 53, 4 | **56, 4** |
+
+Final actual: **56 passed, 4 skipped, 0 failed.** Three tasks exceeded their
+planned test counts because code review required coverage the plan had not
+asked for: Task 4 gained a progress-bar regression test, and Task 5 gained two
+mutation-verified clamp-wiring tests on top of its six unit tests. The planned
+figures are left in place rather than rewritten, because the gap between
+planned and actual is the useful signal - it is a measure of what the plan
+failed to anticipate.
 
 If Task 6 Step 4 successfully enables the two skipped template specs, the final figure becomes **53 passed, 4 skipped**.
 
