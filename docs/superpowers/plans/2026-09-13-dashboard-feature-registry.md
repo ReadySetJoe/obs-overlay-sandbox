@@ -154,15 +154,17 @@ Expected: `14`.
 
 Replace each of these, and **only** these — leave in-panel selectors alone:
 
-| File | Old | New |
-|---|---|---|
-| `color-scheme-sync.spec.ts` (2 sites) | `page.click('text=Color Scheme')` | `page.getByTestId('tile-color').click()` |
-| `countdown-timer.spec.ts` (4 sites) | `page.click('text=Countdown Timers')` | `page.getByTestId('tile-countdown').click()` |
-| `event-labels.spec.ts` (4 sites) | `page.click('text=Recent Events')` | `page.getByTestId('tile-eventlabels').click()` |
-| `paint-by-numbers.spec.ts` | `page.click('text=Paint by Numbers')` | `page.getByTestId('tile-paint').click()` |
-| `stream-stats.spec.ts` | `page.click('text=Stream Stats')` | `page.getByTestId('tile-streamstats').click()` |
-| `weather-effects.spec.ts` | `page.click('text=Weather Effects')` | `page.getByTestId('tile-weather').click()` |
-| `wheel-spinner.spec.ts` | `page.click('text=Wheel Spinner')` | `page.getByTestId('tile-wheel').click()` |
+**There are 26 occurrences, not one per file.** Every one is a `page.click` on a tile — exactly one per realtime test — and none are in-panel assertions. Verified by enumerating all of them. Migrate all 26.
+
+| File | Sites | Old | New |
+|---|---|---|---|
+| `color-scheme-sync.spec.ts` | 2 | `page.click('text=Color Scheme')` | `page.getByTestId('tile-color').click()` |
+| `countdown-timer.spec.ts` | 4 | `page.click('text=Countdown Timers')` | `page.getByTestId('tile-countdown').click()` |
+| `event-labels.spec.ts` | 5 | `page.click('text=Recent Events')` | `page.getByTestId('tile-eventlabels').click()` |
+| `paint-by-numbers.spec.ts` | 5 | `page.click('text=Paint by Numbers')` | `page.getByTestId('tile-paint').click()` |
+| `stream-stats.spec.ts` | 4 | `page.click('text=Stream Stats')` | `page.getByTestId('tile-streamstats').click()` |
+| `weather-effects.spec.ts` | 4 | `page.click('text=Weather Effects')` | `page.getByTestId('tile-weather').click()` |
+| `wheel-spinner.spec.ts` | 2 | `page.click('text=Wheel Spinner')` | `page.getByTestId('tile-wheel').click()` |
 
 Find every occurrence first so none is missed:
 
@@ -172,7 +174,7 @@ grep -rn "text=Color Scheme\|text=Countdown Timers\|text=Recent Events\|text=Pai
 
 Migrate each hit, then re-run that grep — it must return nothing.
 
-**Careful with `text=Stream Stats`:** the tile's title is "Stream Stats & Goals", so the old selector was a substring match. Check whether the expanded panel also contains "Stream Stats" text; if the spec relies on that *after* opening the panel, leave that later assertion as-is and change only the tile click.
+Note `text=Stream Stats` was a substring match against the tile’s real title, "Stream Stats & Goals". All four occurrences are tile clicks, so all four migrate; there is no post-panel assertion relying on that text.
 
 - [ ] **Step 5: Run type-check, lint and the full suite**
 
@@ -193,7 +195,7 @@ A `getByTestId` that matches nothing fails loudly, so a green suite is already g
 grep -rn "getByTestId('tile-" tests/e2e/ | wc -l
 ```
 
-Expected: `14` (2 + 4 + 4 + 1 + 1 + 1 + 1).
+Expected: `26` (2 + 4 + 5 + 5 + 4 + 4 + 2).
 
 - [ ] **Step 7: Commit**
 
