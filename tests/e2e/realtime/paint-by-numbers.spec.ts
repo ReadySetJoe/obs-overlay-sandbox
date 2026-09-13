@@ -30,7 +30,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'paint-by-numbers');
 
     // 3. Click on Paint by Numbers tile in dashboard
-    await page.click('text=Paint by Numbers');
+    await page.getByTestId('tile-paint').click();
 
     // Wait for expanded view to load
     await expect(page.locator('text=Select Template')).toBeVisible({
@@ -62,7 +62,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'paint-by-numbers');
 
     // Open Paint by Numbers settings
-    await page.click('text=Paint by Numbers');
+    await page.getByTestId('tile-paint').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Select Template')).toBeVisible({
@@ -118,7 +118,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'paint-by-numbers');
 
     // Open Paint by Numbers settings
-    await page.click('text=Paint by Numbers');
+    await page.getByTestId('tile-paint').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Position & Size')).toBeVisible({
@@ -181,7 +181,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'paint-by-numbers');
 
     // Open Paint by Numbers settings
-    await page.click('text=Paint by Numbers');
+    await page.getByTestId('tile-paint').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Select Template')).toBeVisible({
@@ -211,7 +211,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'paint-by-numbers');
 
     // Open Paint by Numbers settings
-    await page.click('text=Paint by Numbers');
+    await page.getByTestId('tile-paint').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Select Template')).toBeVisible({

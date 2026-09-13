@@ -30,7 +30,7 @@ test.describe('Color Scheme - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'wheel');
 
     // 3. Click Color Scheme tile in dashboard
-    await page.click('text=Color Scheme');
+    await page.getByTestId('tile-color').click();
 
     // Wait for expanded view - look for preset buttons
     await expect(page.locator('button:has-text("Cyberpunk")')).toBeVisible({
@@ -81,7 +81,7 @@ test.describe('Color Scheme - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'wheel');
 
     // Open Color Scheme settings
-    await page.click('text=Color Scheme');
+    await page.getByTestId('tile-color').click();
 
     // Navigate to Custom tab
     await page.click('button:has-text("Custom")');

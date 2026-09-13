@@ -33,7 +33,7 @@ test.describe('Countdown Timer - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'countdown');
 
     // 3. Click on Countdown Timer tile in dashboard
-    await page.click('text=Countdown Timers');
+    await page.getByTestId('tile-countdown').click();
 
     // Wait for expanded view to load
     await expect(page.locator('text=+ Add Timer')).toBeVisible({
@@ -140,7 +140,7 @@ test.describe('Countdown Timer - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'countdown');
 
     // Open Countdown Timer settings
-    await page.click('text=Countdown Timers');
+    await page.getByTestId('tile-countdown').click();
     await expect(page.locator('text=+ Add Timer')).toBeVisible({
       timeout: 5000,
     });
@@ -183,7 +183,7 @@ test.describe('Countdown Timer - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'countdown');
 
     // Open Countdown Timer settings
-    await page.click('text=Countdown Timers');
+    await page.getByTestId('tile-countdown').click();
     await expect(page.locator('text=+ Add Timer')).toBeVisible({
       timeout: 5000,
     });
@@ -231,7 +231,7 @@ test.describe('Countdown Timer - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'countdown');
 
     // Open Countdown Timer settings
-    await page.click('text=Countdown Timers');
+    await page.getByTestId('tile-countdown').click();
 
     // Wait for expanded view to load
     await expect(page.locator('text=+ Add Timer')).toBeVisible({

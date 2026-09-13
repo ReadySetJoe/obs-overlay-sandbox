@@ -36,7 +36,7 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'wheel');
 
     // 3. Click on Wheel Spinner tile in dashboard
-    await page.click('text=Wheel Spinner');
+    await page.getByTestId('tile-wheel').click();
 
     // Wait for expanded view to load
     await expect(page.locator('text=Create Wheel')).toBeVisible({
@@ -126,7 +126,7 @@ test.describe('Wheel Spinner - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'wheel');
 
     // Open wheel settings
-    await page.click('text=Wheel Spinner');
+    await page.getByTestId('tile-wheel').click();
 
     // Create and activate a wheel (similar to previous test)
     await page.click('text=Create Wheel');

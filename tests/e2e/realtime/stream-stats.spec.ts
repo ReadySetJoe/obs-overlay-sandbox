@@ -30,7 +30,7 @@ test.describe('Stream Stats - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'stream-stats');
 
     // 3. Click on Stream Stats tile in dashboard
-    await page.click('text=Stream Stats');
+    await page.getByTestId('tile-streamstats').click();
 
     // Wait for expanded view to load
     await expect(page.locator('text=Display Mode')).toBeVisible({
@@ -85,7 +85,7 @@ test.describe('Stream Stats - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'stream-stats');
 
     // Open Stream Stats settings
-    await page.click('text=Stream Stats');
+    await page.getByTestId('tile-streamstats').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Goal Targets')).toBeVisible({
@@ -135,7 +135,7 @@ test.describe('Stream Stats - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'stream-stats');
 
     // Open Stream Stats settings
-    await page.click('text=Stream Stats');
+    await page.getByTestId('tile-streamstats').click();
 
     // Wait for expanded view with metrics
     await expect(page.locator('text=Visible Metrics')).toBeVisible({
@@ -184,7 +184,7 @@ test.describe('Stream Stats - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'stream-stats');
 
     // Open Stream Stats settings
-    await page.click('text=Stream Stats');
+    await page.getByTestId('tile-streamstats').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Display Mode')).toBeVisible({

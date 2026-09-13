@@ -30,7 +30,7 @@ test.describe('Event Labels - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'event-labels');
 
     // 3. Click on Recent Events tile in dashboard (Event Labels)
-    await page.click('text=Recent Events');
+    await page.getByTestId('tile-eventlabels').click();
 
     // Wait for expanded view to load - use exact match to avoid matching the description text
     await expect(
@@ -92,7 +92,7 @@ test.describe('Event Labels - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'event-labels');
 
     // Open Event Labels settings
-    await page.click('text=Recent Events');
+    await page.getByTestId('tile-eventlabels').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Latest Follower')).toBeVisible({
@@ -120,7 +120,7 @@ test.describe('Event Labels - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'event-labels');
 
     // Open Event Labels settings
-    await page.click('text=Recent Events');
+    await page.getByTestId('tile-eventlabels').click();
 
     // Wait for test section to be visible
     await expect(page.locator('h4:has-text("Test Events")')).toBeVisible({
@@ -172,7 +172,7 @@ test.describe('Event Labels - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'event-labels');
 
     // Open Event Labels settings
-    await page.click('text=Recent Events');
+    await page.getByTestId('tile-eventlabels').click();
 
     // Wait for expanded view - use exact match to avoid matching the description text
     await expect(
@@ -222,7 +222,7 @@ test.describe('Event Labels - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'event-labels');
 
     // Open Event Labels settings
-    await page.click('text=Recent Events');
+    await page.getByTestId('tile-eventlabels').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Latest Bits')).toBeVisible({

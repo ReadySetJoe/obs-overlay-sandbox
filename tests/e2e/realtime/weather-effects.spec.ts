@@ -30,7 +30,7 @@ test.describe('Weather Effects - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'weather');
 
     // 3. Click on Weather Effects tile in dashboard
-    await page.click('text=Weather Effects');
+    await page.getByTestId('tile-weather').click();
 
     // Wait for expanded view to load
     await expect(page.locator('button:has-text("rain")')).toBeVisible({
@@ -91,7 +91,7 @@ test.describe('Weather Effects - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'weather');
 
     // Open Weather Effects settings
-    await page.click('text=Weather Effects');
+    await page.getByTestId('tile-weather').click();
 
     // Wait for expanded view
     await expect(page.locator('button:has-text("rain")')).toBeVisible({
@@ -133,7 +133,7 @@ test.describe('Weather Effects - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'weather');
 
     // Open Weather Effects settings
-    await page.click('text=Weather Effects');
+    await page.getByTestId('tile-weather').click();
 
     // Wait for expanded view
     await expect(page.locator('text=Particle Density')).toBeVisible({
@@ -186,7 +186,7 @@ test.describe('Weather Effects - Dashboard to Overlay Sync', () => {
     await navigateToOverlay(overlayPage, 'weather');
 
     // Open Weather Effects settings
-    await page.click('text=Weather Effects');
+    await page.getByTestId('tile-weather').click();
 
     // Wait for expanded view
     await expect(page.locator('button:has-text("rain")')).toBeVisible({

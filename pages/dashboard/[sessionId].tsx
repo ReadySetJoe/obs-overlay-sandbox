@@ -207,6 +207,7 @@ export default function DashboardPage() {
                 tileCount={3}
               >
                 <SummaryTile
+                  testId='tile-color'
                   title='Color Scheme'
                   subtitle={colorSchemeHook.colorScheme}
                   icon={<ColorSchemeIcon />}
@@ -214,6 +215,7 @@ export default function DashboardPage() {
                   onClick={() => expandedViewHook.handleExpandElement('color')}
                 />
                 <SummaryTile
+                  testId='tile-background'
                   title='Custom Background'
                   subtitle={
                     backgroundHook.backgroundImageUrl
@@ -227,6 +229,7 @@ export default function DashboardPage() {
                   }
                 />
                 <SummaryTile
+                  testId='tile-textstyle'
                   title='Text Style'
                   subtitle={textStyleHook.fontFamily}
                   icon={<TextStyleIcon />}
@@ -246,6 +249,7 @@ export default function DashboardPage() {
                 tileCount={2}
               >
                 <SummaryTile
+                  testId='tile-weather'
                   title='Weather Effects'
                   subtitle={weatherHook.weatherEffect}
                   icon={<WeatherIcon />}
@@ -257,6 +261,7 @@ export default function DashboardPage() {
                   }
                 />
                 <SummaryTile
+                  testId='tile-emote'
                   title='Emote Wall'
                   subtitle={`${emoteWallHook.emoteIntensity} intensity`}
                   icon={<EmoteWallIcon />}
@@ -274,6 +279,7 @@ export default function DashboardPage() {
                 tileCount={2}
               >
                 <SummaryTile
+                  testId='tile-streamstats'
                   title='Stream Stats & Goals'
                   subtitle='Track goals, metrics, & sentiment'
                   icon={<StreamStatsIcon />}
@@ -287,6 +293,7 @@ export default function DashboardPage() {
                   }
                 />
                 <SummaryTile
+                  testId='tile-eventlabels'
                   title='Recent Events'
                   subtitle='Latest follower, sub, bits, etc.'
                   icon={<EventLabelsIcon />}
@@ -310,6 +317,7 @@ export default function DashboardPage() {
                 tileCount={3}
               >
                 <SummaryTile
+                  testId='tile-wheel'
                   title='Wheel Spinner'
                   subtitle={
                     wheelsHook.wheels.find(w => w.isActive)
@@ -325,6 +333,7 @@ export default function DashboardPage() {
                   onClick={() => expandedViewHook.handleExpandElement('wheel')}
                 />
                 <SummaryTile
+                  testId='tile-paint'
                   title='Paint by Numbers'
                   subtitle={
                     paintHook.paintByNumbersState
@@ -340,6 +349,7 @@ export default function DashboardPage() {
                   onClick={() => expandedViewHook.handleExpandElement('paint')}
                 />
                 <SummaryTile
+                  testId='tile-countdown'
                   title='Countdown Timers'
                   subtitle={`${timersHook.timers.length} timer${timersHook.timers.length !== 1 ? 's' : ''}`}
                   icon={<CountdownIcon />}
@@ -361,6 +371,7 @@ export default function DashboardPage() {
                 tileCount={3}
               >
                 <SummaryTile
+                  testId='tile-chathighlight'
                   title='Chat Highlight'
                   subtitle={chatHook.chatHighlight ? 'Selected' : 'Inactive'}
                   icon={<ChatHighlightIcon />}
@@ -374,6 +385,7 @@ export default function DashboardPage() {
                   }
                 />
                 <SummaryTile
+                  testId='tile-tts'
                   title='Text to Speech'
                   subtitle='Voice overlay & TTS'
                   icon={<TTSIcon />}
@@ -383,6 +395,7 @@ export default function DashboardPage() {
                   onClick={() => expandedViewHook.handleExpandElement('tts')}
                 />
                 <SummaryTile
+                  testId='tile-alerts'
                   title='Stream Alerts'
                   subtitle={
                     alertsHook.totalConfiguredCount === 0
@@ -404,6 +417,7 @@ export default function DashboardPage() {
                 tileCount={1}
               >
                 <SummaryTile
+                  testId='tile-nowplaying'
                   title='Now Playing'
                   subtitle={
                     spotify.isPlaying ? spotify.trackTitle : 'Not playing'
