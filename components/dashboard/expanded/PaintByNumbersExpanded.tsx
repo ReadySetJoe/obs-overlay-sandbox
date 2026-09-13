@@ -8,6 +8,12 @@ import {
   PaintTemplate,
 } from '@/types/overlay';
 import { getBuiltInTemplates } from '@/lib/paintTemplates';
+import {
+  PAINT_GRID_SIZE_MIN,
+  PAINT_GRID_SIZE_MAX,
+  DEFAULT_PAINT_GRID_SIZE,
+  clampGridSize,
+} from '@/lib/paintGrid';
 import CopyURLButton from '../CopyURLButton';
 import PositionControls from '../PositionControls';
 import { PaintByNumbersIcon } from '../tiles/TileIcons';
@@ -81,7 +87,7 @@ export default function PaintByNumbersExpanded({
     x: 0,
     y: 0,
     scale: 1,
-    gridSize: 20,
+    gridSize: DEFAULT_PAINT_GRID_SIZE,
   };
 
   // Load custom templates on mount
@@ -511,15 +517,17 @@ export default function PaintByNumbersExpanded({
           </div>
           <div>
             <label className='block text-xs text-gray-400 mb-1'>
-              Grid Size: {layout.gridSize}px
+              Grid Size: {clampGridSize(layout.gridSize)}px
             </label>
             <input
               type='range'
-              min='1'
-              max='40'
+              min={PAINT_GRID_SIZE_MIN}
+              max={PAINT_GRID_SIZE_MAX}
               step='1'
-              value={layout.gridSize}
-              onChange={e => onGridSizeChange(parseInt(e.target.value))}
+              value={clampGridSize(layout.gridSize)}
+              onChange={e =>
+                onGridSizeChange(clampGridSize(parseInt(e.target.value)))
+              }
               className='w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500'
             />
           </div>

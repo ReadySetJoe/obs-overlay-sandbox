@@ -150,7 +150,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
     const gridSlider = page.locator('input[type="range"]').nth(1);
     if (await gridSlider.isVisible()) {
       const initialGrid = await gridSlider.inputValue();
-      await gridSlider.fill('30');
+      await gridSlider.fill('8');
       await page.waitForTimeout(1000);
 
       await expect(overlayPage.locator('body')).toBeVisible();

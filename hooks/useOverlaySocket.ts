@@ -20,6 +20,7 @@ import {
   TTSConfig,
 } from '@/types/overlay';
 import { colorSchemePresets } from '@/lib/colorSchemes';
+import { clampGridSize, DEFAULT_PAINT_GRID_SIZE } from '@/lib/paintGrid';
 
 export function useOverlaySocket(sessionId: string) {
   const { socket, isConnected } = useSocket(sessionId);
@@ -50,7 +51,7 @@ export function useOverlaySocket(sessionId: string) {
       x: 0,
       y: 0,
       scale: 1,
-      gridSize: 20,
+      gridSize: DEFAULT_PAINT_GRID_SIZE,
     },
     wheel: {
       position: 'center',
@@ -193,6 +194,14 @@ export function useOverlaySocket(sessionId: string) {
           if (layout.componentLayouts) {
             try {
               const parsedLayouts = JSON.parse(layout.componentLayouts);
+              if (parsedLayouts.paintByNumbers) {
+                parsedLayouts.paintByNumbers = {
+                  ...parsedLayouts.paintByNumbers,
+                  gridSize: clampGridSize(
+                    parsedLayouts.paintByNumbers.gridSize
+                  ),
+                };
+              }
               setComponentLayouts(prev => ({
                 ...prev,
                 ...parsedLayouts,
@@ -410,7 +419,15 @@ export function useOverlaySocket(sessionId: string) {
     });
 
     socket.on('component-layouts', (layouts: ComponentLayouts) => {
-      setComponentLayouts(layouts);
+      setComponentLayouts({
+        ...layouts,
+        ...(layouts.paintByNumbers && {
+          paintByNumbers: {
+            ...layouts.paintByNumbers,
+            gridSize: clampGridSize(layouts.paintByNumbers.gridSize),
+          },
+        }),
+      });
     });
 
     socket.on('chat-highlight', (highlight: ChatHighlightType | null) => {

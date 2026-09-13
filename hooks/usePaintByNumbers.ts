@@ -12,6 +12,7 @@ import {
   handlePaintAllCommand as processPaintAllCommand,
   handlePaintRandomCommand as processPaintRandomCommand,
 } from '@/lib/paintStateManager';
+import { DEFAULT_PAINT_GRID_SIZE } from '@/lib/paintGrid';
 
 interface UsePaintByNumbersProps {
   sessionId: string | undefined;
@@ -171,7 +172,7 @@ export function usePaintByNumbers({
           ...(componentLayouts.paintByNumbers || {
             position: 'top-left',
             scale: 1,
-            gridSize: 20,
+            gridSize: DEFAULT_PAINT_GRID_SIZE,
           }),
           x,
           y,
@@ -194,7 +195,7 @@ export function usePaintByNumbers({
             position: 'top-left',
             x: 0,
             y: 0,
-            gridSize: 20,
+            gridSize: DEFAULT_PAINT_GRID_SIZE,
           }),
           scale,
         },

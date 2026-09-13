@@ -11,6 +11,7 @@ import {
   PaintByNumbersState,
 } from '@/types/overlay';
 import { serializePaintState } from '@/lib/paintStateManager';
+import { DEFAULT_PAINT_GRID_SIZE } from '@/lib/paintGrid';
 
 interface Layer {
   id: string;
@@ -197,7 +198,7 @@ export function useLayoutPersistence({
                   x: 0,
                   y: 0,
                   scale: 1,
-                  gridSize: 20,
+                  gridSize: DEFAULT_PAINT_GRID_SIZE,
                 },
                 eventLabels: parsedLayouts.eventLabels || {
                   position: 'top-right',
