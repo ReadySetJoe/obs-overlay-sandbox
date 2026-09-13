@@ -283,6 +283,34 @@ with content exists, regardless of `isPlaying`:
 
 ---
 
+### Known coverage gap
+
+A second defect surfaced only after the disappearance was fixed: `hooks/useSpotify.ts`
+dropped `progress`, `duration` and `timestamp` from its pause emit, so
+`NowPlaying`’s `progressPercent` fell to its `: 0` branch and the bar collapsed
+to empty on every real pause. While the panel was sliding off-screen this had no
+visible consequence, which is why the original diagnosis missed it. Fixed by
+preferring the live API payload (the Spotify endpoint does return progress and
+duration for a genuine pause) and falling back to retained state.
+
+**That fix has no test.** The reason is structural and worth recording, because the
+same mistake was made twice: the e2e test injects a synthetic `now-playing`
+payload from Node, so it exercises how `NowPlaying` *renders* a payload and can
+never exercise what *produces* one. A test that fabricates the payload cannot
+test the payload producer — and the original bug went unnoticed for exactly this
+reason, because the fixture was richer than anything the app emits.
+
+Closing it needs one of:
+
+- Extract the pause-payload construction out of the hook into a pure function in
+  `lib/`, and unit-test it the way `lib/paintGrid.ts` is tested. Small and
+  principled; preferred.
+- Or the repo’s first dashboard-driven e2e with a mocked
+  `/api/spotify/now-playing` route. Attempted and abandoned: the dashboard has
+many concurrent hooks and the poll did not fire within a sane timeout.
+
+---
+
 ## 6. Paint by Numbers adjustments
 
 Three changes, all user-specified.
