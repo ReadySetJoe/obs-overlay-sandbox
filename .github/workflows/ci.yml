@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Dummy values for the variables lib/env.ts requires. Nothing in CI talks to
+# real Twitch/Cloudinary; the tests only need the app to boot.
+env:
+  NEXTAUTH_URL: http://localhost:3000
+  NEXTAUTH_SECRET: ci-not-a-real-secret
+  TWITCH_CLIENT_ID: ci-dummy-client-id
+  TWITCH_CLIENT_SECRET: ci-dummy-client-secret
+  CLOUDINARY_CLOUD_NAME: ci-dummy-cloud
+  CLOUDINARY_API_KEY: ci-dummy-key
+  CLOUDINARY_API_SECRET: ci-dummy-secret
+
+jobs:
+  checks:
+    name: Types, lint, build, audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the Node version nixpacks.toml pins for Railway.
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run type-check
+
+      - run: npm run lint
+
+      - run: npm run build
+
+      # Railway refuses to even start a build when a dependency has a critical
+      # advisory, which is how a deploy broke once. Catching it here means the
+      # failure shows up on the PR instead of at deploy time. Scoped to
+      # critical deliberately: there is a backlog of high advisories in
+      # transitive deps, so gating on `high` would fail every run.
+      - name: Audit for critical advisories
+        run: npm audit --audit-level=critical
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: obs_user
+          POSTGRES_PASSWORD: obs_password
+          POSTGRES_DB: obs_overlay
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U obs_user -d obs_overlay"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://obs_user:obs_password@localhost:5432/obs_overlay
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+
+      # playwright.config.ts starts `npm run dev` itself via its webServer
+      # block, so there is no separate server step here.
+      - run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
