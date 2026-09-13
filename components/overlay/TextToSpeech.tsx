@@ -119,14 +119,22 @@ export default function TextToSpeech({
     };
   }, [socket, config.maxQueueSize, config.filterProfanity]);
 
-  // Process TTS queue
+  // Process TTS queue.
+  //
+  // This effect is the queue pump: whenever nothing is being spoken and the
+  // queue is non-empty, it starts the next utterance. Driving the browser
+  // Speech Synthesis API is inherently imperative, and the 'speaking' flag has
+  // to live in state because the overlay renders from it, so setting state
+  // here is the intended design rather than an accident.
   useEffect(() => {
     if (isSpeaking || queue.length === 0) {
       return;
     }
 
     const nextMessage = queue[0];
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentMessage(nextMessage.text);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSpeaking(true);
 
     // Calculate estimated duration based on text length and rate

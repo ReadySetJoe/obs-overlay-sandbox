@@ -5,8 +5,12 @@ export function useOriginUrl(): string {
   const [origin, setOrigin] = useState('');
 
   useEffect(() => {
-    // Only access window on client side
+    // window.location has to be read after mount rather than in a useState
+    // initializer: the server renders an empty string, and a lazy initializer
+    // would return a different value on the client - a hydration mismatch.
+    // One extra render on mount is the deliberate trade-off.
     if (typeof window !== 'undefined') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOrigin(window.location.origin);
     }
   }, []);

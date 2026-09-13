@@ -23,10 +23,13 @@ export default function CollapsibleSection({
 }: CollapsibleSectionProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
-  // Load collapse state from localStorage on mount
+  // Load collapse state from localStorage on mount. localStorage does not
+  // exist during SSR, so this cannot move into the useState initializer
+  // without causing a hydration mismatch.
   useEffect(() => {
     const savedState = localStorage.getItem(`dashboard-section-${id}`);
     if (savedState !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCollapsed(savedState === 'true');
     }
   }, [id]);

@@ -7,6 +7,7 @@ import {
   ComponentLayouts,
   TTSVisualizerStyle,
   TTSVisualizerPosition,
+  TTSChatPermissions,
 } from '@/types/overlay';
 import PositionControls from '../PositionControls';
 import CopyURLButton from '../CopyURLButton';
@@ -78,7 +79,10 @@ export default function TextToSpeechExpanded({
   const [localConfig, setLocalConfig] = useState(() => {
     if (initialConfig) {
       const { id, layoutId, createdAt, updatedAt, ...configData } =
-        initialConfig as any;
+        initialConfig as TTSConfig & {
+          createdAt?: unknown;
+          updatedAt?: unknown;
+        };
       return { ...getDefaultConfig(), ...configData };
     }
     return getDefaultConfig();
@@ -619,7 +623,9 @@ export default function TextToSpeechExpanded({
             <select
               value={localConfig.chatPermissions}
               onChange={e =>
-                handleChange({ chatPermissions: e.target.value as any })
+                handleChange({
+                  chatPermissions: e.target.value as TTSChatPermissions,
+                })
               }
               className='w-full px-3 py-2 bg-gray-700 rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500 text-white'
             >
