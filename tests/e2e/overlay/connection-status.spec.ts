@@ -30,7 +30,7 @@ test.describe('Overlay connection status', () => {
   test('shows the reconnect hint when the socket cannot connect', async ({
     page,
   }) => {
-    await page.routeWebSocket('**/api/socket/**', ws => ws.close());
+    await page.routeWebSocket('**/api/socket**', ws => ws.close());
     await page.route('**/api/socket**', route => route.abort());
 
     await page.goto(`/overlay/${TEST_SESSION_ID}/chat-highlight`);

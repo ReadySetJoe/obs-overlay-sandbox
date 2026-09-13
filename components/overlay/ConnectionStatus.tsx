@@ -7,7 +7,7 @@ interface ConnectionStatusProps {
 /**
  * Disconnected badge for overlay pages.
  *
- * Previously this markup was copy-pasted into all 12 overlay pages, which is
+ * Previously this markup was copy-pasted into 12 of the 13 overlay pages, which is
  * why the reconnect hint lives here: one place to change.
  */
 export default function ConnectionStatus({
