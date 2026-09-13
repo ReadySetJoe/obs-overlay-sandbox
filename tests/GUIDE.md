@@ -3,6 +3,7 @@
 This guide explains how to read, understand, and write E2E tests for the OBS Overlay project. Use this as a reference when working with Claude Code to continue test development.
 
 ## Table of Contents
+
 1. [Understanding Test Structure](#understanding-test-structure)
 2. [How Tests Work](#how-tests-work)
 3. [Reading Existing Tests](#reading-existing-tests)
@@ -16,6 +17,7 @@ This guide explains how to read, understand, and write E2E tests for the OBS Ove
 ## Understanding Test Structure
 
 ### File Organization
+
 ```
 tests/
 ├── e2e/                           # End-to-end tests
@@ -30,11 +32,15 @@ tests/
 ```
 
 ### Test File Structure
+
 Each test file follows this pattern:
 
 ```typescript
 import { test, expect } from '@playwright/test';
-import { setupTestDatabase, teardownTestDatabase } from '../../fixtures/database';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+} from '../../fixtures/database';
 import { navigateToDashboard, navigateToOverlay } from '../../fixtures/auth';
 
 test.describe('Feature Name', () => {
@@ -79,6 +85,7 @@ await expect(overlayPage.locator('canvas')).toBeVisible();
 ```
 
 **Key Concepts:**
+
 - `page` = The dashboard window
 - `overlayPage` = The overlay window
 - `context` = Browser context that contains both windows
@@ -110,7 +117,10 @@ await expect(overlayPage.locator('canvas')).toBeVisible();
 Let's break down a real test step-by-step:
 
 ```typescript
-test('should create wheel in dashboard and spin it in overlay', async ({ page, context }) => {
+test('should create wheel in dashboard and spin it in overlay', async ({
+  page,
+  context,
+}) => {
   // STEP 1: Setup socket tracking
   await exposeSocketStatus(page);
 
@@ -131,7 +141,9 @@ test('should create wheel in dashboard and spin it in overlay', async ({ page, c
   await page.click('button:has-text("Create Wheel")');
 
   // STEP 6: Verify wheel was created
-  await expect(page.locator('text=Test E2E Wheel')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('text=Test E2E Wheel')).toBeVisible({
+    timeout: 5000,
+  });
 
   // STEP 7: Activate the wheel
   await page.click('button:has-text("Activate")');
@@ -161,15 +173,15 @@ test('should create wheel in dashboard and spin it in overlay', async ({ page, c
 
 ### What Each Part Does
 
-| Code | Purpose |
-|------|---------|
-| `page.click()` | Clicks an element in the dashboard |
-| `overlayPage.locator()` | Finds an element in the overlay |
-| `expect().toBeVisible()` | Asserts element appears on screen |
-| `waitForCanvasChange()` | Waits for canvas animation to start |
-| `getCanvasSnapshot()` | Captures canvas state for comparison |
-| `overlayPage.waitForTimeout()` | Waits specified milliseconds |
-| `overlayPage.close()` | Closes the overlay window |
+| Code                           | Purpose                              |
+| ------------------------------ | ------------------------------------ |
+| `page.click()`                 | Clicks an element in the dashboard   |
+| `overlayPage.locator()`        | Finds an element in the overlay      |
+| `expect().toBeVisible()`       | Asserts element appears on screen    |
+| `waitForCanvasChange()`        | Waits for canvas animation to start  |
+| `getCanvasSnapshot()`          | Captures canvas state for comparison |
+| `overlayPage.waitForTimeout()` | Waits specified milliseconds         |
+| `overlayPage.close()`          | Closes the overlay window            |
 
 ---
 
@@ -239,7 +251,10 @@ expect(eventData.winningLabel).toBeDefined();
 
 ```typescript
 import { test, expect } from '@playwright/test';
-import { setupTestDatabase, teardownTestDatabase } from '../../fixtures/database';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+} from '../../fixtures/database';
 import { navigateToDashboard, navigateToOverlay } from '../../fixtures/auth';
 import { exposeSocketStatus } from '../../utils/test-helpers';
 
@@ -252,7 +267,10 @@ test.describe('My Feature - Dashboard to Overlay Sync', () => {
     await teardownTestDatabase();
   });
 
-  test('should sync my feature from dashboard to overlay', async ({ page, context }) => {
+  test('should sync my feature from dashboard to overlay', async ({
+    page,
+    context,
+  }) => {
     // Setup
     await exposeSocketStatus(page);
     await navigateToDashboard(page);
@@ -270,7 +288,9 @@ test.describe('My Feature - Dashboard to Overlay Sync', () => {
 
     // 3. Verify overlay received the change
     await overlayPage.waitForTimeout(1500); // Give socket time to sync
-    await expect(overlayPage.locator('[data-feature="my-feature"]')).toBeVisible();
+    await expect(
+      overlayPage.locator('[data-feature="my-feature"]')
+    ).toBeVisible();
 
     // 4. Test another action
     await page.click('button:has-text("Configure")');
@@ -307,21 +327,25 @@ test.describe('My Feature - Dashboard to Overlay Sync', () => {
 ### When Tests Fail
 
 1. **Check the screenshot**: Every failure saves a screenshot
+
    ```bash
    open test-results/[test-name]/test-failed-1.png
    ```
 
 2. **Watch the video**: See what actually happened
+
    ```bash
    open test-results/[test-name]/video.webm
    ```
 
 3. **Read the error context**:
+
    ```bash
    cat test-results/[test-name]/error-context.md
    ```
 
 4. **Run in headed mode** to see browser:
+
    ```bash
    npm run test:headed
    ```
@@ -334,6 +358,7 @@ test.describe('My Feature - Dashboard to Overlay Sync', () => {
 ### Common Issues and Solutions
 
 #### Issue: "Element not found"
+
 ```typescript
 // ❌ Bad: Selector too generic
 await page.click('text=Active');
@@ -343,6 +368,7 @@ await page.click('span.bg-purple-600:has-text("Active")');
 ```
 
 #### Issue: "Test timeout"
+
 ```typescript
 // ❌ Bad: Not waiting for socket
 await page.click('button');
@@ -355,6 +381,7 @@ await expect(overlayPage.locator('canvas')).toBeVisible({ timeout: 5000 });
 ```
 
 #### Issue: "Element detached from DOM"
+
 ```typescript
 // ❌ Bad: Clicking during re-render
 await page.click('button:has-text("Deactivate")');
@@ -366,6 +393,7 @@ await button.click({ force: true });
 ```
 
 #### Issue: "Cannot fill color input"
+
 ```typescript
 // ❌ Bad: fill() doesn't work on color inputs
 await page.fill('input[type="color"]', '#ff0000');
@@ -385,56 +413,72 @@ await page.locator('input[type="color"]').evaluate((el: HTMLInputElement) => {
 ### Authentication (`fixtures/auth.ts`)
 
 #### `navigateToDashboard(page, sessionId?)`
+
 Opens the dashboard with mock authentication.
+
 ```typescript
 await navigateToDashboard(page); // Uses TEST_SESSION_ID
 await navigateToDashboard(page, 'my-custom-session');
 ```
 
 #### `navigateToOverlay(page, overlayType, sessionId?)`
+
 Opens an overlay page.
+
 ```typescript
 await navigateToOverlay(overlayPage, 'wheel');
 await navigateToOverlay(overlayPage, 'paint-by-numbers');
 ```
 
 #### `TEST_SESSION_ID`
+
 The session ID used for all tests: `'test-session-e2e'`
 
 ### Database (`fixtures/database.ts`)
 
 #### `setupTestDatabase()`
+
 Creates test user and session. **Call in `beforeAll()`**
 
 #### `teardownTestDatabase()`
+
 Deletes all test data. **Call in `afterAll()`**
 
 #### `cleanupTestData()`
+
 Deletes test session data only (keeps user).
 
 ### Utilities (`utils/test-helpers.ts`)
 
 #### `exposeSocketStatus(page)`
+
 Adds socket connection tracking to page. **Call before navigating.**
+
 ```typescript
 await exposeSocketStatus(page);
 await navigateToDashboard(page);
 ```
 
 #### `waitForSocketEvent(page, eventName, timeout?)`
+
 Waits for a specific Socket.io event.
+
 ```typescript
 const data = await waitForSocketEvent(overlayPage, 'wheel-spin', 10000);
 ```
 
 #### `getCanvasSnapshot(page, selector?)`
+
 Captures canvas state as base64 string.
+
 ```typescript
 const snapshot = await getCanvasSnapshot(overlayPage, 'canvas');
 ```
 
 #### `waitForCanvasChange(page, selector?, timeout?)`
+
 Waits for canvas to animate (pixels change).
+
 ```typescript
 await waitForCanvasChange(overlayPage, 'canvas', 5000);
 ```
@@ -446,12 +490,14 @@ await waitForCanvasChange(overlayPage, 'canvas', 5000);
 ### When Asking Claude Code to Write Tests
 
 1. **Be specific about what to test:**
+
    ```
    "Write a test that creates a countdown timer in the dashboard
    and verifies it appears in the overlay"
    ```
 
 2. **Reference this guide:**
+
    ```
    "Following the patterns in tests/GUIDE.md, write a test for..."
    ```
@@ -464,12 +510,14 @@ await waitForCanvasChange(overlayPage, 'canvas', 5000);
 ### When Tests Fail
 
 1. **Share the error:**
+
    ```
    "This test is failing with error: [paste error]
    Here's the screenshot: [describe what you see]"
    ```
 
 2. **Ask for specific fixes:**
+
    ```
    "The test times out at step 5. Can you add better waits?"
    ```

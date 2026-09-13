@@ -35,6 +35,7 @@ test('description', async ({ page, context }) => {
 ```
 
 **Key points:**
+
 - `page` = dashboard
 - `overlayPage` = overlay
 - Changes sync via Socket.io (wait 1500ms)
@@ -60,6 +61,7 @@ test('description', async ({ page, context }) => {
 **[Complete Testing Guide →](./GUIDE.md)**
 
 Covers:
+
 - Detailed test structure explanation
 - All helper functions
 - Common patterns

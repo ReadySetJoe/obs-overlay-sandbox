@@ -1,0 +1,9 @@
+# Normalize line endings: store LF in the repository and check out LF on every
+# platform. Without this, Windows clones get CRLF via core.autocrlf while
+# .prettierrc sets endOfLine "lf", which produced ~25,000 spurious
+# "Delete CR" errors from prettier/prettier and made `npm run lint` useless.
+* text=auto eol=lf
+
+# Binary assets - never normalize
+*.png binary
+*.ico binary

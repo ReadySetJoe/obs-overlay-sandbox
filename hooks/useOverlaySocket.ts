@@ -197,12 +197,13 @@ export function useOverlaySocket(sessionId: string) {
                 ...prev,
                 ...parsedLayouts,
                 // Ensure tts layout exists with defaults if not in parsed data
-                tts: parsedLayouts.tts || prev.tts || {
-                  position: 'bottom-right',
-                  x: 0,
-                  y: 0,
-                  scale: 1,
-                },
+                tts: parsedLayouts.tts ||
+                  prev.tts || {
+                    position: 'bottom-right',
+                    x: 0,
+                    y: 0,
+                    scale: 1,
+                  },
               }));
             } catch (error) {
               console.error('Error parsing component layouts:', error);

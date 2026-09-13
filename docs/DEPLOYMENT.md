@@ -252,7 +252,7 @@ npm run build
 npm audit --json   # confirm the package no longer appears
 ```
 
-Note that Railway names a *minimum* version, which is not always
+Note that Railway names a _minimum_ version, which is not always
 security-complete. Check `npm audit` for advisories that only have fixes in a
 later minor - an older release line may have stopped receiving backports.
 

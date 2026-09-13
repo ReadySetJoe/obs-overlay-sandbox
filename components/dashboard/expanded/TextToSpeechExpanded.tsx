@@ -704,10 +704,7 @@ export default function TextToSpeechExpanded({
       </div>
 
       {/* Copy URL */}
-      <CopyURLButton
-        url={overlayUrl}
-        label='Copy TTS Overlay URL'
-      />
+      <CopyURLButton url={overlayUrl} label='Copy TTS Overlay URL' />
     </div>
   );
 }

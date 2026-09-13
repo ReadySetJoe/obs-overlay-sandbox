@@ -22,12 +22,14 @@ End-to-end tests that verify **real-time Socket.io synchronization** between das
 ## 📚 Documentation Created
 
 ### 1. **[tests/QUICKSTART.md](./tests/QUICKSTART.md)** - Start here!
+
 - How to run tests
 - Basic test structure
 - Quick debugging tips
 - 5-minute read
 
 ### 2. **[tests/GUIDE.md](./tests/GUIDE.md)** - Complete reference
+
 - Detailed test structure explanation
 - How to read existing tests
 - Common patterns library
@@ -38,6 +40,7 @@ End-to-end tests that verify **real-time Socket.io synchronization** between das
 - 20-minute read
 
 ### 3. **[tests/README.md](./tests/README.md)** - Overview
+
 - Test structure diagram
 - Setup instructions
 - Critical test scenarios
@@ -126,11 +129,13 @@ tests/
 ### To Continue Testing with Claude Code:
 
 1. **Read the docs:**
+
    ```
    "Read tests/QUICKSTART.md to understand E2E testing"
    ```
 
 2. **Write new tests:**
+
    ```
    "Following tests/GUIDE.md, write a test for countdown timers
    that verifies creating a timer in the dashboard shows it in the overlay"
@@ -208,11 +213,13 @@ tests/
 ### Best Prompts
 
 **To understand:**
+
 ```
 "Explain how the wheel spinner test works step-by-step"
 ```
 
 **To write:**
+
 ```
 "Write a Playwright test for countdown timers following the
 patterns in tests/GUIDE.md. Test creating a timer in the
@@ -220,12 +227,14 @@ dashboard and verifying it appears in the overlay."
 ```
 
 **To debug:**
+
 ```
 "This test fails with timeout. Here's the error: [paste]
 The screenshot shows [describe]. Help me fix it."
 ```
 
 **To extend:**
+
 ```
 "Add a test case to wheel-spinner.spec.ts that verifies
 deactivating a wheel hides it from the overlay"
@@ -246,6 +255,7 @@ deactivating a wheel hides it from the overlay"
 ## 🏆 Success Criteria
 
 Tests are successful when:
+
 - ✅ All tests pass consistently
 - ✅ Tests catch regressions before deployment
 - ✅ New features have test coverage
@@ -256,12 +266,12 @@ Tests are successful when:
 
 ## 📖 Documentation Index
 
-| Document | Purpose | Time |
-|----------|---------|------|
-| [QUICKSTART.md](./tests/QUICKSTART.md) | Quick reference & basics | 5 min |
-| [GUIDE.md](./tests/GUIDE.md) | Complete testing guide | 20 min |
-| [README.md](./tests/README.md) | Test overview & setup | 5 min |
-| This file | Summary & next steps | 10 min |
+| Document                               | Purpose                  | Time   |
+| -------------------------------------- | ------------------------ | ------ |
+| [QUICKSTART.md](./tests/QUICKSTART.md) | Quick reference & basics | 5 min  |
+| [GUIDE.md](./tests/GUIDE.md)           | Complete testing guide   | 20 min |
+| [README.md](./tests/README.md)         | Test overview & setup    | 5 min  |
+| This file                              | Summary & next steps     | 10 min |
 
 ---
 

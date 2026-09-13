@@ -512,10 +512,7 @@ export default function WheelExpanded({
       )}
 
       {/* Copy URL */}
-      <CopyURLButton
-        url={overlayUrl}
-        label='Wheel Overlay URL'
-      />
+      <CopyURLButton url={overlayUrl} label='Wheel Overlay URL' />
     </div>
   );
 }

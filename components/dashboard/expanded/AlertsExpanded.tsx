@@ -844,10 +844,7 @@ export default function AlertsExpanded({
 
       {/* Copy URL */}
       <div className='mb-6 space-y-3'>
-        <CopyURLButton
-          url={overlayUrl}
-          label='Alerts Overlay URL'
-        />
+        <CopyURLButton url={overlayUrl} label='Alerts Overlay URL' />
         <p className='text-xs text-gray-400 mt-2'>
           Individual overlay showing only alerts
         </p>

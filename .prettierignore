@@ -71,3 +71,6 @@ temp/
 # Package lock files (if you want to ignore them)
 package-lock.json
 yarn.lock
+# Generated pixel data (6.2MB of coordinate arrays). Already excluded from
+# ESLint via eslint.config.mjs; formatting it is pure churn.
+lib/paint-templates/

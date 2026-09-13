@@ -30,26 +30,31 @@ tests/
 ## Running Tests
 
 ### Run all tests
+
 ```bash
 npm test
 ```
 
 ### Run specific test file
+
 ```bash
 npx playwright test wheel-spinner
 ```
 
 ### Run in headed mode (see browser)
+
 ```bash
 npx playwright test --headed
 ```
 
 ### Run with UI mode (interactive)
+
 ```bash
 npx playwright test --ui
 ```
 
 ### Debug a test
+
 ```bash
 npx playwright test --debug
 ```
@@ -60,7 +65,10 @@ npx playwright test --debug
 
 ```typescript
 import { test, expect } from '@playwright/test';
-import { setupTestDatabase, teardownTestDatabase } from '../../fixtures/database';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+} from '../../fixtures/database';
 import { navigateToDashboard, navigateToOverlay } from '../../fixtures/auth';
 
 test.describe('My Feature', () => {
@@ -72,7 +80,10 @@ test.describe('My Feature', () => {
     await teardownTestDatabase();
   });
 
-  test('should sync changes from dashboard to overlay', async ({ page, context }) => {
+  test('should sync changes from dashboard to overlay', async ({
+    page,
+    context,
+  }) => {
     // 1. Navigate to dashboard
     await navigateToDashboard(page);
 
@@ -94,6 +105,7 @@ test.describe('My Feature', () => {
 ## Key Testing Patterns
 
 ### Multi-Window Testing
+
 ```typescript
 const overlayPage = await context.newPage();
 await navigateToOverlay(overlayPage, 'wheel');
@@ -101,6 +113,7 @@ await navigateToOverlay(overlayPage, 'wheel');
 ```
 
 ### Socket Event Testing
+
 ```typescript
 import { waitForSocketEvent } from '../../utils/test-helpers';
 
@@ -109,6 +122,7 @@ expect(eventData.winningLabel).toBeDefined();
 ```
 
 ### Canvas Testing
+
 ```typescript
 import { waitForCanvasChange } from '../../utils/test-helpers';
 
@@ -119,22 +133,27 @@ await waitForCanvasChange(overlayPage, 'canvas', 5000);
 ## Debugging Tips
 
 ### View test execution
+
 ```bash
 npx playwright test --headed --slowMo=1000
 ```
 
 ### Generate test code
+
 ```bash
 npx playwright codegen http://localhost:3000
 ```
 
 ### View test report
+
 ```bash
 npx playwright show-report
 ```
 
 ### Check videos/screenshots
+
 After test failures, check `test-results/` directory for:
+
 - Screenshots
 - Videos
 - Traces
@@ -142,6 +161,7 @@ After test failures, check `test-results/` directory for:
 ## CI/CD
 
 Tests run automatically in CI with:
+
 - Retries on failure
 - Video recording on failure
 - Screenshot on failure
