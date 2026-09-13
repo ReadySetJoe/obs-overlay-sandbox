@@ -113,6 +113,60 @@ address that. Flagged to the user and deliberately deferred.
 
 ---
 
+### Carried into Plan 2b
+
+Plan 2a (registry + category grid) is complete. Its final review left these,
+deliberately deferred rather than bundled into the change under test.
+
+**Dead code, now four items not one.** `CollapsibleSection.tsx` (83 lines) was
+the known orphan. But `SummaryTile.tsx` (76 lines) is also unreferenced now,
+and it was `ToggleSwitch.tsx`’s only consumer, so that is transitively dead
+too. `hooks/useAlerts.ts` still computes and returns `totalConfiguredCount`
+and `enabledAlertsCount`, which nothing consumes - they existed only for the
+old Stream Alerts subtitle. Note the `testId` prop added in Task 1 is now dead
+code inside a dead component.
+
+**Restore the empty-state signal, not the subtitles.** The 14 tiles lost their
+subtitle text, and that was doing two different jobs. Live values
+(`cyberpunk`, the current font, the playing track) are **not** worth restoring:
+the operator is looking at their own overlay where the same information is
+larger and authoritative, and duplicating it is what produced the sprawl. What
+genuinely disappeared is the "this is not set up yet" signal - `Not
+configured`, `No background`, `No wheels yet`, `0 timers`, `Inactive`. That was
+real discoverability, and it is worst for `alerts`, which now has no dot
+either.
+
+Restore it as a badge, not a line of prose: an optional
+`status?: { badge: string; tone: 'ok' | 'idle' | 'warn' }` threaded page →
+`CategoryCard` → `FeatureTile`, shown as a small count or a hollow warn ring.
+A shape-based marker also fixes the dot’s colour-only problem. **Compute it in
+`pages/dashboard/[sessionId].tsx`, never in the registry** - the registry’s
+freedom from React and from live state is what makes it unit-testable without
+a renderer.
+
+**Layout holds at the mainstream case, not everywhere.** Measured: the grid
+went from ~1344px to ~276px, a ~79% reduction. It fits without scrolling at
+1920x1080 and 1440x900, fits by only ~16px at 1920x1080 with 125% Windows
+scaling, and still needs ~90-210px of scroll at 1366x768 or in the 768-1279px
+`md` band (a half-width browser window). Worth revisiting if the user reports
+scrolling.
+
+**`ambience` is the one arbitrary category left.** Weather Effects belongs
+there; Emote Wall is chat-triggered and could sit under Chat or Viewer Games.
+The category is really "visual effects with no config state", and it partly
+exists to keep every card at 2-3 features. Down from three arbitrary groupings
+to one, which is worth accepting - but it is not principled.
+
+**Smaller items:** `toggle-<id>` test ids have no coverage at all, so the new
+primary state control is untested. `aria-pressed` is set but `CategoryCard`
+could be a `<section aria-labelledby>`. Cards with 2 features leave an empty
+third grid cell. Six features had their colour reassigned and `countdown` is
+now orange while `CountdownExpanded` accents yellow. `opacity-75` on the
+dimmed Appearance card pushes its count text under AA contrast. Old
+`dashboard-section-*` localStorage keys linger in existing browsers.
+
+---
+
 ## 2. Reconnect hint on the overlay disconnected badge
 
 ### Problem
