@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
+import { requireLayoutOwner } from '@/lib/apiAuth';
 import { getSocketServer } from '../socket';
 
 export default async function handler(
@@ -43,6 +44,10 @@ export default async function handler(
       .status(400)
       .json({ error: 'wheelId and sessionId are required' });
   }
+
+  // Writes require an authenticated owner - see lib/apiAuth.ts
+  const owner = await requireLayoutOwner(req, res, sessionId);
+  if (!owner) return;
 
   try {
     console.log('[Wheel Spin API] Request received:', { wheelId, sessionId });

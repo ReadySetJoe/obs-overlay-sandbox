@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
+import { requireLayoutOwner } from '@/lib/apiAuth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,6 +24,10 @@ export default async function handler(
   if (!sessionId || !name || !segments || !Array.isArray(segments)) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
+
+  // Writes require an authenticated owner - see lib/apiAuth.ts
+  const owner = await requireLayoutOwner(req, res, sessionId);
+  if (!owner) return;
 
   // Validate segments
   for (const segment of segments) {

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
+import { requireWheelOwner } from '@/lib/apiAuth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,6 +11,10 @@ export default async function handler(
   if (!wheelId || typeof wheelId !== 'string') {
     return res.status(400).json({ error: 'wheelId is required' });
   }
+
+  // Both PUT and DELETE mutate the wheel, so require an authenticated owner.
+  const owner = await requireWheelOwner(req, res, wheelId);
+  if (!owner) return;
 
   if (req.method === 'PUT') {
     // Update wheel

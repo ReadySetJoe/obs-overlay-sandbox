@@ -1,6 +1,7 @@
 // pages/api/event-labels/reset.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
+import { requireLayoutOwner } from '@/lib/apiAuth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,6 +16,10 @@ export default async function handler(
   if (!sessionId) {
     return res.status(400).json({ error: 'Missing sessionId' });
   }
+
+  // Writes require an authenticated owner - see lib/apiAuth.ts
+  const owner = await requireLayoutOwner(req, res, sessionId);
+  if (!owner) return;
 
   try {
     // Get socket server

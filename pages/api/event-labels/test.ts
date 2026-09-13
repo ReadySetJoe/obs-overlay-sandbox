@@ -1,6 +1,7 @@
 // pages/api/event-labels/test.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
+import { requireLayoutOwner } from '@/lib/apiAuth';
 
 const TEST_NAMES = [
   'CoolViewer123',
@@ -34,6 +35,10 @@ export default async function handler(
   if (!sessionId || !eventType) {
     return res.status(400).json({ error: 'Missing sessionId or eventType' });
   }
+
+  // Writes require an authenticated owner - see lib/apiAuth.ts
+  const owner = await requireLayoutOwner(req, res, sessionId);
+  if (!owner) return;
 
   try {
     // Get socket server

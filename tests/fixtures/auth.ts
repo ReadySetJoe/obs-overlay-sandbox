@@ -18,6 +18,17 @@ export const TEST_USER = {
 export const TEST_SESSION_ID = 'test-session-e2e';
 
 /**
+ * NextAuth session token used by the tests.
+ *
+ * This is set as a cookie AND seeded as a Session row by seedTestUser(), so
+ * that getServerSession() actually resolves server-side. Mocking
+ * /api/auth/session with page.route only fools client-side code - it leaves
+ * API routes unauthenticated, which silently hid the fact that write
+ * endpoints had no auth at all.
+ */
+export const TEST_SESSION_TOKEN = 'test-session-token';
+
+/**
  * Setup authenticated session for tests
  * This mocks the NextAuth session without requiring real OAuth
  */
@@ -53,7 +64,7 @@ export async function setupAuthenticatedSession(page: Page) {
   await page.context().addCookies([
     {
       name: 'next-auth.session-token',
-      value: 'test-session-token',
+      value: TEST_SESSION_TOKEN,
       domain: 'localhost',
       path: '/',
       httpOnly: true,

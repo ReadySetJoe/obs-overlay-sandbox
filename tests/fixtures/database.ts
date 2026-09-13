@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { TEST_USER, TEST_SESSION_ID } from './auth';
+import { TEST_USER, TEST_SESSION_ID, TEST_SESSION_TOKEN } from './auth';
 
 /**
  * Clean up test data from database
@@ -108,6 +108,22 @@ export async function seedTestUser() {
         access_token: 'test-access-token',
         token_type: 'bearer',
         scope: 'user:read:email',
+      },
+    });
+
+    // Create a real NextAuth session row so getServerSession() resolves the
+    // cookie set in setupAuthenticatedSession(). Without this, API routes see
+    // an anonymous caller.
+    await prisma.session.upsert({
+      where: { sessionToken: TEST_SESSION_TOKEN },
+      update: {
+        userId: user.id,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+      create: {
+        sessionToken: TEST_SESSION_TOKEN,
+        userId: user.id,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 

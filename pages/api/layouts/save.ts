@@ -1,7 +1,6 @@
 // pages/api/layouts/save.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
+import { requireLayoutOwner } from '@/lib/apiAuth';
 import { prisma } from '@/lib/prisma';
 
 interface LayerVisibility {
@@ -159,13 +158,18 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const session = await getServerSession(req, res, authOptions);
+  const data: LayoutData = req.body;
 
-  if (!session?.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!data?.sessionId) {
+    return res.status(400).json({ error: 'sessionId is required' });
   }
 
-  const data: LayoutData = req.body;
+  // allowMissing: upserting a layout you do not have yet is legitimate,
+  // and it gets created with your own userId.
+  const owner = await requireLayoutOwner(req, res, data.sessionId, {
+    allowMissing: true,
+  });
+  if (!owner) return;
 
   try {
     const updateData = buildUpdateData(data);
@@ -173,7 +177,7 @@ export default async function handler(
     const layout = await prisma.layout.upsert({
       where: { sessionId: data.sessionId },
       update: updateData,
-      create: buildCreateData(data, session.user.id),
+      create: buildCreateData(data, owner.userId),
     });
 
     return res.status(200).json({ success: true, layout });
