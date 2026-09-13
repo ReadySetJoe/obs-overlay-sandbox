@@ -300,7 +300,7 @@ would otherwise have to be added twelve times."
 - Create: `tests/e2e/overlay/resolution-warning.spec.ts`
 - Modify: all 13 overlay pages
 
-The component takes **no props** — it derives its `sessionStorage` key from `window.location.pathname`, which keeps the 12-file wiring to a single self-closing tag.
+The component takes **no props** — it derives its `sessionStorage` key from `window.location.pathname`, which keeps the 13-file wiring to a single self-closing tag.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -336,18 +336,26 @@ test.describe('Overlay resolution warning', () => {
   test('stays silent at 1920x1080', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto(`/overlay/${TEST_SESSION_ID}/weather`);
-    await page.waitForTimeout(2000);
 
-    await expect(page.getByText(WARNING)).toHaveCount(0);
+    // Positive control: without this, a page that rendered nothing at all
+    // would satisfy the count assertion below.
+    await expect(page.locator('div.relative.w-screen')).toBeVisible({
+      timeout: 15000,
+    });
+
+    await expect(page.getByTestId('resolution-warning')).toHaveCount(0);
   });
 
   test('stays silent within the 5% tolerance', async ({ page }) => {
     // 1900x1070 is inside tolerance on both axes.
     await page.setViewportSize({ width: 1900, height: 1070 });
     await page.goto(`/overlay/${TEST_SESSION_ID}/weather`);
-    await page.waitForTimeout(2000);
 
-    await expect(page.getByText(WARNING)).toHaveCount(0);
+    await expect(page.locator('div.relative.w-screen')).toBeVisible({
+      timeout: 15000,
+    });
+
+    await expect(page.getByTestId('resolution-warning')).toHaveCount(0);
   });
 });
 ```
@@ -431,7 +439,10 @@ export default function ResolutionWarning() {
   if (!size) return null;
 
   return (
-    <div className='fixed bottom-4 left-4 bg-amber-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 pointer-events-none max-w-sm'>
+    <div
+      data-testid='resolution-warning'
+      className='fixed bottom-4 left-4 bg-amber-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 pointer-events-none max-w-sm'
+    >
       <div className='font-semibold'>
         Browser source is {size.width}×{size.height}
       </div>
@@ -532,7 +543,19 @@ npx playwright test tests/e2e/overlay/resolution-warning.spec.ts --reporter=list
 
 Expected: type-check exits 0; all 3 tests PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Run the FULL suite — this change has a suite-wide side effect**
+
+`playwright.config.ts:45` uses `devices['Desktop Chrome']`, whose default viewport is **1280x720**. That is outside the 5% tolerance, so this warning will now render on **every** overlay page that any spec loads - 8 existing spec files do so. That is correct behaviour, not a bug, but it means new DOM appears in tests that never had it.
+
+```bash
+npx playwright test --reporter=line
+```
+
+Expected: `41 passed, 6 skipped` (38 + 3 new).
+
+If anything fails, the likely cause is a locator that is now ambiguous because the warning added matching text, or a strict-mode violation. Fix by making the *existing* spec's locator more specific - do NOT suppress the warning in tests, and do NOT change the tolerance to dodge the problem. Report what you changed and why.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add components/overlay/ResolutionWarning.tsx tests/e2e/overlay/resolution-warning.spec.ts pages/overlay/
