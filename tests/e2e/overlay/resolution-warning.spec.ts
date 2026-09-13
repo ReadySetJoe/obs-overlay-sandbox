@@ -48,4 +48,53 @@ test.describe('Overlay resolution warning', () => {
 
     await expect(page.getByTestId('resolution-warning')).toHaveCount(0);
   });
+
+  test('auto-hides after its visible window', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`/overlay/${TEST_SESSION_ID}/weather`);
+
+    await expect(page.getByTestId('resolution-warning')).toBeVisible({
+      timeout: 10000,
+    });
+
+    // VISIBLE_MS is 10s; generous headroom for the auto-retrying assertion.
+    await expect(page.getByTestId('resolution-warning')).toHaveCount(0, {
+      timeout: 15000,
+    });
+  });
+
+  test('does not warn again for the same size after a reload', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`/overlay/${TEST_SESSION_ID}/weather`);
+    await expect(page.getByTestId('resolution-warning')).toBeVisible({
+      timeout: 10000,
+    });
+
+    await page.reload();
+    await expect(page.locator('div.relative.w-screen')).toBeVisible({
+      timeout: 15000,
+    });
+
+    await expect(page.getByTestId('resolution-warning')).toHaveCount(0);
+  });
+
+  test('warns again when the source changes to a different wrong size', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto(`/overlay/${TEST_SESSION_ID}/weather`);
+    await expect(page.locator('div.relative.w-screen')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByTestId('resolution-warning')).toHaveCount(0);
+
+    await page.setViewportSize({ width: 800, height: 600 });
+
+    await expect(page.getByTestId('resolution-warning')).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByText(/800×600/)).toBeVisible();
+  });
 });
