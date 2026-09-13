@@ -788,7 +788,10 @@ See `.env.example` for full reference.
 
 ### Validation
 
-`lib/env.ts` validates all required variables on server startup. Missing required vars will throw an error with clear message.
+`lib/env.ts` throws when a required variable is missing, listing the missing
+names. Note that it is only imported by `pages/api/auth/[...nextauth].ts`, so
+validation happens the first time an auth route is hit - not at process
+startup. A missing variable will not stop the server from booting.
 
 ## Common Development Tasks
 
@@ -1022,8 +1025,9 @@ useEffect(() => {
 
 ---
 
-**Last Updated**: 2025-11-02
-**Version**: 0.2.0
 **Maintainer**: Joe
+
+This document is not versioned by hand - `package.json` is the source of
+truth for the version, and `git log` for when things changed.
 
 For questions or contributions, refer to this document as the source of truth for architectural decisions and patterns.

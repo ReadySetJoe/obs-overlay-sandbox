@@ -276,7 +276,10 @@ obs-overlay-sandbox/
 │   ├── next-auth.d.ts               # NextAuth type extensions
 │   └── overlay.ts                   # Shared overlay types
 ├── .env.example                     # Environment variable template
-└── CLAUDE.md                        # Developer documentation (AI-friendly)
+└── docs/
+    ├── CLAUDE.md                    # Developer documentation (AI-friendly)
+    ├── DEPLOYMENT.md                # Railway deployment guide
+    └── TWITCH_ALERTS_INTEGRATION.md # Twitch alerts notes
 ```
 
 ## Usage
@@ -570,7 +573,7 @@ For detailed technical documentation, including:
 - Code examples and templates
 - Development best practices
 
-See **[CLAUDE.md](./CLAUDE.md)** - comprehensive documentation designed for both developers and AI assistants.
+See **[docs/CLAUDE.md](./docs/CLAUDE.md)** - comprehensive documentation designed for both developers and AI assistants.
 
 ## Performance Tips
 
@@ -809,7 +812,7 @@ Open an issue with the "enhancement" label and describe:
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes following existing code patterns
 4. Test thoroughly (run `npm run type-check` and `npm run lint`)
-5. Update documentation (README.md and CLAUDE.md if applicable)
+5. Update documentation (README.md and docs/CLAUDE.md if applicable)
 6. Commit with clear messages
 7. Push to your fork and open a pull request
 
@@ -818,7 +821,7 @@ Open an issue with the "enhancement" label and describe:
 - Follow TypeScript best practices
 - Use Prettier for formatting (`npm run format`)
 - Write clear commit messages
-- Update CLAUDE.md for architectural changes
+- Update docs/CLAUDE.md for architectural changes
 - Test in OBS before submitting overlay changes
 
 **Testing:**
@@ -830,7 +833,7 @@ Open an issue with the "enhancement" label and describe:
 
 ## Support
 
-- 📖 **Documentation**: See [CLAUDE.md](./CLAUDE.md) for technical details
+- 📖 **Documentation**: See [docs/CLAUDE.md](./docs/CLAUDE.md) for technical details
 - 🐛 **Issues**: [GitHub Issues](../../issues)
 - 💬 **Discussions**: [GitHub Discussions](../../discussions)
 
