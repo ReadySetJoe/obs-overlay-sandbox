@@ -163,15 +163,10 @@ export default function PaintByNumbers({
             borderColor: `${theme.primary}80`, // 50% opacity
           }}
         >
-          {/* Header */}
+          {/* Header - the title is implied by the grid, so the space goes to
+              the instructions, which viewers actually need to read. */}
           <div className='mb-4 text-center'>
-            <h3
-              className='text-2xl font-bold bg-clip-text text-transparent'
-              style={{ backgroundImage: theme.gradientText }}
-            >
-              Paint by Numbers
-            </h3>
-            <p className='text-sm text-gray-400 mt-1'>
+            <p className='text-xl font-semibold text-gray-200'>
               Type{' '}
               <span className='font-mono' style={{ color: theme.accentText }}>
                 !paint [number] [color]

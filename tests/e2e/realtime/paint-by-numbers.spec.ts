@@ -163,7 +163,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
   });
 
   // Note: Reset requires a template to be selected and progress to exist
-  test.skip('should reset canvas when reset button is clicked', async ({
+  test('should reset canvas when reset button is clicked', async ({
     page,
     context,
   }) => {
@@ -193,7 +193,7 @@ test.describe('Paint by Numbers - Dashboard to Overlay Sync', () => {
 
   // Note: Template selection requires templates to be loaded from the API.
   // This test is skipped because template loading can be slow/unreliable in tests.
-  test.skip('should show progress when template is selected', async ({
+  test('should show progress when template is selected', async ({
     page,
     context,
   }) => {
