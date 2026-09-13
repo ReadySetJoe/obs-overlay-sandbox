@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { startTwitchChatMonitoring } from '@/lib/twitchChat';
 import { startFollowMonitoring } from '@/lib/twitchFollows';
+import { prisma } from '@/lib/prisma';
 import { Server as SocketIOServer } from 'socket.io';
 
 type NextApiResponseServerIO = NextApiResponse & {
@@ -51,16 +52,32 @@ export default async function handler(
     // Start chat monitoring (for messages, subs, bits, raids, etc.)
     await startTwitchChatMonitoring(twitchUsername, sessionId, io);
 
-    // Start follow monitoring (if access token is available)
-    if (session.accessToken) {
+    // Start follow monitoring.
+    //
+    // The Twitch access token has to come from the Account row, not from
+    // session.accessToken. NextAuth is configured with the Prisma adapter,
+    // which means database sessions - so the `jwt` callback in
+    // pages/api/auth/[...nextauth].ts never runs and session.accessToken is
+    // always undefined. This branch was therefore dead, and follower/event
+    // label updates silently never started.
+    //
+    // pages/api/stream-stats/sync-twitch.ts already reads the token this way.
+    const twitchAccount = await prisma.account.findFirst({
+      where: { userId: session.user.id, provider: 'twitch' },
+      select: { access_token: true },
+    });
+
+    if (twitchAccount?.access_token) {
       await startFollowMonitoring(
         twitchUsername,
-        session.accessToken,
+        twitchAccount.access_token,
         sessionId,
         io
       );
     } else {
-      console.warn('No access token available for follow monitoring');
+      console.warn(
+        'No Twitch access token on file; skipping follow monitoring'
+      );
     }
 
     return res.status(200).json({

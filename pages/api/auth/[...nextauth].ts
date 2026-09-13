@@ -19,23 +19,17 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    session: async ({ session, user, token }) => {
+    session: async ({ session, user }) => {
       if (session?.user) {
         session.user.id = user.id;
-        // Add access token to session for Twitch API calls
-        if (token?.accessToken) {
-          session.accessToken = token.accessToken as string;
-        }
       }
       return session;
     },
-    jwt: async ({ token, account }) => {
-      // Store access token in JWT for later use
-      if (account?.access_token) {
-        token.accessToken = account.access_token;
-      }
-      return token;
-    },
+    // NOTE: there is deliberately no `jwt` callback. Configuring an adapter
+    // selects database sessions, so NextAuth never invokes it. A previous
+    // version used one to copy the Twitch access token onto the session, which
+    // silently never ran and left follow monitoring dead. Read the token from
+    // the Account row instead - see pages/api/twitch/connect-chat.ts.
   },
   pages: {
     signIn: '/',
