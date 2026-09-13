@@ -4,6 +4,7 @@
 import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import StreamStats from '@/components/overlay/StreamStats';
+import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 
 export default function StreamStatsOverlay() {
   const router = useRouter();
@@ -30,11 +31,7 @@ export default function StreamStatsOverlay() {
       style={customGradientCSS ? { background: customGradientCSS } : {}}
     >
       {/* Connection Status */}
-      {!isConnected && (
-        <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
-          Disconnected
-        </div>
-      )}
+      <ConnectionStatus isConnected={isConnected} />
 
       {/* Stream Stats */}
       {getLayerVisible('streamstats') &&

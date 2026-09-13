@@ -15,6 +15,7 @@ import StreamStats from '@/components/overlay/StreamStats';
 import Alert from '@/components/overlay/Alert';
 import Wheel from '@/components/overlay/Wheel';
 import TextToSpeech from '@/components/overlay/TextToSpeech';
+import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 import {
   AlertConfig,
   AlertEvent,
@@ -495,11 +496,7 @@ export default function OverlayPage() {
         style={customGradientCSS ? { background: customGradientCSS } : {}}
       />
       {/* Connection Status */}
-      {!isConnected && (
-        <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
-          Disconnected
-        </div>
-      )}
+      <ConnectionStatus isConnected={isConnected} />
 
       {/* Debug Panel - Add ?debug=true to URL to show */}
       {showDebug && (

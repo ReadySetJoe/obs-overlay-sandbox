@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import TextToSpeech from '@/components/overlay/TextToSpeech';
 import { TTSConfig } from '@/types/overlay';
+import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 
 // Default config for when no TTS config exists yet
 const DEFAULT_TTS_CONFIG: TTSConfig = {
@@ -57,11 +58,7 @@ export default function TTSOverlay() {
       style={customGradientCSS ? { background: customGradientCSS } : {}}
     >
       {/* Connection Status */}
-      {!isConnected && (
-        <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
-          Disconnected
-        </div>
-      )}
+      <ConnectionStatus isConnected={isConnected} />
 
       {/* Text to Speech - Always render with default config if none exists */}
       {getLayerVisible('tts') && (

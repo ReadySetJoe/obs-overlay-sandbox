@@ -11,6 +11,7 @@ import {
   CustomColors,
 } from '@/types/overlay';
 import Alert from '@/components/overlay/Alert';
+import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 
 export default function AlertsOverlay() {
   const router = useRouter();
@@ -144,11 +145,7 @@ export default function AlertsOverlay() {
   return (
     <div className='relative w-screen h-screen overflow-hidden bg-transparent'>
       {/* Connection Status */}
-      {!isConnected && (
-        <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
-          Disconnected
-        </div>
-      )}
+      <ConnectionStatus isConnected={isConnected} />
 
       {/* Current Alert */}
       {currentAlert && (

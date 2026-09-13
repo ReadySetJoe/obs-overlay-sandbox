@@ -4,6 +4,7 @@
 import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import PaintByNumbers from '@/components/overlay/PaintByNumbers';
+import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 
 export default function PaintByNumbersOverlay() {
   const router = useRouter();
@@ -37,11 +38,7 @@ export default function PaintByNumbersOverlay() {
       style={customGradientCSS ? { background: customGradientCSS } : {}}
     >
       {/* Connection Status */}
-      {!isConnected && (
-        <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
-          Disconnected
-        </div>
-      )}
+      <ConnectionStatus isConnected={isConnected} />
 
       {/* Paint by Numbers */}
       {getLayerVisible('paintbynumbers') && paintByNumbersState && (

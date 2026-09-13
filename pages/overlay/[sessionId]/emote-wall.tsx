@@ -4,6 +4,7 @@
 import { useRouter } from 'next/router';
 import { useOverlaySocket } from '@/hooks/useOverlaySocket';
 import EmoteWall from '@/components/overlay/EmoteWall';
+import ConnectionStatus from '@/components/overlay/ConnectionStatus';
 
 export default function EmoteWallOverlay() {
   const router = useRouter();
@@ -21,11 +22,7 @@ export default function EmoteWallOverlay() {
       style={customGradientCSS ? { background: customGradientCSS } : {}}
     >
       {/* Connection Status */}
-      {!isConnected && (
-        <div className='fixed top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50'>
-          Disconnected
-        </div>
-      )}
+      <ConnectionStatus isConnected={isConnected} />
 
       {/* Emote Wall */}
       <EmoteWall />
