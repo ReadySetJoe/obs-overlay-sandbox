@@ -7,7 +7,7 @@ import {
   ComponentLayouts,
   PaintTemplate,
 } from '@/types/overlay';
-import { mergeTemplates } from '@/lib/paintTemplates';
+import { getBuiltInTemplates } from '@/lib/paintTemplates';
 import CopyURLButton from '../CopyURLButton';
 import PositionControls from '../PositionControls';
 import { PaintByNumbersIcon } from '../tiles/TileIcons';
@@ -54,8 +54,22 @@ export default function PaintByNumbersExpanded({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Built-in templates are fetched lazily so their ~6MB of pixel data stays
+  // out of the initial bundle (see lib/paintTemplates.ts).
+  const [builtInTemplates, setBuiltInTemplates] = useState<PaintTemplate[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getBuiltInTemplates().then(templates => {
+      if (!cancelled) setBuiltInTemplates(templates);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Merge built-in and custom templates
-  const allTemplates = mergeTemplates(customTemplates);
+  const allTemplates = [...builtInTemplates, ...customTemplates];
   const totalRegions = paintState?.regions.length || 0;
   const filledRegions = paintState?.regions.filter(r => r.filled).length || 0;
   const progress =
