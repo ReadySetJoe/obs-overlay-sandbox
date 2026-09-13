@@ -476,6 +476,9 @@ const REPLACEMENT = [
 const IMPORT =
   "import ResolutionWarning from '@/components/overlay/ResolutionWarning';";
 
+const CONNECTION_IMPORT =
+  "import ConnectionStatus from '@/components/overlay/ConnectionStatus';";
+
 let failed = 0;
 for (const file of FILES) {
   let s = fs.readFileSync(file, 'utf8');
@@ -488,12 +491,19 @@ for (const file of FILES) {
   }
   s = s.split(ANCHOR).join(REPLACEMENT);
 
+  // Anchor on the single-line ConnectionStatus import that Task 1 inserted.
+  // Do NOT use "the last line starting with import": several of these files
+  // end their import section with a multi-line `import { ... }` block, and
+  // splicing into the middle of one produces invalid syntax that this
+  // script cannot detect (it broke pages/overlay/[sessionId].tsx in Task 1).
   const lines = s.split(LF);
-  let lastImport = -1;
-  lines.forEach((l, i) => {
-    if (l.startsWith('import ')) lastImport = i;
-  });
-  lines.splice(lastImport + 1, 0, IMPORT);
+  const anchorIdx = lines.findIndex(l => l === CONNECTION_IMPORT);
+  if (anchorIdx === -1) {
+    console.log('SKIP ' + file + ': ConnectionStatus import not found');
+    failed++;
+    continue;
+  }
+  lines.splice(anchorIdx + 1, 0, IMPORT);
 
   fs.writeFileSync(file, lines.join(LF));
   console.log('OK   ' + file);
