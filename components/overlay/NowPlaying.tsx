@@ -113,15 +113,10 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
 
   return (
     <div
+      data-testid='now-playing-panel'
       className={`
         fixed ${positionClasses[layout.position]} transform transition-all duration-500
-        ${
-          isVisible
-            ? track.isPlaying
-              ? 'translate-y-0 opacity-100'
-              : 'translate-y-0 opacity-70'
-            : 'translate-y-full opacity-0'
-        }
+        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
       `}
       style={{
         zIndex: 10,
@@ -156,22 +151,26 @@ export default function NowPlaying({ track, layout }: NowPlayingProps) {
           {/* Track Info */}
           <div className='flex-1 min-w-0 overflow-hidden'>
             <div className='flex items-center gap-2 mb-1'>
-              <div className='w-2 h-2 bg-green-400 rounded-full animate-pulse' />
-              <span className='text-xs text-green-200 uppercase tracking-wider font-semibold'>
-                Now Playing
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  track.isPlaying ? 'bg-green-400 animate-pulse' : 'bg-gray-400'
+                }`}
+              />
+              <span
+                data-testid='now-playing-state'
+                className={`text-xs uppercase tracking-wider font-semibold ${
+                  track.isPlaying ? 'text-green-200' : 'text-gray-300'
+                }`}
+              >
+                {track.isPlaying ? 'Now Playing' : '❚❚ Paused'}
               </span>
-              {!track.isPlaying && (
-                <span className='ml-2 text-xs font-semibold uppercase tracking-wide opacity-80'>
-                  &#10074;&#10074; Paused
-                </span>
-              )}
             </div>
             <div className='overflow-hidden mb-1'>
               <h3
                 className='text-white font-bold text-lg whitespace-nowrap inline-block animate-scroll-text'
                 style={{
                   animation:
-                    track.title.length > 25
+                    (track.title?.length ?? 0) > 25
                       ? 'scroll-text 10s linear infinite'
                       : 'none',
                 }}

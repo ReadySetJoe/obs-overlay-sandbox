@@ -54,6 +54,8 @@ export function useSpotify({
   const [trackTitle, setTrackTitle] = useState('');
   const [trackArtist, setTrackArtist] = useState('');
   const [trackAlbumArt, setTrackAlbumArt] = useState('');
+  const [trackProgress, setTrackProgress] = useState(0);
+  const [trackDuration, setTrackDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const emitNowPlaying = useSocketEmit(socket, 'now-playing');
@@ -100,13 +102,23 @@ export function useSpotify({
           setTrackTitle(data.title);
           setTrackArtist(data.artist);
           setTrackAlbumArt(data.albumArt);
+          setTrackProgress(data.progress);
+          setTrackDuration(data.duration);
           setIsPlaying(data.isPlaying);
         } else {
           emitNowPlaying({
-            title: trackTitle,
-            artist: trackArtist,
-            albumArt: trackAlbumArt,
+            // Prefer the live payload: the API still returns the item with
+            // progress/duration when a track is merely paused. It returns a
+            // bare { isPlaying: false } for no-item, ads and podcasts, which
+            // is what the retained state covers.
+            title: data.title ?? trackTitle,
+            artist: data.artist ?? trackArtist,
+            albumArt: data.albumArt ?? trackAlbumArt,
             isPlaying: false,
+            // Without duration, NowPlaying's progressPercent falls to 0 and the
+            // bar empties instead of freezing where playback stopped.
+            progress: data.progress ?? trackProgress,
+            duration: data.duration ?? trackDuration,
           });
           setIsPlaying(false);
         }
@@ -127,6 +139,8 @@ export function useSpotify({
     trackTitle,
     trackArtist,
     trackAlbumArt,
+    trackProgress,
+    trackDuration,
     emitNowPlaying,
   ]);
 

@@ -134,7 +134,7 @@ export default function TextToSpeech({
     const nextMessage = queue[0];
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentMessage(nextMessage.text);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setIsSpeaking(true);
 
     // Calculate estimated duration based on text length and rate
