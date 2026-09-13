@@ -162,13 +162,52 @@ one widget). So the warning must be advisory and quiet:
 
 - **Tolerance**: only warn if either dimension differs by more than 5%.
 - **Timed**: auto-hide after 10 seconds, per the user's "timed warning" framing.
-- **Once per source**: record dismissal in `sessionStorage` keyed by
-  `sessionId` + pathname, so it does not reappear on every scene switch.
+- **Once per source**: record dismissal in `localStorage`, keyed by pathname
+  **plus the observed size**.
+
+  This was originally specified as `sessionStorage` keyed by pathname, which
+  was wrong on the facts. The README recommends "Shutdown source when not
+  visible" for every overlay; that destroys the browsing context on each
+  scene switch and wipes `sessionStorage`, so the guard would have been inert
+  in exactly the configuration it was written for - and this banner is
+  composited into the broadcast, so it would have reappeared in front of
+  viewers on every scene switch. (Note the two OBS settings differ: "Refresh
+  browser when scene becomes active" is a reload, which `sessionStorage`
+  survives. "Shutdown when not visible" is not.)
+
+  The observed size belongs in the key for correctness, not polish: all OBS
+  browser sources share one CEF cache directory, so they share `localStorage`
+  per origin. Two sources on the same URL at different sizes - a fullscreen
+  background and a deliberately-small corner widget - must decide
+  independently, or whichever booted first would permanently silence the
+  other. Including the size also makes a *different* wrong size newly
+  reportable, which is genuinely new information.
+
+  Storage access must be wrapped in `try`/`catch` and warn anyway on failure.
+  `localStorage` throws when storage is unavailable or over quota, and there
+  is no error boundary in `pages/_app.tsx`, so an uncaught throw would
+  unmount the overlay and black out a live browser source. A diagnostic
+  banner must never be able to do that.
 - **Never blocks**: positioned away from centre, does not intercept clicks.
 - **Content**: reports actual vs expected, e.g. *"Browser source is 1280×720 —
   overlays are designed for 1920×1080."*
 
 Recheck on `resize`, debounced.
+
+Deferred, not required for this feature to ship:
+
+- A `?resolutionWarning=off` URL opt-out, documented in the README's OBS
+  Setup section. Stateless and explicit, and a better answer than any storage
+  primitive for the streamer who deliberately runs a small source. The
+  size-keyed guard already limits that person to one warning ever, so this is
+  belt-and-braces.
+- A `data-testid` on the overlay page root. The resolution tests currently
+  use `div.relative.w-screen` as a positive control, which couples them to a
+  Tailwind class name; a test id would serve these specs and the eight other
+  overlay specs better.
+- `README.md:408-421` recommends 1920x1080 for every component, which sits
+  awkwardly with this section's premise that small per-widget sources are
+  legitimate. One of the two should be reconciled.
 
 ---
 

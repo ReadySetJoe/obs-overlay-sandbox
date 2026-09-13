@@ -392,7 +392,7 @@ const RESIZE_DEBOUNCE_MS = 400;
  *
  * Deliberately advisory, not insistent: sizing an individual element's source
  * smaller (say 500x500 for one widget) is legitimate, so this auto-hides and
- * shows at most once per source per session rather than nagging.
+ * warns at most once per path+size in localStorage rather than nagging.
  */
 export default function ResolutionWarning() {
   const [size, setSize] = useState<{ width: number; height: number } | null>(
@@ -400,9 +400,6 @@ export default function ResolutionWarning() {
   );
 
   useEffect(() => {
-    const storageKey = `obs-resolution-warning:${window.location.pathname}`;
-
-    let hideTimer: ReturnType<typeof setTimeout> | undefined;
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
     const check = () => {
@@ -414,11 +411,33 @@ export default function ResolutionWarning() {
         Math.abs(height - EXPECTED_HEIGHT) / EXPECTED_HEIGHT > TOLERANCE;
 
       if (!offBy) return;
-      if (sessionStorage.getItem(storageKey)) return;
 
-      sessionStorage.setItem(storageKey, '1');
+      // localStorage, not sessionStorage: the README recommends "Shutdown
+      // source when not visible", which destroys the browsing context on every
+      // scene switch and would wipe sessionStorage - making this guard inert
+      // exactly where it matters. This banner is composited into the
+      // broadcast, so repeating it in front of viewers is the worst outcome.
+      //
+      // Keyed on the observed size as well as the path, because all OBS
+      // browser sources share one CEF cache directory and therefore share
+      // localStorage per origin. Two sources on the same URL at different
+      // sizes must decide independently, and a *different* wrong size is new
+      // information worth reporting.
+      const storageKey = `obs-resolution-warning:${window.location.pathname}:${width}x${height}`;
+
+      let alreadyWarned = false;
+      try {
+        alreadyWarned = localStorage.getItem(storageKey) !== null;
+        localStorage.setItem(storageKey, '1');
+      } catch {
+        // Storage unavailable or over quota. Warn anyway rather than throw:
+        // there is no error boundary in pages/_app.tsx, so an exception here
+        // would unmount the overlay and black out a live browser source.
+      }
+
+      if (alreadyWarned) return;
+
       setSize({ width, height });
-      hideTimer = setTimeout(() => setSize(null), VISIBLE_MS);
     };
 
     const onResize = () => {
@@ -431,10 +450,17 @@ export default function ResolutionWarning() {
 
     return () => {
       window.removeEventListener('resize', onResize);
-      clearTimeout(hideTimer);
       clearTimeout(debounceTimer);
     };
   }, []);
+
+  // Auto-hide in its own effect keyed on `size`, so a second warning cannot be
+  // cut short by the previous one's orphaned timer.
+  useEffect(() => {
+    if (!size) return;
+    const timer = setTimeout(() => setSize(null), VISIBLE_MS);
+    return () => clearTimeout(timer);
+  }, [size]);
 
   if (!size) return null;
 
