@@ -522,7 +522,10 @@ This app works with any platform that supports:
 
 **Recommended platforms:**
 
-- **Vercel** - Easiest deployment, add WebSocket support via Pusher or Ably
+- **Vercel** - ⚠️ **Not supported.** `pages/api/socket.ts` attaches Socket.io to the
+  Node HTTP server, and `lib/twitchChat.ts` holds long-lived tmi.js IRC connections
+  in memory. Serverless functions can do neither. Using Vercel requires replacing
+  the realtime layer *and* hosting the chat monitor as a separate always-on service.
 - **Railway** - Built-in PostgreSQL, WebSocket support
 - **DigitalOcean App Platform** - Full control, WebSocket support
 - **AWS/GCP/Azure** - Scalable, requires more configuration

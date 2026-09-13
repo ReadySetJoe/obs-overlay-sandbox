@@ -60,11 +60,16 @@ DATABASE_URL=${DATABASE_URL}
 
 # NextAuth - IMPORTANT: We'll update NEXTAUTH_URL after first deploy
 NEXTAUTH_URL=https://your-app.railway.app
-NEXTAUTH_SECRET=h+22aivs5WLVl43fJBMWpQ4AfmlYZD8f/Q2rsHVFEds=
+NEXTAUTH_SECRET=<paste your own freshly generated secret - see below>
 
 # Twitch OAuth (get from https://dev.twitch.tv/console/apps)
 TWITCH_CLIENT_ID=your_twitch_client_id_here
 TWITCH_CLIENT_SECRET=your_twitch_client_secret_here
+
+# Cloudinary (Required - get from https://cloudinary.com/console)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # Node Environment
 NODE_ENV=production
@@ -83,7 +88,9 @@ SPOTIFY_REDIRECT_URI=https://your-app.railway.app/api/spotify/callback
 
 - Railway has a `DATABASE_URL` variable pre-filled - don't change it!
 - You can copy-paste all variables at once using "RAW Editor"
-- Your generated NEXTAUTH_SECRET is shown above (or generate a new one with `openssl rand -base64 32`)
+- Generate your own NEXTAUTH_SECRET and never commit it to the repo:
+  `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+- Cloudinary vars are **required**, not optional - `lib/env.ts` throws without them
 
 ---
 
@@ -224,7 +231,30 @@ Repeat for each overlay component you want to use!
 - `NEXTAUTH_SECRET`
 - `TWITCH_CLIENT_ID`
 - `TWITCH_CLIENT_SECRET`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
 - `NODE_ENV`
+
+### Deployment blocked with "SECURITY VULNERABILITIES DETECTED"
+
+Railway runs a dependency vulnerability scan **before** the build. If a
+dependency has known CVEs, it refuses to build at all - the build logs will be
+empty because the build never started.
+
+**Solution:** upgrade the flagged package to at least the version Railway names,
+then verify locally before pushing:
+
+```bash
+npm install <package>@<version>
+npm run type-check
+npm run build
+npm audit --json   # confirm the package no longer appears
+```
+
+Note that Railway names a *minimum* version, which is not always
+security-complete. Check `npm audit` for advisories that only have fixes in a
+later minor - an older release line may have stopped receiving backports.
 
 ### "Error: connect ECONNREFUSED" in logs
 
@@ -291,10 +321,9 @@ CREATE SCHEMA public;
    - Bandwidth
    - Database storage
 
-**Free tier limits:**
-
-- $5 credit/month
-- Unused credits don't roll over
+**Pricing:** Railway's plans and trial-credit terms have changed several times -
+check [railway.app/pricing](https://railway.app/pricing) for current rates rather
+than relying on this doc. Budget for the app service plus a small Postgres.
 
 ---
 
