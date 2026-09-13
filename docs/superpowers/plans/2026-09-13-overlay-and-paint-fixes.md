@@ -1057,11 +1057,18 @@ Path 2 matters because a dashboard that loaded an old layout before this change 
 - [ ] **Step 7: Verify no stale bounds remain**
 
 ```bash
-grep -rn "gridSize: 20\|max='40'" components hooks || echo "clean"
+grep -rn "gridSize: 20\|max='40'\|max={40}" components hooks pages lib || echo "clean"
 npm run type-check
 ```
 
 Expected: `clean`, and type-check exits 0.
+
+The scope matters. This grep originally covered only `components hooks` and
+reported `clean` while three more `gridSize: 20` literals sat in `pages/` -
+including the dashboard’s initial `componentLayouts` state, which
+`saveLayout()` persists, so a brand-new session wrote an out-of-cap value to
+the database on its first save. A verification command with too narrow a
+scope produces a false negative that is harder to notice than no check at all.
 
 - [ ] **Step 8: Run the paint specs and the full suite**
 
