@@ -97,7 +97,7 @@ export default function SessionInfo({
             </button>
           </div>
           <div className='text-xs text-gray-500 mt-1'>
-            Width: 1920 x Height: 1080 x FPS: 60
+            Width: 1920 x Height: 1080
           </div>
         </div>
       </div>
