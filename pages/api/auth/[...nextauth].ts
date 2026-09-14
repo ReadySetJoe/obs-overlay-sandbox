@@ -13,7 +13,14 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
       authorization: {
         params: {
-          scope: 'openid user:read:email moderator:read:followers',
+          // channel:read:subscriptions is what /helix/subscriptions needs.
+          // Without it that call 401s forever, so the subscriber half of
+          // stream-stats sync could never work no matter how healthy the
+          // token was. Changing this does NOT re-prompt existing users:
+          // scopes are fixed at consent time, so anyone who signed in
+          // before must sign out and back in to be re-asked.
+          scope:
+            'openid user:read:email moderator:read:followers channel:read:subscriptions',
         },
       },
     }),

@@ -3,7 +3,8 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
-import { Server as SocketIOServer } from 'socket.io';
+import { getSocketServer } from '../socket';
+import { getValidTwitchToken } from '@/lib/twitchToken';
 
 interface StreamStatsData {
   currentFollowers: number;
@@ -16,12 +17,6 @@ interface StreamStatsData {
   overallPositivityScore: number;
   nicestChatterScore: number;
 }
-
-interface GlobalWithSocketIO {
-  io?: SocketIOServer;
-}
-
-declare const global: GlobalWithSocketIO;
 
 export default async function handler(
   req: NextApiRequest,
@@ -43,22 +38,16 @@ export default async function handler(
   }
 
   try {
-    // Get the user's Twitch account info from NextAuth
-    const account = await prisma.account.findFirst({
-      where: {
-        userId: session.user.id,
-        provider: 'twitch',
-      },
-    });
+    // Refreshes the stored token when it has expired. Reading
+    // account.access_token directly is what made this endpoint stop working
+    // a few hours after every sign-in.
+    const token = await getValidTwitchToken(session.user.id);
 
-    if (!account?.access_token || !account?.providerAccountId) {
-      return res.status(400).json({
-        error: 'Twitch account not connected',
-      });
+    if (!token.ok) {
+      return res.status(token.status).json({ error: token.error });
     }
 
-    const broadcasterId = account.providerAccountId;
-    const accessToken = account.access_token;
+    const { accessToken, broadcasterId } = token;
 
     // Fetch follower count from Twitch API
     const followersResponse = await fetch(
@@ -71,15 +60,22 @@ export default async function handler(
       }
     );
 
-    let followerCount = 0;
+    // null means "Twitch did not tell us", which is different from zero.
+    let followerCount: number | null = null;
+    let followerError: string | null = null;
+
     if (followersResponse.ok) {
       const followersData = await followersResponse.json();
       followerCount = followersData.total || 0;
+    } else {
+      followerError = `followers: Twitch returned ${followersResponse.status}`;
     }
 
     // Fetch subscriber count from Twitch API
     // Note: This requires channel:read:subscriptions scope and affiliate/partner status
-    let subCount = 0;
+    let subCount: number | null = null;
+    let subError: string | null = null;
+
     try {
       const subsResponse = await fetch(
         `https://api.twitch.tv/helix/subscriptions?broadcaster_id=${broadcasterId}&first=1`,
@@ -96,12 +92,26 @@ export default async function handler(
         // The total is in the response, but pagination is needed for exact count
         // For simplicity, we'll use the 'total' field if available
         subCount = subsData.total || 0;
+      } else {
+        subError =
+          `subscribers: Twitch returned ${subsResponse.status} ` +
+          '(needs the channel:read:subscriptions scope and affiliate/partner status)';
       }
     } catch (error) {
-      console.log(
-        'Could not fetch subscriber count (requires affiliate/partner status)',
-        error
-      );
+      subError = 'subscribers: request failed';
+      console.error('Error fetching subscriber count', error);
+    }
+
+    // If Twitch refused everything, say so rather than persisting zeros over
+    // good data and reporting success. Expiry is already handled above, so
+    // reaching here means Twitch rejected a token it should have accepted -
+    // usually a revoked authorisation.
+    if (followerCount === null && subCount === null) {
+      return res.status(502).json({
+        error:
+          `Twitch rejected both requests (${followerError}; ${subError}). ` +
+          'If this persists, sign out and sign in again to re-authorise.',
+      });
     }
 
     // Load existing streamStatsData
@@ -137,9 +147,14 @@ export default async function handler(
       }
     }
 
-    // Update with Twitch stats
-    statsData.currentFollowers = followerCount;
-    statsData.currentSubs = subCount;
+    // Only overwrite what Twitch actually returned. Assigning unconditionally
+    // meant a rejected request persisted 0 over the last known-good value.
+    if (followerCount !== null) {
+      statsData.currentFollowers = followerCount;
+    }
+    if (subCount !== null) {
+      statsData.currentSubs = subCount;
+    }
     // Keep currentBits as is (running total from cheers)
 
     // Save to database
@@ -151,15 +166,20 @@ export default async function handler(
     });
 
     // Emit update via socket.io
-    const io = global.io;
+    // Previously `global.io`, which nothing in the codebase assigns, so this
+    // broadcast never fired and the overlay kept showing stale stats.
+    const io = getSocketServer();
     if (io) {
       io.to(sessionId).emit('stream-stats-update', statsData);
     }
 
+    const warnings = [followerError, subError].filter(Boolean);
+
     res.status(200).json({
       success: true,
-      followers: followerCount,
-      subscribers: subCount,
+      followers: statsData.currentFollowers,
+      subscribers: statsData.currentSubs,
+      warnings,
     });
   } catch (error) {
     console.error('Error syncing Twitch stats:', error);

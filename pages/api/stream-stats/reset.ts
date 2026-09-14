@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
+import { getSocketServer } from '../socket';
 
 export default async function handler(
   req: NextApiRequest,
@@ -50,16 +51,11 @@ export default async function handler(
       where: { sessionId },
     });
 
-    // Emit reset event via socket.io
-    const io = (
-      global as {
-        io?: {
-          to: (room: string) => {
-            emit: (event: string, data: unknown) => void;
-          };
-        };
-      }
-    ).io;
+    // Emit reset event via socket.io. Previously read `global.io`, which
+    // nothing assigns - the cast satisfied TypeScript while describing a
+    // property that does not exist, so the guard below always skipped and the
+    // overlay was never told.
+    const io = getSocketServer();
     if (io) {
       io.to(sessionId).emit('stream-stats-update', emptyStats);
     }

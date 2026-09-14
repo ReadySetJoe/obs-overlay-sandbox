@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { startTwitchChatMonitoring } from '@/lib/twitchChat';
 import { startFollowMonitoring } from '@/lib/twitchFollows';
-import { prisma } from '@/lib/prisma';
+import { getValidTwitchToken } from '@/lib/twitchToken';
 import { Server as SocketIOServer } from 'socket.io';
 
 type NextApiResponseServerIO = NextApiResponse & {
@@ -61,23 +61,20 @@ export default async function handler(
     // always undefined. This branch was therefore dead, and follower/event
     // label updates silently never started.
     //
-    // pages/api/stream-stats/sync-twitch.ts already reads the token this way.
-    const twitchAccount = await prisma.account.findFirst({
-      where: { userId: session.user.id, provider: 'twitch' },
-      select: { access_token: true },
-    });
+    // getValidTwitchToken refreshes an expired token first. Chat itself is
+    // anonymous, so a dead token only costs follow monitoring - which is
+    // exactly the kind of half-working state that is hard to notice.
+    const token = await getValidTwitchToken(session.user.id);
 
-    if (twitchAccount?.access_token) {
+    if (token.ok) {
       await startFollowMonitoring(
         twitchUsername,
-        twitchAccount.access_token,
+        token.accessToken,
         sessionId,
         io
       );
     } else {
-      console.warn(
-        'No Twitch access token on file; skipping follow monitoring'
-      );
+      console.warn(`Skipping follow monitoring: ${token.error}`);
     }
 
     return res.status(200).json({

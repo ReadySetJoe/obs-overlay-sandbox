@@ -55,8 +55,16 @@ export default function StreamStatsExpanded({
 
       if (response.ok) {
         const data = await response.json();
+        // A sync can partly succeed - followers work on any account, but
+        // subscriber counts need affiliate/partner status. An unqualified
+        // "Successfully synced!" made a half-broken sync look identical to
+        // a working one.
+        const warnings: string[] = data.warnings ?? [];
+        const detail = `Followers: ${data.followers}\nSubscribers: ${data.subscribers}`;
         alert(
-          `Successfully synced!\nFollowers: ${data.followers}\nSubscribers: ${data.subscribers}`
+          warnings.length
+            ? `Synced with problems:\n${warnings.join('\n')}\n\n${detail}`
+            : `Successfully synced!\n${detail}`
         );
       } else {
         const error = await response.json();
